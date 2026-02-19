@@ -415,3 +415,22 @@ Ergebnisbild: ein organisch wachsender, selbstoptimierender Verbund aus Agentenk
 - **Von statischen Modellen zu lebenden Theorien:** Modelle werden laufend an Realitätsschocks re-kalibriert.
 
 Große Leitidee: Ein verantwortungsvoll orchestriertes TPM-Cluster könnte helfen, chaotische Systeme nicht zu „beherrschen", aber **früher zu verstehen, robuster zu steuern und menschlicher zu entscheiden**.
+
+
+### Sprachübergreifende Resonanz (Ausbau gestartet)
+
+Die visionäre TPM-Logik ist jetzt auch in der englischen Hauptdokumentation enthalten (`README.md`) — inkl. 100-Berufe-Matrix und Länder-Äquivalenz-Hinweisen.
+
+Zusätzliche Sprach-Landingpages:
+
+- Spanisch: `docs/i18n/README.es.md`
+- Italienisch: `docs/i18n/README.it.md`
+- Bosnisch: `docs/i18n/README.bs.md`
+- Russisch: `docs/i18n/README.ru.md`
+- Chinesisch (vereinfacht): `docs/i18n/README.zh-CN.md`
+- Französisch: `docs/i18n/README.fr.md`
+- Portugiesisch (Brasilien): `docs/i18n/README.pt-BR.md`
+- Hindi: `docs/i18n/README.hi.md`
+- Japanisch: `docs/i18n/README.ja.md`
+
+Hinweis: Wo Berufe zwischen Ländern nicht 1:1 existieren, wird im TPM-Kontext mit **funktionalen Äquivalenten** gearbeitet (gleicher Kern-Intent, unterschiedliche Bezeichnung/Institution).
