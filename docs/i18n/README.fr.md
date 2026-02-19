@@ -4,7 +4,7 @@
 
 Bootstrap propre pour une configuration multi-agent autonome (BTC, COFFEE, etc.) avec des options d’exécution cross-platform.
 
-## What's Included
+## Contenu inclus
 
 - `production/preflight_manager.py` – resilient market source probing with Alpha Vantage + fallback chain and local cache fallback.
 - `production/tpm_agent_process.py` – simple per-market agent loop.
@@ -15,7 +15,7 @@ Bootstrap propre pour une configuration multi-agent autonome (BTC, COFFEE, etc.)
 - `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – process ops helpers.
 - `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operational core tooling.
 
-## Universal Quickstart
+## Démarrage rapide universel
 
 ```bash
 python scripts/tpm_cli.py env
@@ -24,68 +24,68 @@ python scripts/tpm_cli.py preflight --market ALL
 python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600
 ```
 
-## Runtime Chain Check (causal/order sanity)
+## Vérification de la chaîne runtime (cohérence causale/ordre)
 
-The default repo flow is intentionally linear to avoid hidden-state drift and "false confidence" during live runs.
+Le flux par défaut du dépôt est volontairement linéaire pour éviter la dérive d’état cachée et la "fausse confiance" en exécution live.
 
 ```mermaid
 flowchart LR
-  A[1. env check] --> B[2. validate]
+  A[1. vérif env] --> B[2. valider]
   B --> C[3. preflight ALL]
-  C --> D[4. live monitor]
-  D --> E[5. stress test]
+  C --> D[4. moniteur live]
+  D --> E[5. test de stress]
 ```
 
-### Gate logic (what must be true before the next step)
-- **Gate 1 – Environment:** Python/platform context is correct (`env`).
-- **Gate 2 – Scientific sanity:** baseline model behavior is reproducible (`validate`).
-- **Gate 3 – Source reliability:** market data + fallback chain are reachable (`preflight --market ALL`).
-- **Gate 4 – Runtime execution:** live loop runs with known input history (`live`).
-- **Gate 5 – Adversarial confidence:** latency/failover targets hold under stress (`stress_test_suite.py`).
+### Logique des gates (ce qui doit être vrai avant l'étape suivante)
+- **Gate 1 – Environnement :** le contexte Python/plateforme est correct (`env`).
+- **Gate 2 – Rigueur scientifique :** le comportement de base du modèle est reproductible (`validate`).
+- **Gate 3 – Fiabilité des sources :** données marché + chaîne de fallback accessibles (`preflight --market ALL`).
+- **Gate 4 – Exécution runtime :** la boucle live tourne avec un historique d’entrée connu (`live`).
+- **Gate 5 – Confiance adversariale :** les cibles latence/failover tiennent sous stress (`stress_test_suite.py`).
 
-✅ Already fixed in code: CLI preflight now supports `--market ALL`, matching quickstart + docker flow.
+✅ Déjà corrigé dans le code : le preflight CLI prend désormais en charge `--market ALL`, aligné avec le quickstart + flux docker.
 
-## Choose Your Mission (role-based CTA)
+## Choisissez votre mission (CTA par rôle)
 
-> **You are X? Click your lane. Start in <60 seconds.**
+> **Vous êtes X ? Choisissez votre voie. Commencez en <60 secondes.**
 
-| Persona | What you care about | Click path | First command |
+| Persona | Ce qui vous importe | Parcours | Première commande |
 |---|---|---|---|
 | 📈 **Trader** | Fast pulse, actionable runtime | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
 | 💼 **Investor** | Stability, source trust, resilience | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
 | 🔬 **Scientist** | Evidence, tests, statistical signal | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
-| 🧠 **Theoretician** | Causal structure + future architecture | [`core/scout.py`](./core/scout.py) + [`Next Steps`](#next-steps) | `python scripts/tpm_cli.py validate` |
+| 🧠 **Theoretician** | Causal structure + future architecture | [`core/scout.py`](./core/scout.py) + [`Prochaines étapes`](#prochaines-étapes) | `python scripts/tpm_cli.py validate` |
 | 🛡️ **Skeptic (priority)** | Break assumptions before production | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
 | ⚙️ **Operator / DevOps** | Uptime, process health, recoverability | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
 
-### Skeptic Challenge (recommended first for new visitors)
-If you do **only one thing**, run this and inspect the report output:
+### Défi sceptique (recommandé pour les nouveaux visiteurs)
+Si vous ne faites **qu’une seule chose**, lancez ceci et inspectez la sortie du rapport :
 
 ```bash
 python scripts/tpm_cli.py preflight --market ALL
 python scripts/stress_test_suite.py
 ```
 
-If this lane convinces you, the rest of the repository will likely resonate too.
+Si cette voie vous convainc, le reste du dépôt devrait aussi vous parler.
 
-## Platform Notes
+## Notes de plateforme
 
 - **Android / Termux (Samsung, etc.)**
   ```bash
   pkg install termux-api -y
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
-- **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
-- **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
+- **iPhone (best effort) :** utilisez des apps shell comme iSH / a-Shell. Les hooks de notification spécifiques à Termux n’y sont pas disponibles.
+- **Windows / Linux / macOS** : utilisez les mêmes commandes CLI ; exécutez via tmux/scheduler/cron pour la persistance.
 
-## Docker (Cross-OS Easiest Path)
+## Docker (chemin cross-OS le plus simple)
 
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-Optional for COFFEE source quality:
+Optionnel pour améliorer la qualité de la source COFFEE :
 
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
@@ -94,7 +94,7 @@ docker compose run --rm tpm-preflight
 
 ## Validation
 
-Run the scientific validation pipeline:
+Exécutez le pipeline de validation scientifique :
 
 ```bash
 python core/tpm_scientific_validation.py
@@ -104,7 +104,7 @@ Artifacts:
 - `state/TPM_Scientific_Report.md`
 - `state/TPM_test_results.json`
 
-## Sources & Failover
+## Sources et bascule (failover)
 
 `production/preflight_manager.py` supports:
 - Alpha Vantage first for COFFEE (when `ALPHAVANTAGE_KEY` is set)
@@ -129,55 +129,55 @@ Output: `state/stress_test_report.json`
 
 
 
-## TPM Playground (interactive MVP)
+## TPM Playground (MVP interactif)
 
-You can now explore TPM behavior interactively in the browser:
+Vous pouvez désormais explorer le comportement TPM de manière interactive dans le navigateur :
 
 ```bash
 python -m http.server 8765
 # open http://localhost:8765/playground/index.html
 ```
 
-Includes:
-- Single agent weak-signal anomaly view
-- Mini swarm (BTC/COFFEE/VOL) consensus pressure
-- Cross-domain transfer resonance (synthetic finance/weather/health)
+Comprend :
+- Vue d’anomalies weak-signal en agent unique
+- Mini essaim (BTC/COFFEE/VOL) avec pression de consensus
+- Résonance de transfert cross-domain (synthétique : finance/météo/santé)
 
 See: `playground/README.md`.
-## Next Steps
+## Prochaines étapes
 
-- Transfer entropy module for cross-market causal analysis.
-- Optimizer with policy updates based on historical performance.
+- Module de transfer entropy pour l’analyse causale inter-marchés.
+- Optimiseur avec mises à jour de policy basées sur la performance historique.
 - Alert channels (Telegram/Signal) + boot persistence.
 
 
 ---
 
-## IrsanAI Deep Dive: How the TPM core "thinks" in complex systems
+## IrsanAI Deep Dive : comment le cœur TPM "pense" dans les systèmes complexes
 
-### 1) Visionary transformation: from trading agent to universal TPM ecosystem
+### 1) Transformation visionnaire : de l’agent de trading à l’écosystème TPM universel
 
-### What is unique about the IrsanAI-TPM algorithm? (corrected framing)
+### Qu’est-ce qui rend l’algorithme IrsanAI-TPM unique ? (cadre corrigé)
 
-Working hypothesis of the TPM core:
+Hypothèse de travail du cœur TPM :
 
-- In complex, chaotic systems, early-warning signal is often hidden in the **micro-residual**: tiny deviations, weak correlations, almost-empty data points.
-- Where classic systems see only `0` or "not enough relevance", TPM searches for **structured anomalies** (glitch patterns) in context flow.
-- TPM evaluates not only a value itself, but the **change of relationships over time, source quality, regime, and causal neighborhood**.
+- Dans les systèmes complexes et chaotiques, le signal d’alerte précoce est souvent caché dans le **micro-résiduel** : petites déviations, corrélations faibles et points quasi vides.
+- Là où les systèmes classiques ne voient que `0` ou "pertinence insuffisante", TPM recherche des **anomalies structurées** (glitch patterns) dans le flux de contexte.
+- TPM évalue non seulement une valeur, mais aussi le **changement des relations dans le temps, la qualité des sources, le régime et le voisinage causal**.
 
-Important correctness note: TPM does **not** magically predict the future. It aims for **earlier probabilistic detection** of regime shifts, breakouts, and disruptions — when data quality and validation gates are satisfied.
+Note importante : TPM **ne** prédit pas magiquement le futur. Il vise une **détection probabiliste plus précoce** des changements de régime, ruptures et perturbations lorsque la qualité des données et les gates de validation sont respectés.
 
-### Think BIG: why this extends beyond finance
+### Voir GRAND : pourquoi cela dépasse la finance
 
-If TPM can detect weak precursor patterns in financial instruments (index/ticker/ISIN-like identifiers, liquidity, microstructure), the same principle can generalize to many domains:
+Si TPM peut détecter des schémas précurseurs faibles dans les instruments financiers (identifiants type index/ticker/ISIN, liquidité, microstructure), le même principe peut se généraliser à de nombreux domaines :
 
 - **Event/sensor stream + context model + anomaly layer + feedback loop**
-- Every profession can be modeled as a "market" with domain-specific features, nodes, correlations, and anomalies
-- Specialized TPM agents can learn across domains while preserving local professional logic and ethics
+- Chaque profession peut être modélisée comme un "marché" avec ses variables, nœuds, corrélations et anomalies
+- Des agents TPM spécialisés peuvent apprendre entre domaines en conservant logique professionnelle locale et éthique
 
-### 100 professions as TPM target spaces
+### 100 professions comme espaces cibles TPM
 
-| # | Profession | TPM data analog | Anomaly/pattern-detection target |
+| # | Profession | Analogue de données TPM | Cible de détection d’anomalies/patterns |
 |---|---|---|---|
 | 1 | Police analyst | Incident logs, geotemporal crime maps, networks | Early signals of escalating crime clusters |
 | 2 | Fire service commander | Alarm chains, sensor feeds, weather, building profiles | Predict fire and hazard propagation windows |
@@ -280,26 +280,26 @@ If TPM can detect weak precursor patterns in financial instruments (index/ticker
 | 99 | Anthropologist | Field observations, language/social networks | Detect cultural-shift conflict precursors |
 | 100 | Foresight strategist | Tech curves, regulation, behavior data | Connect scenarios with early indicators |
 
-### Country-fit notes (profession equivalence across jurisdictions)
+### Notes d’adaptation pays (équivalence des professions selon les juridictions)
 
-To keep the list logically correct across regions, TPM role-mapping should be interpreted as **functional equivalents**, not literal job-title translation:
+Pour garder la liste logiquement correcte entre régions, le role-mapping TPM doit être interprété comme **équivalents fonctionnels**, et non comme traduction littérale des intitulés :
 
 - **Germany ↔ US/UK:** `Polizei` vs split functions (`Police Department`, `Sheriff`, `State Trooper`) and prosecution differences (`Staatsanwaltschaft` vs `District Attorney/Crown Prosecution`).
-- **Spain / Italy:** civil-law structures with distinct court and policing workflows; data pipelines often split between regional and national systems.
-- **Bosnia and Herzegovina:** multi-entity governance means fragmented data ownership; TPM benefits from federated anomaly fusion.
-- **Russia / China:** role definitions and data-governance constraints differ; TPM must be configured with local compliance boundaries and institutional equivalents.
-- **Additional high-impact regions:** France, Brazil, India, Japan, MENA states, and Sub-Saharan Africa can be onboarded by mapping equivalent functions and available telemetry.
+- **Espagne / Italie :** structures de droit civil avec workflows judiciaires et policiers distincts ; les pipelines de données sont souvent répartis entre niveaux régional et national.
+- **Bosnie-Herzégovine :** la gouvernance multi-entités implique une propriété des données fragmentée ; TPM bénéficie d’une fusion fédérée des anomalies.
+- **Russie / Chine :** les définitions de rôle et contraintes de gouvernance des données diffèrent ; TPM doit être configuré avec des limites locales de conformité et des équivalents institutionnels.
+- **Autres régions à fort impact :** France, Brésil, Inde, Japon, États MENA et Afrique subsaharienne peuvent être intégrés via mapping des fonctions équivalentes et de la télémétrie disponible.
 
-### Philosophical-scientific outlook
+### Perspective philosophico-scientifique
 
-- From tool to **epistemic infrastructure**: domains operationalize "weak early knowledge".
-- From isolated systems to **agent federations**: local ethics + shared anomaly grammar.
-- From reactive response to **anticipatory governance**: prevention over late crisis control.
-- From static models to **living theories**: continuous recalibration under real-world shocks.
+- De l’outil à **l’infrastructure épistémique** : les domaines opérationnalisent la "connaissance précoce faible".
+- Des systèmes isolés aux **fédérations d’agents** : éthique locale + grammaire partagée des anomalies.
+- De la réponse réactive à la **gouvernance anticipatrice** : prévention plutôt que contrôle tardif de crise.
+- Des modèles statiques aux **théories vivantes** : recalibrage continu face aux chocs du réel.
 
-Core idea: a responsibly governed TPM cluster cannot control chaos — but it can help institutions understand it earlier, steer it more robustly, and decide more humanely.
+Idée clé : un cluster TPM gouverné de façon responsable ne contrôle pas le chaos, mais aide les institutions à le comprendre plus tôt, le piloter plus robustement et décider plus humainement.
 
-## Multilingual expansion (in progress)
+## Extension multilingue (en cours)
 
 To support cross-language resonance, localized strategic overviews are available in:
 
@@ -313,4 +313,4 @@ To support cross-language resonance, localized strategic overviews are available
 - Hindi (`docs/i18n/README.hi.md`)
 - Japanese (`docs/i18n/README.ja.md`)
 
-Each localized file includes region-fit notes and points back to this canonical English section for the full 100-profession matrix.
+Chaque fichier localisé inclut des notes d’adaptation régionale et renvoie à cette section canonique pour la matrice completa de 100 professions.

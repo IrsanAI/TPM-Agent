@@ -4,18 +4,18 @@
 
 Čist bootstrap za autonomno multi-agent podešavanje (BTC, COFFEE i više), sa cross-platform runtime opcijama.
 
-## What's Included
+## Šta je uključeno
 
-- `production/preflight_manager.py` – resilient market source probing with Alpha Vantage + fallback chain and local cache fallback.
-- `production/tpm_agent_process.py` – simple per-market agent loop.
-- `production/tpm_live_monitor.py` – live BTC monitor with optional CSV warm-start and Termux notifications.
-- `core/tpm_scientific_validation.py` – backtest + statistical validation pipeline.
-- `scripts/tpm_cli.py` – unified launcher for Termux/Linux/macOS/Windows.
-- `scripts/stress_test_suite.py` – failover/latency stress test.
-- `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – process ops helpers.
-- `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operational core tooling.
+- `production/preflight_manager.py` – robusno ispitivanje tržišnih izvora uz Alpha Vantage + fallback lanac i lokalni cache fallback.
+- `production/tpm_agent_process.py` – jednostavna agentska petlja po tržištu.
+- `production/tpm_live_monitor.py` – live BTC monitor sa opcionalnim CSV warm-startom i Termux notifikacijama.
+- `core/tpm_scientific_validation.py` – backtest + statistički validacijski pipeline.
+- `scripts/tpm_cli.py` – objedinjeni launcher za Termux/Linux/macOS/Windows.
+- `scripts/stress_test_suite.py` – stres test failovera/latencije.
+- `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – pomoćni alati za operacije procesa.
+- `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operativni core alati.
 
-## Universal Quickstart
+## Univerzalni brzi početak
 
 ```bash
 python scripts/tpm_cli.py env
@@ -24,9 +24,9 @@ python scripts/tpm_cli.py preflight --market ALL
 python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600
 ```
 
-## Runtime Chain Check (causal/order sanity)
+## Provjera runtime lanca (kauzalni/redoslijedni sanity)
 
-The default repo flow is intentionally linear to avoid hidden-state drift and "false confidence" during live runs.
+Podrazumijevani tok repozitorija je namjerno linearan kako bi se izbjegao drift skrivenih stanja i "lažno samopouzdanje" tokom live rada.
 
 ```mermaid
 flowchart LR
@@ -36,138 +36,138 @@ flowchart LR
   D --> E[5. stress test]
 ```
 
-### Gate logic (what must be true before the next step)
-- **Gate 1 – Environment:** Python/platform context is correct (`env`).
-- **Gate 2 – Scientific sanity:** baseline model behavior is reproducible (`validate`).
-- **Gate 3 – Source reliability:** market data + fallback chain are reachable (`preflight --market ALL`).
-- **Gate 4 – Runtime execution:** live loop runs with known input history (`live`).
-- **Gate 5 – Adversarial confidence:** latency/failover targets hold under stress (`stress_test_suite.py`).
+### Logika gate-ova (šta mora važiti prije sljedećeg koraka)
+- **Gate 1 – Okruženje:** Python/platform kontekst je ispravan (`env`).
+- **Gate 2 – Naučna provjera:** bazno ponašanje modela je reproduktivno (`validate`).
+- **Gate 3 – Pouzdanost izvora:** tržišni podaci + fallback lanac su dostupni (`preflight --market ALL`).
+- **Gate 4 – Runtime izvršavanje:** live petlja radi s poznatom ulaznom historijom (`live`).
+- **Gate 5 – Adversarialno povjerenje:** ciljevi latencije/failovera drže pod stresom (`stress_test_suite.py`).
 
-✅ Already fixed in code: CLI preflight now supports `--market ALL`, matching quickstart + docker flow.
+✅ Već ispravljeno u kodu: CLI preflight sada podržava `--market ALL`, usklađeno s quickstart + docker tokom.
 
-## Choose Your Mission (role-based CTA)
+## Odaberi svoju misiju (CTA po ulozi)
 
-> **You are X? Click your lane. Start in <60 seconds.**
+> **Ti si X? Odaberi svoju stazu. Kreni za <60 sekundi.**
 
-| Persona | What you care about | Click path | First command |
+| Persona | Šta ti je važno | Putanja klika | Prva komanda |
 |---|---|---|---|
-| 📈 **Trader** | Fast pulse, actionable runtime | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
-| 💼 **Investor** | Stability, source trust, resilience | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
-| 🔬 **Scientist** | Evidence, tests, statistical signal | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
-| 🧠 **Theoretician** | Causal structure + future architecture | [`core/scout.py`](./core/scout.py) + [`Next Steps`](#next-steps) | `python scripts/tpm_cli.py validate` |
-| 🛡️ **Skeptic (priority)** | Break assumptions before production | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
-| ⚙️ **Operator / DevOps** | Uptime, process health, recoverability | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
+| 📈 **Trader** | Brz puls, operativno upotrebljiv runtime | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
+| 💼 **Investitor** | Stabilnost, povjerenje u izvore, otpornost | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
+| 🔬 **Naučnik** | Dokazi, testovi, statistički signal | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
+| 🧠 **Teoretičar** | Kauzalna struktura + buduća arhitektura | [`core/scout.py`](./core/scout.py) + [`Next Steps`](#next-steps) | `python scripts/tpm_cli.py validate` |
+| 🛡️ **Skeptik (prioritet)** | Razbij pretpostavke prije produkcije | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
+| ⚙️ **Operator / DevOps** | Uptime, zdravlje procesa, oporavljivost | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
 
-### Skeptic Challenge (recommended first for new visitors)
-If you do **only one thing**, run this and inspect the report output:
+### Skeptik izazov (preporučeno prvo za nove posjetioce)
+Ako uradiš **samo jednu stvar**, pokreni ovo i pregledaj izlaz izvještaja:
 
 ```bash
 python scripts/tpm_cli.py preflight --market ALL
 python scripts/stress_test_suite.py
 ```
 
-If this lane convinces you, the rest of the repository will likely resonate too.
+Ako te ova staza uvjeri, vjerovatno će ti i ostatak repozitorija imati smisla.
 
-## Platform Notes
+## Napomene po platformama
 
-- **Android / Termux (Samsung, etc.)**
+- **Android / Termux (Samsung itd.)**
   ```bash
   pkg install termux-api -y
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
-- **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
-- **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
+- **iPhone (best effort)**: koristi shell aplikacije poput iSH / a-Shell. Termux-specifični notification hookovi tamo nisu dostupni.
+- **Windows / Linux / macOS**: koristi iste CLI komande; za trajnost pokreći preko tmux/scheduler/cron.
 
-## Docker (Cross-OS Easiest Path)
+## Docker (najlakši put preko različitih OS-ova)
 
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-Optional for COFFEE source quality:
+Opcionalno za bolji kvalitet COFFEE izvora:
 
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
 docker compose run --rm tpm-preflight
 ```
 
-## Validation
+## Validacija
 
-Run the scientific validation pipeline:
+Pokreni naučni validacijski pipeline:
 
 ```bash
 python core/tpm_scientific_validation.py
 ```
 
-Artifacts:
+Artefakti:
 - `state/TPM_Scientific_Report.md`
 - `state/TPM_test_results.json`
 
-## Sources & Failover
+## Izvori i failover
 
-`production/preflight_manager.py` supports:
-- Alpha Vantage first for COFFEE (when `ALPHAVANTAGE_KEY` is set)
-- TradingView + Yahoo fallback chain
-- local cached fallback in `state/latest_prices.json`
+`production/preflight_manager.py` podržava:
+- Alpha Vantage prvo za COFFEE (kada je `ALPHAVANTAGE_KEY` postavljen)
+- TradingView + Yahoo fallback lanac
+- lokalni cache fallback u `state/latest_prices.json`
 
-Run preflight directly:
+Pokreni preflight direktno:
 
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
 python production/preflight_manager.py --market ALL
 ```
 
-Run outage stress test (target `p95 < 1000ms`):
+Pokreni stres test prekida (cilj `p95 < 1000ms`):
 
 ```bash
 python scripts/stress_test_suite.py
 ```
 
-Output: `state/stress_test_report.json`
+Izlaz: `state/stress_test_report.json`
 
 
 
 
-## TPM Playground (interactive MVP)
+## TPM Playground (interaktivni MVP)
 
-You can now explore TPM behavior interactively in the browser:
+Sada možeš interaktivno istraživati TPM ponašanje u pregledniku:
 
 ```bash
 python -m http.server 8765
 # open http://localhost:8765/playground/index.html
 ```
 
-Includes:
-- Single agent weak-signal anomaly view
-- Mini swarm (BTC/COFFEE/VOL) consensus pressure
-- Cross-domain transfer resonance (synthetic finance/weather/health)
+Sadrži:
+- Single-agent prikaz anomalija slabih signala
+- Mini roj (BTC/COFFEE/VOL) i pritisak konsenzusa
+- Cross-domain transfer rezonanca (sintetički: finansije/vrijeme/zdravlje)
 
-See: `playground/README.md`.
-## Next Steps
+Pogledaj: `playground/README.md`.
+## Sljedeći koraci
 
-- Transfer entropy module for cross-market causal analysis.
-- Optimizer with policy updates based on historical performance.
-- Alert channels (Telegram/Signal) + boot persistence.
+- Transfer-entropy modul za kauzalnu analizu između tržišta.
+- Optimizer s policy ažuriranjima na osnovu historijskog učinka.
+- Alert kanali (Telegram/Signal) + boot perzistencija.
 
 
 ---
 
-## IrsanAI Deep Dive: How the TPM core "thinks" in complex systems
+## IrsanAI Deep Dive: kako TPM jezgro "razmišlja" u kompleksnim sistemima
 
-### 1) Visionary transformation: from trading agent to universal TPM ecosystem
+### 1) Vizionarska transformacija: od trading agenta do univerzalnog TPM ekosistema
 
-### What is unique about the IrsanAI-TPM algorithm? (corrected framing)
+### Šta je jedinstveno kod IrsanAI-TPM algoritma? (korektno uokvirenje)
 
-Working hypothesis of the TPM core:
+Radna hipoteza TPM jezgra:
 
 - In complex, chaotic systems, early-warning signal is often hidden in the **micro-residual**: tiny deviations, weak correlations, almost-empty data points.
 - Where classic systems see only `0` or "not enough relevance", TPM searches for **structured anomalies** (glitch patterns) in context flow.
 - TPM evaluates not only a value itself, but the **change of relationships over time, source quality, regime, and causal neighborhood**.
 
-Important correctness note: TPM does **not** magically predict the future. It aims for **earlier probabilistic detection** of regime shifts, breakouts, and disruptions — when data quality and validation gates are satisfied.
+Važna napomena o ispravnosti: TPM **ne** predviđa budućnost magično. Cilj je **ranija probabilistička detekcija** promjena režima, proboja i poremećaja — kada su ispunjeni uslovi kvaliteta podataka i validacijskih gate-ova.
 
-### Think BIG: why this extends beyond finance
+### Razmišljaj VELIKO: zašto ovo nadilazi finansije
 
 If TPM can detect weak precursor patterns in financial instruments (index/ticker/ISIN-like identifiers, liquidity, microstructure), the same principle can generalize to many domains:
 
@@ -175,7 +175,7 @@ If TPM can detect weak precursor patterns in financial instruments (index/ticker
 - Every profession can be modeled as a "market" with domain-specific features, nodes, correlations, and anomalies
 - Specialized TPM agents can learn across domains while preserving local professional logic and ethics
 
-### 100 professions as TPM target spaces
+### 100 profesija kao TPM ciljna polja
 
 | # | Profession | TPM data analog | Anomaly/pattern-detection target |
 |---|---|---|---|
@@ -280,7 +280,7 @@ If TPM can detect weak precursor patterns in financial instruments (index/ticker
 | 99 | Anthropologist | Field observations, language/social networks | Detect cultural-shift conflict precursors |
 | 100 | Foresight strategist | Tech curves, regulation, behavior data | Connect scenarios with early indicators |
 
-### Country-fit notes (profession equivalence across jurisdictions)
+### Country-fit napomene (ekvivalencija profesija kroz jurisdikcije)
 
 To keep the list logically correct across regions, TPM role-mapping should be interpreted as **functional equivalents**, not literal job-title translation:
 
@@ -290,18 +290,18 @@ To keep the list logically correct across regions, TPM role-mapping should be in
 - **Russia / China:** role definitions and data-governance constraints differ; TPM must be configured with local compliance boundaries and institutional equivalents.
 - **Additional high-impact regions:** France, Brazil, India, Japan, MENA states, and Sub-Saharan Africa can be onboarded by mapping equivalent functions and available telemetry.
 
-### Philosophical-scientific outlook
+### Filozofsko-naučni pogled
 
 - From tool to **epistemic infrastructure**: domains operationalize "weak early knowledge".
 - From isolated systems to **agent federations**: local ethics + shared anomaly grammar.
 - From reactive response to **anticipatory governance**: prevention over late crisis control.
 - From static models to **living theories**: continuous recalibration under real-world shocks.
 
-Core idea: a responsibly governed TPM cluster cannot control chaos — but it can help institutions understand it earlier, steer it more robustly, and decide more humanely.
+Suštinska ideja: TPM klaster kojim se odgovorno upravlja ne može kontrolisati haos — ali može pomoći institucijama da ga ranije razumiju, robusnije usmjeravaju i humanije odlučuju.
 
-## Multilingual expansion (in progress)
+## Višejezično proširenje (u toku)
 
-To support cross-language resonance, localized strategic overviews are available in:
+Kako bi se podržala rezonanca kroz jezike, lokalizirani strateški pregledi dostupni su na:
 
 - Spanish (`docs/i18n/README.es.md`)
 - Italian (`docs/i18n/README.it.md`)
@@ -313,4 +313,4 @@ To support cross-language resonance, localized strategic overviews are available
 - Hindi (`docs/i18n/README.hi.md`)
 - Japanese (`docs/i18n/README.ja.md`)
 
-Each localized file includes region-fit notes and points back to this canonical English section for the full 100-profession matrix.
+Svaki lokalizirani fajl uključuje napomene prilagođene regiji i upućuje na ovu kanonsku englesku sekciju za kompletnu matricu od 100 profesija.
