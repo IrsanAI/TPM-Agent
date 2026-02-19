@@ -93,7 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     v.set_defaults(func=cmd_validate)
 
     pf = sp.add_parser("preflight", help="run source preflight")
-    pf.add_argument("--market", choices=["BTC", "COFFEE"], default="BTC")
+    pf.add_argument("--market", choices=["BTC", "COFFEE", "ALL"], default="ALL")
     pf.add_argument("--alpha-vantage-key", default=os.environ.get("ALPHAVANTAGE_KEY", ""))
     pf.set_defaults(func=cmd_preflight)
 
