@@ -127,6 +127,23 @@ python scripts/stress_test_suite.py
 Output: `state/stress_test_report.json`
 
 
+
+
+## TPM Playground (interactive MVP)
+
+You can now explore TPM behavior interactively in the browser:
+
+```bash
+python -m http.server 8765
+# open http://localhost:8765/playground/index.html
+```
+
+Includes:
+- Single agent weak-signal anomaly view
+- Mini swarm (BTC/COFFEE/VOL) consensus pressure
+- Cross-domain transfer resonance (synthetic finance/weather/health)
+
+See: `playground/README.md`.
 ## Next Steps
 
 - Transfer entropy module for cross-market causal analysis.
