@@ -80,4 +80,4 @@ Run outage stress test (target `p95 < 1000ms`):
 python scripts/stress_test_suite.py
 ```
 
-Output: `state/stress_test_report.json`
+
