@@ -1,0 +1,52 @@
+{
+  "platform": {
+    "project_root_name": "IrsanAI-TPM",
+    "cache_dir": "state",
+    "data_dir": "data",
+    "logs_dir": "logs"
+  },
+  "alerts": {
+    "telegram": {"enabled": false, "bot_token": "", "chat_id": ""},
+    "signal": {"enabled": false, "endpoint": ""}
+  },
+  "engine": {
+    "interval_seconds": 30,
+    "lookback_window": 60,
+    "entropy_bins": 12,
+    "transfer_lag": 1,
+    "circuit_breaker_failures": 3,
+    "cooldown_seconds": 45,
+    "reward_learning_rate": 0.08,
+    "min_source_votes": 2
+  },
+  "agents": [
+    {
+      "name": "BTC_KRAKEN",
+      "domain": "finance",
+      "market": "BTC",
+      "source_type": "kraken",
+      "url": "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60",
+      "weight": 1.0
+    },
+    {
+      "name": "BTC_BINANCE",
+      "domain": "finance",
+      "market": "BTC",
+      "source_type": "binance",
+      "url": "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+      "weight": 0.9
+    },
+    {
+      "name": "WEATHER_OPEN_METEO",
+      "domain": "weather",
+      "market": "BERLIN_TEMP",
+      "source_type": "open_meteo",
+      "url": "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m",
+      "weight": 0.7
+    }
+  ],
+  "domain_templates": {
+    "medical": {"metric_keys": ["risk_index", "latency", "uptime"]},
+    "seismic": {"metric_keys": ["magnitude", "depth", "confidence"]}
+  }
+}
