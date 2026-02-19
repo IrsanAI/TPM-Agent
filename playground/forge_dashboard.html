@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080b14" />
+  <title>The Forge | Windows Immersive Console</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root { --accent:#7c5cff; --bg:#080b14; --card:#12172a; --line:#2a3353; --text:#dce6ff; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: Segoe UI, Inter, Arial, sans-serif;
+      background: radial-gradient(circle at 10% -10%, #1c2558 0, transparent 40%), var(--bg);
+      min-height: 100vh;
+      padding: 18px;
+    }
+    .wrap { max-width: 1400px; margin: 0 auto; }
+    .glass {
+      background: linear-gradient(145deg, rgba(18,23,42,0.92), rgba(16,19,34,0.92));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    h1 { margin: 0 0 10px; font-weight: 700; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px; }
+    .pill { padding: 7px 10px; border-radius: 999px; border:1px solid var(--line); background:#151b31; font-size: 13px; }
+    .grid { display:grid; grid-template-columns: 1.7fr 1fr; gap:12px; }
+    .subgrid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .domains { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:8px; }
+    .domain-card { border:1px solid var(--line); border-radius:14px; padding:10px; background:#10162a; }
+    .kpi { font-size: 1.2rem; font-weight: 700; margin-top: 6px; }
+    pre { margin:0; max-height:300px; overflow:auto; font-size:12px; }
+    @media (max-width: 1100px){ .grid { grid-template-columns: 1fr; } .subgrid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="glass">
+    <h1>🪟⚒️ The Forge // Windows Immersive Future Console</h1>
+    <div class="meta">
+      <span class="pill" id="os"></span>
+      <span class="pill" id="device"></span>
+      <span class="pill" id="tuple">Design-Tuple: Domain + Future</span>
+      <span class="pill">Desktop UX: Snap-Layout + Wide Charts + Multi-Domain Templates</span>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="glass subgrid">
+      <div id="signals" style="height:320px"></div>
+      <div id="entropy" style="height:320px"></div>
+    </div>
+    <div class="glass">
+      <h3 style="margin-top:0">Domain Future Templates</h3>
+      <div class="domains" id="domains"></div>
+    </div>
+  </section>
+
+  <section class="glass">
+    <h3 style="margin-top:0">Live Frame</h3>
+    <pre id="json"></pre>
+  </section>
+</div>
+
+<script>
+const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+const ws = new WebSocket(`${wsProto}://${location.host}/ws`);
+ws.onopen = () => ws.send('tick');
+ws.onmessage = (ev) => {
+  const frame = JSON.parse(ev.data);
+  applyTheme(frame);
+  render(frame);
+  ws.send('tick');
+};
+
+function applyTheme(frame){
+  const ui = frame.ui_profile || {};
+  const windows = ui.windows_profile || {};
+  const themeMap = ui.domain_themes || {};
+  const firstDomain = Object.keys(frame.domain_summary || {})[0];
+  const domainTheme = themeMap[firstDomain] || {};
+  const accent = domainTheme.accent || windows.accent || '#7c5cff';
+  document.documentElement.style.setProperty('--accent', accent);
+  document.getElementById('tuple').textContent = `Design-Tuple: ${windows.future_tuple || 'domain+future'}`;
+}
+
+function render(frame){
+  document.getElementById('json').textContent = JSON.stringify(frame, null, 2);
+  document.getElementById('os').textContent = `OS: ${frame.runtime?.os || 'unknown'}`;
+  document.getElementById('device').textContent = `Root: ${frame.runtime?.device_root || 'n/a'}`;
+
+  const labels = (frame.signals || []).map(s => `${s.domain} / ${s.agent}`);
+  const fitness = (frame.signals || []).map(s => s.fitness);
+  Plotly.newPlot('signals', [{x: labels, y: fitness, type:'bar', marker:{color:'var(--accent)'}}],
+    {title:'Agent Fitness (Desktop Windowed View)', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+
+  const edges = Object.keys(frame.transfer_entropy_graph || {});
+  const values = Object.values(frame.transfer_entropy_graph || {});
+  Plotly.newPlot('entropy', [{x: edges, y: values, mode:'lines+markers', line:{color:'#3ddc97'}}],
+    {title:'Inter-Agent Transfer Entropy', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+
+  const domains = frame.domain_summary || {};
+  const box = document.getElementById('domains');
+  box.innerHTML = '';
+  Object.entries(domains).forEach(([name, item]) => {
+    const el = document.createElement('div');
+    el.className = 'domain-card';
+    el.innerHTML = `<strong>${name.toUpperCase()}</strong><div class="kpi">${(item.avg_fitness||0).toFixed(3)}</div><div>Agents: ${item.count}</div><div>Template: ${item.template}</div>`;
+    box.appendChild(el);
+  });
+}
+</script>
+</body>
+</html>
