@@ -1,0 +1,18 @@
+{
+  "GOLD": {
+    "validation_threshold": 80,
+    "min_runs": 50,
+    "sources": [
+      {"name": "goldapi", "url": "https://www.goldapi.io/api/XAU/USD"},
+      {"name": "metals_api", "url": "https://metals-api.com/api/latest?base=USD&symbols=XAU"}
+    ]
+  },
+  "EUR_USD": {
+    "validation_threshold": 85,
+    "min_runs": 30,
+    "sources": [
+      {"name": "exchangerate_api", "url": "https://api.exchangerate-api.com/v4/latest/EUR"},
+      {"name": "fixer", "url": "https://api.fixer.io/latest?base=EUR"}
+    ]
+  }
+}
