@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05070d" />
+  <title>The Forge | TPM-Agent</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    body { background:#05070d; color:#d9e2f3; font-family: Inter, Arial, sans-serif; margin:0; padding:14px; }
+    .wrap { max-width: 1080px; margin:auto; }
+    .card { background:#121826; border:1px solid #1f2937; border-radius:16px; padding:12px; margin-bottom:12px; }
+    h1 { font-size:1.2rem; margin:0 0 8px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:8px; }
+    .pill { background:#1d2638; padding:6px 9px; border-radius:999px; display:inline-block; margin-right:6px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>⚒️ The Forge – Stage 4 Hivemind</h1>
+    <span class="pill" id="os"></span>
+    <span class="pill" id="device"></span>
+    <span class="pill">Samsung PWA-ready: Add to Home Screen</span>
+  </div>
+  <div class="grid">
+    <div class="card"><div id="signals" style="height:300px"></div></div>
+    <div class="card"><div id="entropy" style="height:300px"></div></div>
+  </div>
+  <div class="card"><pre id="json"></pre></div>
+</div>
+
+<script>
+const ws = new WebSocket(`ws://${location.host}/ws`);
+ws.onopen = () => ws.send('tick');
+ws.onmessage = (ev) => {
+  const data = JSON.parse(ev.data);
+  render(data);
+  ws.send('tick');
+};
+
+function render(frame){
+  document.getElementById('json').textContent = JSON.stringify(frame, null, 2);
+  document.getElementById('os').textContent = `OS: ${frame.runtime?.os || 'unknown'}`;
+  document.getElementById('device').textContent = `Root: ${frame.runtime?.device_root || 'n/a'}`;
+
+  const labels = (frame.signals || []).map(s => s.agent);
+  const fitness = (frame.signals || []).map(s => s.fitness);
+  Plotly.newPlot('signals', [{x: labels, y: fitness, type:'bar', marker:{color:'#00d4ff'}}], {title:'Agent Fitness'});
+
+  const edges = Object.keys(frame.transfer_entropy_graph || {});
+  const values = Object.values(frame.transfer_entropy_graph || {});
+  Plotly.newPlot('entropy', [{x: edges, y: values, mode:'lines+markers', line:{color:'#39ff88'}}], {title:'Transfer Entropy Graph'});
+}
+</script>
+</body>
+</html>
