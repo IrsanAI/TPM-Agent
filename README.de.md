@@ -132,3 +132,148 @@ Output: `state/stress_test_report.json`
 - Transfer-Entropy-Modul für Kausalitätsanalyse zwischen Märkten.
 - Optimizer mit Policy-Updates auf Basis historischer Performance.
 - Alerting (Telegram/Signal) + Boot-Persistenz.
+
+---
+
+## IrsanAI Deep Dive: Wie das Herzstück des TPM Agent "tickt"
+
+> **Kurzform:** TPM ist kein einzelner Bot, sondern ein *entscheidungsökologisches System* aus Daten-Validierung, Markt-Agenten, Feedback-Loops und Governance-Gates.
+
+### 1) Architektonischer Prozessablauf (immersiv)
+
+```mermaid
+flowchart TD
+  U[User-Rolle: Trader / Wissenschaft / Investor / Operator] --> G0[Intent & Zielsetzung]
+  G0 --> G1[Gate 1: Environment Check]
+  G1 --> G2[Gate 2: Scientific Validation]
+  G2 --> G3[Gate 3: Source Preflight + Failover]
+  G3 --> A1[Markt-Agent BTC]
+  G3 --> A2[Markt-Agent COFFEE]
+  G3 --> A3[n weitere Markt-Agenten]
+  A1 --> M[Live Monitor + Signalstrom]
+  A2 --> M
+  A3 --> M
+  M --> R[Reserve / Risk Layer]
+  R --> F[Feedback: Performance + Robustheit]
+  F --> G2
+  F --> G3
+  F --> NX[Nächste Ausbaustufe: IrsanAI-TPM-Neuralnet-Agents]
+```
+
+Interpretation:
+- **Links (Intent):** Jede Rolle startet mit anderer Frage, aber im selben sicheren Pipeline-Rahmen.
+- **Mitte (Gates):** Keine Runtime ohne überprüfte Daten- und Modellbasis.
+- **Rechts (Swarm):** Mehrere Agenten erzeugen kollektive Marktwahrnehmung statt Monoperspektive.
+
+---
+
+### 2) Perspektive "Wissenschaft" (epistemische Qualität)
+
+Der wissenschaftliche Kern liegt nicht nur in "Backtest vorhanden", sondern in einer **stufenweisen Falsifikationskette**:
+
+1. **Reproduzierbarkeit** über `validate`.
+2. **Datenquellen-Härtung** über Preflight + Fallback.
+3. **Adversarial Testing** über Latenz-/Outage-Simulation.
+
+Warum das zählt:
+- Der Agent trennt **Signal** von **Datenartefakt**.
+- Er reduziert Scheinsicherheit durch explizite Gates.
+- Er erzeugt artefaktbasierte Evidenz (`state/*.json`, Reports), nicht bloß "gefühlte" Performance.
+
+---
+
+### 3) Perspektive "Trader" (entscheidungsnahe Runtime)
+
+Aus Trader-Sicht ist TPM stark, weil es drei Dinge koppelt:
+
+- **Taktische Reaktionsfähigkeit:** Live-Monitoring mit kontrollierter Polling-Frequenz.
+- **Operational Trust:** Preflight verhindert blinde Signale bei API-/Quellenproblemen.
+- **Kontinuität:** Fallbacks + Cache halten den Prozess lauffähig, auch bei Teil-Ausfällen.
+
+Praktischer Effekt: weniger "Noise-Trading", mehr **zustandsbewusste Entscheidung**.
+
+---
+
+### 4) Perspektive "Investor / Stratege" (Systemresilienz)
+
+TPM ist nicht auf kurzfristigen Output optimiert, sondern auf **persistente Robustheit**:
+
+- Mehrschichtige Datenbeschaffung (Primary + Secondary + Cache).
+- Klare Trennung zwischen Validierung, Preflight und Live-Betrieb.
+- Stress-Tests als Pflichtteil der Betriebsrealität.
+
+Das verschiebt das Narrativ von "ein Bot trifft Trades" zu **"ein Betriebssystem für verlässliche Agentenentscheidungen"**.
+
+---
+
+### 5) Meta-kognitiver Blick (IrsanAI-Stil)
+
+IrsanAI-Logik bedeutet hier:
+
+- **Der Agent beobachtet nicht nur den Markt, sondern auch sich selbst.**
+- **Jede Entscheidung ist kontextgebunden an Datenqualität, Latenz und Modus.**
+- **Fehler ("Glitches") sind Diagnosesignale, keine Defekte, die man versteckt.**
+
+Typische Glitches, die bewusst adressiert werden:
+- Quelleninstabilität / API-Drift
+- Latenzspitzen im Retrieval
+- Regimewechsel im Markt (historisches Muster bricht)
+
+Die Architektur antwortet darauf mit: Gatekeeping, Fallback, Monitoring, Re-Validation.
+
+---
+
+### 6) Warum Schwarmintelligenz (BTC + COFFEE + n Märkte) unumkehrbar wird
+
+Einzelagenten sehen lokal. Swarms sehen **Interdependenz**.
+
+Wenn BTC-Agent, Coffee-Agent und weitere Markt-Agenten parallel laufen, entsteht:
+
+- **Cross-Market-Sensitivität** (Frühsignale über Märkte hinweg)
+- **Redundanz gegen Blindspots**
+- **Emergente Hypothesenbildung** (was isoliert unsichtbar bleibt, wird im Verbund messbar)
+
+Damit wächst TPM von Multi-Agent-Setup zu einem **IrsanAI-TPM-Neuralnet-Ökomikrokosmos**:
+
+- Knoten = spezialisierte Markt-Agenten
+- Kanten = Informationsfluss / Kausalbezug
+- Plastizität = adaptive Gewichtung je Regime und Qualität
+
+---
+
+### 7) Nächste Ausbaustufe (promotet)
+
+Die nächste Evolutionsstufe ist ein **koordiniertes Meta-Layer** über allen Agenten:
+
+1. **Transfer-Entropy / Kausalitäts-Graphen** als dynamische Verknüpfungsmatrix.
+2. **Policy-Orchestrator**, der Agentengewichte nach Regime (Trend, Schock, Sideways) re-kalibriert.
+3. **Collective Memory**, die erfolgreiche Reaktionsmuster versionssicher speichert.
+4. **Reflexive Governance**, die bei Unsicherheit automatisch in konservative Modi schaltet.
+
+So entsteht aus "mehreren Bots" ein lernendes, kontrollierbares Netzwerk mit wissenschaftlichem Rückgrat.
+
+---
+
+### 8) Rollenbasierter immersiver Einstieg (1-Command-Matrix)
+
+| Rolle | Primäre Frage | Immersiver Start |
+|---|---|---|
+| 🔬 Wissenschaft | "Ist das Signal robust oder nur Zufall?" | `python scripts/tpm_cli.py validate` |
+| 📈 Trader | "Ist der Marktmodus jetzt handelbar?" | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
+| 💼 Investor | "Wie resilient ist der Betrieb unter Ausfall?" | `python scripts/tpm_cli.py preflight --market ALL` |
+| 🛡️ Skeptiker | "Wo bricht das System zuerst?" | `python scripts/stress_test_suite.py` |
+| ⚙️ Operator | "Wie halte ich das System gesund im Dauerlauf?" | `bash scripts/start_agents.sh` |
+
+Wenn alle Rollen dieselbe Architektur aus ihrem Blick als sinnvoll erleben, ist das der stärkste Hinweis auf ein tragfähiges TPM-Kernsystem.
+
+
+### 9) Repo-Resonanzcheck (System im Verbund)
+
+Damit Architektur-Story und reale Ausführung zusammenpassen, gilt im TPM-Kontext dieser Kurz-Check:
+
+- `env` muss Plattform + Python sauber melden (Betriebsbasis).
+- `validate` liefert wissenschaftliche Artefakte auch dann, wenn nicht alle internen Tests "grün" sind — entscheidend ist die transparente Reportlage statt Blackbox-Optimismus.
+- `preflight --market ALL` bleibt der Realitätsanker für externe Feeds; in restriktiven Netzwerkumgebungen (z. B. 403/Tunnel) zeigt der Output bewusst degradierte Quellverfügbarkeit.
+- `stress_test_suite.py` quantifiziert Robustheit trotz Fehlerpfaden (z. B. p95-Latenz unter Zielgrenze bei gleichzeitigen Source-Exceptions).
+
+**Resonanz-Prinzip:** Nicht "alles perfekt", sondern **alles messbar, erklärbar und steuerbar**. Genau daraus entsteht die IrsanAI-typische Betriebssicherheit über Rollen hinweg.
