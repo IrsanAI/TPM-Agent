@@ -1,0 +1,10 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+COPY . /app
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "scripts/tpm_cli.py", "env"]

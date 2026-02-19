@@ -1,0 +1,12 @@
+services:
+  tpm-preflight:
+    build: .
+    environment:
+      - ALPHAVANTAGE_KEY=${ALPHAVANTAGE_KEY:-}
+    command: ["python", "scripts/tpm_cli.py", "preflight", "--market", "ALL"]
+
+  tpm-live:
+    build: .
+    environment:
+      - ALPHAVANTAGE_KEY=${ALPHAVANTAGE_KEY:-}
+    command: ["python", "scripts/tpm_cli.py", "live", "--history-csv", "btc_real_24h.csv", "--poll-seconds", "3600"]
