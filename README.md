@@ -314,3 +314,18 @@ To support cross-language resonance, localized strategic overviews are available
 - Japanese (`docs/i18n/README.ja.md`)
 
 Each localized file includes region-fit notes and points back to this canonical English section for the full 100-profession matrix.
+
+## Hinweis für Entwickler (LOP – Liste offener Punkte)
+
+Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
+
+| Punkt | Aktueller Stand | Wie man sinnvoll fortsetzt |
+|---|---|---|
+| **Transfer-Entropy-Modul für Cross-Market-Kausalität** | **Erledigt ✅** – ist bereits als `TransferEntropyEngine` implementiert und im Forge-Orchestrator aktiv verdrahtet. | Fokus auf fachliche Kalibrierung: sinnvolle Schwellwerte/Interpretation je Domäne definieren (nicht nur technisch „score berechnen“). |
+| **Optimizer mit Policy-Updates aus Historie** | **Erledigt ✅** – Fitness-Scoring + Reward-Update + Candidate-Culling sind implementiert und werden im Tick-Zyklus verwendet. | Als nächstes eine fachliche Reward-Policy je Betriebsziel (z. B. konservativ vs. aggressiv) dokumentieren und evaluieren. |
+| **Alerting (Telegram/Signal)** | **Teilweise erledigt 🟡** – Infrastruktur ist vorhanden (Konfig + Webhook-Versand), aber standardmäßig deaktiviert. | Operationalisieren: konkrete Alert-Policy (welches Event, welche Schwere, welcher Kanal) als fachliche Governance festlegen. |
+| **Boot-Persistenz / Dauerbetrieb als Betriebskonzept** | **Teilweise erledigt 🟡** – es gibt Start-/Health-Monitor-Skripte mit tmux-Recovery, aber kein klarer, plattformübergreifender „Runbook“-Pfad für Produktivbetrieb ab Systemstart. | Ein kurzes Betriebsprofil definieren (Termux, Linux, Docker): Start bei Boot, Restart-Strategie, Verantwortlichkeiten, Eskalation. |
+| **Domänenausbau über Finance hinaus** | **Offen 🔴** – aktuell laufen echte Quellen primär in Finance/Weather; weitere Zieldomänen sind als Konzept/Templates angelegt, aber noch nicht fachlich ausgebaut. | Nächsten Piloten wählen (z. B. Medical oder Seismic), Datenvertrag definieren, dann Anomalie-/Fitness-Kriterien domänenspezifisch festlegen. |
+| **Wissenschaftliche Evidenz auf Realdaten erweitern** | **Offen 🔴** – Validierung ist robust aufgebaut, basiert aber auf synthetischen Regime-Segmenten. | Ergänzend ein reproduzierbares Realdaten-Benchmarking mit klaren Akzeptanzkriterien (Precision/Recall, Fehlalarmrate, Drift-Verhalten) hinzufügen. |
+
+Kurzfazit: Die ursprünglichen „Next Steps“ sind in großen Teilen **technisch bereits umgesetzt**. Der größte Hebel liegt jetzt in **fachlicher Schärfung** (Policies, Domänenlogik, Evidenz auf Realdaten) und in der **Betriebs-Governance** für verlässlichen Dauerbetrieb.
