@@ -22,7 +22,13 @@ def index() -> FileResponse:
 @app.get("/api/frame")
 def api_frame() -> dict:
     if not CACHE_FILE.exists():
-        return {"signals": [], "transfer_entropy_graph": {}}
+        return {
+            "signals": [],
+            "domain_summary": {},
+            "ui_profile": CONFIG.get("ui", {}),
+            "transfer_entropy_graph": {},
+            "runtime": CONFIG.get("runtime", {}),
+        }
     return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
 
 

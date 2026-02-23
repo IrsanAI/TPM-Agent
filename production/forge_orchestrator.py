@@ -43,6 +43,18 @@ class ForgeOrchestrator:
         if signal.get("enabled") and signal.get("endpoint"):
             _send_webhook(signal["endpoint"], message)
 
+    def _domain_summary(self, scored: list[dict]) -> dict[str, dict]:
+        grouped: dict[str, dict] = {}
+        for row in scored:
+            item = grouped.setdefault(row["domain"], {"count": 0, "avg_fitness": 0.0, "markets": []})
+            item["count"] += 1
+            item["avg_fitness"] += row["fitness"]
+            item["markets"].append(row["market"])
+        for domain, item in grouped.items():
+            item["avg_fitness"] = item["avg_fitness"] / max(1, item["count"])
+            item["template"] = f"{domain}+future"
+        return grouped
+
     def tick(self) -> dict:
         signals = []
         for agent in self.agents:
@@ -70,13 +82,24 @@ class ForgeOrchestrator:
                 redundancy_penalty=float(redundancy),
             )
             reward = self.optimizer.update_reward(signal.name, fitness)
-            scored.append({"agent": signal.name, "market": signal.market, "value": signal.value, "fitness": fitness, "reward": reward})
+            scored.append(
+                {
+                    "agent": signal.name,
+                    "domain": signal.domain,
+                    "market": signal.market,
+                    "value": signal.value,
+                    "fitness": fitness,
+                    "reward": reward,
+                }
+            )
 
         cull = self.optimizer.cull_candidates()
         frame = {
             "ts": int(time.time()),
             "runtime": self.config["runtime"],
             "signals": scored,
+            "domain_summary": self._domain_summary(scored),
+            "ui_profile": self.config.get("ui", {}),
             "transfer_entropy_graph": graph,
             "cull_candidates": cull,
         }

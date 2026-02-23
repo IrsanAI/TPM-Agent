@@ -8,6 +8,7 @@ import os
 import platform
 import subprocess
 import sys
+import webbrowser
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +19,11 @@ ROOT = DEVICE_ROOT if DEVICE_ROOT.exists() else REPO_ROOT
 def is_termux() -> bool:
     return "com.termux" in os.environ.get("PREFIX", "") or "com.termux" in os.environ.get("HOME", "")
 
+
+
+
+def is_windows() -> bool:
+    return platform.system().lower().startswith("win")
 
 def run(cmd: list[str], cwd: Path = REPO_ROOT) -> int:
     print("$", " ".join(cmd))
@@ -66,6 +72,16 @@ def cmd_forge_dashboard(args: argparse.Namespace) -> int:
     if importlib.util.find_spec("fastapi") is None or importlib.util.find_spec("uvicorn") is None:
         print("[warn] fastapi/uvicorn not installed; falling back to static playground host.")
         return run([sys.executable, "-m", "http.server", str(args.port)])
+
+    url = f"http://127.0.0.1:{args.port}/"
+    if args.open_browser:
+        try:
+            webbrowser.open(url)
+            if is_windows():
+                print(f"[windows] opened immersive dashboard: {url}")
+        except Exception as exc:
+            print(f"[warn] browser auto-open failed: {exc}")
+
     return run([sys.executable, "-m", "uvicorn", "production.forge_dashboard:app", "--host", "0.0.0.0", "--port", str(args.port)])
 
 
@@ -114,6 +130,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     fd = sp.add_parser("forge-dashboard", help="launch FastAPI + WebSocket PWA dashboard")
     fd.add_argument("--port", type=int, default=8765)
+    fd.add_argument("--open-browser", action="store_true", help="Open dashboard automatically (recommended for Windows desktop UX)")
     fd.set_defaults(func=cmd_forge_dashboard)
     return p
 

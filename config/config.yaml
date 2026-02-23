@@ -19,6 +19,20 @@
     "reward_learning_rate": 0.08,
     "min_source_votes": 2
   },
+  "ui": {
+    "windows_profile": {
+      "layout": "immersive-desktop",
+      "accent": "#7c5cff",
+      "glass": true,
+      "future_tuple": "domain+future"
+    },
+    "domain_themes": {
+      "finance": {"accent": "#00d4ff", "gradient": ["#0a0f1f", "#11213a"], "icon": "📈"},
+      "weather": {"accent": "#3ddc97", "gradient": ["#071a1e", "#13343c"], "icon": "🌦️"},
+      "medical": {"accent": "#ff5f8a", "gradient": ["#220c16", "#3c1326"], "icon": "🧬"},
+      "seismic": {"accent": "#ffb347", "gradient": ["#2a1604", "#4e2a0a"], "icon": "🌋"}
+    }
+  },
   "agents": [
     {
       "name": "BTC_KRAKEN",
