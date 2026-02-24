@@ -129,6 +129,30 @@ Output: `state/stress_test_report.json`
 
 
 
+
+
+## Forge Production Web Runtime (BTC + COFFEE, extensible)
+
+Yes, this has **already started** in the repo and is now extended:
+
+- Starts by default with one finance TPM agent for **BTC** and one for **COFFEE**.
+- Users can add more markets/agents directly from the web UI (`/api/agents`).
+- Runs as a persistent runtime service with live frame output (`/api/frame`) for immersive insight.
+
+### Start (local)
+
+```bash
+uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
+# open http://localhost:8787
+```
+
+### Start (Docker)
+
+```bash
+docker compose up tpm-forge-web
+# open http://localhost:8787
+```
+
 ## TPM Playground (interactive MVP)
 
 You can now explore TPM behavior interactively in the browser:
