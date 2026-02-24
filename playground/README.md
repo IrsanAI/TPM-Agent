@@ -2,10 +2,12 @@
 
 ## 1) Playground (simulation onboarding)
 
-A lightweight browser playground to explore TPM concepts interactively:
-- single-agent weak-signal anomaly detection
-- mini swarm consensus pressure
-- cross-domain transfer resonance (synthetic)
+Web UI for a live-feel TPM onboarding flow with:
+- immersive insight into active information processing (finance-first)
+- responsive layout for smartphone and laptop/desktop
+- reusable domain cards for future TPM industry agents
+- in-browser language switch (DE/EN)
+- prioritized LOP panel embedded in the interface
 
 Run:
 
