@@ -2,12 +2,7 @@
 
 ## 1) Playground (simulation onboarding)
 
-Web UI for a live-feel TPM onboarding flow with:
-- immersive insight into active information processing (finance-first)
-- responsive layout for smartphone and laptop/desktop
-- reusable domain cards for future TPM industry agents
-- in-browser language switch (DE/EN)
-- prioritized LOP panel embedded in the interface
+## 1) Playground (simulation onboarding)
 
 Run:
 
