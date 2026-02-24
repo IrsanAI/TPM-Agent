@@ -1,6 +1,6 @@
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](./README.es.md) | [🇮🇹 Italiano](./README.it.md) | [🇧🇦 Bosanski](./README.bs.md) | [🇷🇺 Русский](./README.ru.md) | [🇨🇳 中文](./README.zh-CN.md) | [🇫🇷 Français](./README.fr.md) | [🇧🇷 Português (BR)](./README.pt-BR.md) | [🇮🇳 हिन्दी](./README.hi.md) | [🇯🇵 日本語](./README.ja.md)
+[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](./README.es.md) | [🇮🇹 Italiano](./README.it.md) | [🇧🇦 Bosanski](./README.bs.md) | [🇷🇺 Русский](./README.ru.md) | [🇨🇳 中文](./README.zh-CN.md) | [🇫🇷 Français](./README.fr.md) | [🇧🇷 Português (BR)](./README.pt-BR.md) | [🇮🇳 हिन्दी](./README.hi.md) | [🇹🇷 Türkçe](./README.tr.md) | [🇯🇵 日本語](./README.ja.md)
 
 Bootstrap limpo para uma configuração autônoma multiagente (BTC, COFFEE e mais), com opções de execução em várias plataformas.
 
@@ -128,6 +128,28 @@ Output: `state/stress_test_report.json`
 
 
 
+
+## Forge Production Web Runtime (BTC + COFFEE, extensible)
+
+This runtime is now synchronized with the EN/DE canonical versions:
+
+- Starts by default with one finance TPM agent for **BTC** and one for **COFFEE**.
+- Users can add more markets/agents directly in the web UI (`/api/agents`).
+- Runs as a persistent service with live frame visibility (`/api/frame`).
+
+### Start (local)
+
+```bash
+uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
+# open http://localhost:8787
+```
+
+### Start (Docker)
+
+```bash
+docker compose up tpm-forge-web
+# open http://localhost:8787
+```
 
 ## TPM Playground (MVP interativo)
 
@@ -311,6 +333,17 @@ To support cross-language resonance, localized strategic overviews are available
 - French (`docs/i18n/README.fr.md`)
 - Portuguese Brazil (`docs/i18n/README.pt-BR.md`)
 - Hindi (`docs/i18n/README.hi.md`)
+- Turkish (`docs/i18n/README.tr.md`)
 - Japanese (`docs/i18n/README.ja.md`)
 
 Cada arquivo localizado inclui notas de adequação regional e aponta para esta seção canônica para a matriz completa de 100 profissões.
+
+## LOP (Endnote – prioritized)
+
+1. **P1 Expand real-data evidence:** benchmarking with explicit acceptance criteria (precision/recall/FPR/drift).
+2. **P2 Finalize reflexive governance:** define strict auto safe-mode rules for uncertainty.
+3. **P3 Standardize collective memory:** versioned learning patterns with per-domain review process.
+4. **P4 Continue web immersion rollout:** role-based views for additional TPM sectors on top of the responsive runtime layout.
+
+**Platform note:** current primary focus is **Windows + smartphone**. **Add later at the end of LOP:** macOS, Linux, and further platform profiles.
+

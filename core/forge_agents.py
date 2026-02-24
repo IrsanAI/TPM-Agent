@@ -63,6 +63,11 @@ class GenericMarketAgent(BaseAgent):
             return float(payload["price"])
         if stype == "open_meteo":
             return float(payload["current"]["temperature_2m"])
+        if stype == "alphavantage_commodity":
+            data = payload.get("data", [])
+            if not data:
+                raise ValueError("alphavantage_commodity payload has no data")
+            return float(data[0]["value"])
         raise ValueError(f"unsupported source_type={stype}")
 
 

@@ -1,17 +1,37 @@
-# TPM Playground (MVP)
+# TPM Playground + Forge Runtime UI
+
+## 1) Playground (simulation onboarding)
 
 A lightweight browser playground to explore TPM concepts interactively:
 - single-agent weak-signal anomaly detection
 - mini swarm consensus pressure
 - cross-domain transfer resonance (synthetic)
 
-## Run locally
+Run:
 
 ```bash
 python -m http.server 8765
 # open http://localhost:8765/playground/index.html
 ```
 
+## 2) Forge Runtime UI (production-like finance start)
+
+The production web runtime starts finance with BTC + COFFEE by default and supports adding agents via web API/UI.
+
+Run:
+
+```bash
+uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
+# open http://localhost:8787
+```
+
+API:
+- `GET /api/frame`
+- `GET /api/agents`
+- `POST /api/agents`
+- `POST /api/tick`
+
 ## Scope
 
-This is a simulation and onboarding UI, not production trading execution.
+Runtime is designed for immersive operations visibility and iterative agent expansion.
+It is not an order execution engine.

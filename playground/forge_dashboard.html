@@ -4,80 +4,100 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080b14" />
-  <title>The Forge | Windows Immersive Console</title>
+  <title>The Forge | TPM Runtime Console</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
     :root { --accent:#7c5cff; --bg:#080b14; --card:#12172a; --line:#2a3353; --text:#dce6ff; }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      color: var(--text);
-      font-family: Segoe UI, Inter, Arial, sans-serif;
-      background: radial-gradient(circle at 10% -10%, #1c2558 0, transparent 40%), var(--bg);
-      min-height: 100vh;
-      padding: 18px;
-    }
-    .wrap { max-width: 1400px; margin: 0 auto; }
-    .glass {
-      background: linear-gradient(145deg, rgba(18,23,42,0.92), rgba(16,19,34,0.92));
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    h1 { margin: 0 0 10px; font-weight: 700; }
-    .meta { display:flex; flex-wrap:wrap; gap:8px; }
-    .pill { padding: 7px 10px; border-radius: 999px; border:1px solid var(--line); background:#151b31; font-size: 13px; }
-    .grid { display:grid; grid-template-columns: 1.7fr 1fr; gap:12px; }
+    body { margin:0; color:var(--text); font-family:Segoe UI, Inter, Arial, sans-serif; background:radial-gradient(circle at 10% -10%, #1c2558 0, transparent 40%), var(--bg); min-height:100vh; padding:14px; }
+    .wrap { max-width: 1320px; margin: 0 auto; }
+    .glass { background:linear-gradient(145deg, rgba(18,23,42,0.92), rgba(16,19,34,0.92)); border:1px solid var(--line); border-radius:16px; padding:12px; margin-bottom:12px; }
+    .meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .pill { padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#151b31; font-size:12px; }
+    .grid { display:grid; grid-template-columns: 1.5fr 1fr; gap:12px; }
     .subgrid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
     .domains { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:8px; }
-    .domain-card { border:1px solid var(--line); border-radius:14px; padding:10px; background:#10162a; }
-    .kpi { font-size: 1.2rem; font-weight: 700; margin-top: 6px; }
-    pre { margin:0; max-height:300px; overflow:auto; font-size:12px; }
-    @media (max-width: 1100px){ .grid { grid-template-columns: 1fr; } .subgrid{grid-template-columns:1fr;} }
+    .domain-card { border:1px solid var(--line); border-radius:12px; padding:10px; background:#10162a; }
+    .kpi { font-size:1.2rem; font-weight:700; margin-top:6px; }
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+    input { width:100%; border-radius:8px; border:1px solid var(--line); padding:8px; background:#0e1426; color:var(--text); }
+    button { border-radius:8px; border:1px solid var(--line); padding:8px 10px; background:#1e2d52; color:var(--text); cursor:pointer; }
+    pre { margin:0; max-height:260px; overflow:auto; font-size:12px; }
+    @media (max-width: 980px){ .grid,.subgrid,.form-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 <div class="wrap">
   <section class="glass">
-    <h1>🪟⚒️ The Forge // Windows Immersive Future Console</h1>
+    <h1 style="margin:0">⚒️ TPM Production Runtime (Finance: BTC + COFFEE)</h1>
     <div class="meta">
       <span class="pill" id="os"></span>
       <span class="pill" id="device"></span>
-      <span class="pill" id="tuple">Design-Tuple: Domain + Future</span>
-      <span class="pill">Desktop UX: Snap-Layout + Wide Charts + Multi-Domain Templates</span>
+      <span class="pill" id="agents">Agents: 0</span>
+      <span class="pill">Windows + Smartphone first</span>
     </div>
   </section>
 
   <section class="grid">
     <div class="glass subgrid">
-      <div id="signals" style="height:320px"></div>
-      <div id="entropy" style="height:320px"></div>
+      <div id="signals" style="height:300px"></div>
+      <div id="entropy" style="height:300px"></div>
     </div>
     <div class="glass">
-      <h3 style="margin-top:0">Domain Future Templates</h3>
+      <h3 style="margin-top:0">Domains</h3>
       <div class="domains" id="domains"></div>
     </div>
   </section>
 
-  <section class="glass">
-    <h3 style="margin-top:0">Live Frame</h3>
-    <pre id="json"></pre>
+  <section class="grid">
+    <div class="glass">
+      <h3 style="margin-top:0">Add market agent</h3>
+      <div class="form-grid">
+        <input id="name" placeholder="Name (e.g. ETH_BINANCE)" />
+        <input id="market" placeholder="Market (e.g. ETH)" />
+        <input id="domain" placeholder="Domain (e.g. finance)" value="finance" />
+        <input id="sourceType" placeholder="source_type (binance/kraken/alphavantage_commodity/open_meteo)" value="binance" />
+        <input id="url" placeholder="https://..." style="grid-column:1/-1" />
+      </div>
+      <button onclick="addAgent()" style="margin-top:8px">Agent hinzufügen</button>
+      <p id="addResult" style="font-size:12px; opacity:0.85"></p>
+    </div>
+    <div class="glass">
+      <h3 style="margin-top:0">Live Frame</h3>
+      <pre id="json"></pre>
+    </div>
   </section>
 </div>
 
 <script>
-const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-const ws = new WebSocket(`${wsProto}://${location.host}/ws`);
-ws.onopen = () => ws.send('tick');
-ws.onmessage = (ev) => {
-  const frame = JSON.parse(ev.data);
-  applyTheme(frame);
-  render(frame);
-  ws.send('tick');
-};
+async function pullFrame(){
+  try {
+    const res = await fetch('/api/frame');
+    const frame = await res.json();
+    applyTheme(frame);
+    render(frame);
+  } catch (err) {
+    document.getElementById('addResult').textContent = `Frame error: ${err}`;
+  }
+}
+setInterval(pullFrame, 2000);
+pullFrame();
+
+async function addAgent(){
+  const payload = {
+    name: document.getElementById('name').value.trim(),
+    market: document.getElementById('market').value.trim(),
+    domain: document.getElementById('domain').value.trim(),
+    source_type: document.getElementById('sourceType').value.trim(),
+    url: document.getElementById('url').value.trim(),
+    weight: 1.0
+  };
+  const out = document.getElementById('addResult');
+  if (!payload.name || !payload.market || !payload.url) { out.textContent = 'Bitte Name/Market/URL ausfüllen.'; return; }
+  const res = await fetch('/api/agents', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
+  const data = await res.json();
+  out.textContent = res.ok ? `OK - agent_count=${data.agent_count}` : `Fehler: ${data.detail || 'unknown'}`;
+}
 
 function applyTheme(frame){
   const ui = frame.ui_profile || {};
@@ -87,23 +107,23 @@ function applyTheme(frame){
   const domainTheme = themeMap[firstDomain] || {};
   const accent = domainTheme.accent || windows.accent || '#7c5cff';
   document.documentElement.style.setProperty('--accent', accent);
-  document.getElementById('tuple').textContent = `Design-Tuple: ${windows.future_tuple || 'domain+future'}`;
 }
 
 function render(frame){
   document.getElementById('json').textContent = JSON.stringify(frame, null, 2);
   document.getElementById('os').textContent = `OS: ${frame.runtime?.os || 'unknown'}`;
   document.getElementById('device').textContent = `Root: ${frame.runtime?.device_root || 'n/a'}`;
+  document.getElementById('agents').textContent = `Agents: ${frame.agent_count || (frame.signals||[]).length}`;
 
-  const labels = (frame.signals || []).map(s => `${s.domain} / ${s.agent}`);
+  const labels = (frame.signals || []).map(s => `${s.market} / ${s.agent}`);
   const fitness = (frame.signals || []).map(s => s.fitness);
   Plotly.newPlot('signals', [{x: labels, y: fitness, type:'bar', marker:{color:'var(--accent)'}}],
-    {title:'Agent Fitness (Desktop Windowed View)', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+    {title:'Agent Fitness', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
 
   const edges = Object.keys(frame.transfer_entropy_graph || {});
   const values = Object.values(frame.transfer_entropy_graph || {});
   Plotly.newPlot('entropy', [{x: edges, y: values, mode:'lines+markers', line:{color:'#3ddc97'}}],
-    {title:'Inter-Agent Transfer Entropy', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+    {title:'Transfer Entropy', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
 
   const domains = frame.domain_summary || {};
   const box = document.getElementById('domains');
