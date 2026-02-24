@@ -1,9 +1,11 @@
-# TPM Playground (MVP)
+# TPM Playground (Immersive Insight Lab)
 
-A lightweight browser playground to explore TPM concepts interactively:
-- single-agent weak-signal anomaly detection
-- mini swarm consensus pressure
-- cross-domain transfer resonance (synthetic)
+Web UI for a live-feel TPM onboarding flow with:
+- immersive insight into active information processing (finance-first)
+- responsive layout for smartphone and laptop/desktop
+- reusable domain cards for future TPM industry agents
+- in-browser language switch (DE/EN)
+- prioritized LOP panel embedded in the interface
 
 ## Run locally
 
@@ -14,4 +16,4 @@ python -m http.server 8765
 
 ## Scope
 
-This is a simulation and onboarding UI, not production trading execution.
+Simulation and onboarding UI only (not production trading execution).
