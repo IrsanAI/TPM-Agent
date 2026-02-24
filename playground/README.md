@@ -2,10 +2,7 @@
 
 ## 1) Playground (simulation onboarding)
 
-A lightweight browser playground to explore TPM concepts interactively:
-- single-agent weak-signal anomaly detection
-- mini swarm consensus pressure
-- cross-domain transfer resonance (synthetic)
+## 1) Playground (simulation onboarding)
 
 Run:
 
