@@ -314,3 +314,13 @@ Kako bi se podržala rezonanca kroz jezike, lokalizirani strateški pregledi dos
 - Japanese (`docs/i18n/README.ja.md`)
 
 Svaki lokalizirani fajl uključuje napomene prilagođene regiji i upućuje na ovu kanonsku englesku sekciju za kompletnu matricu od 100 profesija.
+
+## LOP (Endnote – priorisiert)
+
+1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
+2. **P2 Reflexive Governance finalisieren:** harte Auto-Safe-Mode-Regeln bei Unsicherheit definieren.
+3. **P3 Collective Memory standardisieren:** versionssichere Lernmuster inkl. Review-Prozess je Domäne.
+4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
+
+**Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
+
