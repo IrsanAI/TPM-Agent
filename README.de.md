@@ -129,6 +129,30 @@ Output: `state/stress_test_report.json`
 
 
 
+
+
+## Forge Production Web Runtime (BTC + COFFEE, erweiterbar)
+
+Ja, das ist im Repo **bereits begonnen** worden und jetzt weitergeführt:
+
+- Startet standardmäßig mit einem Finanz-TPM-Agenten für **BTC** und einem für **COFFEE**.
+- User können weitere Märkte/Agenten direkt im Web-UI hinzufügen (`/api/agents`).
+- Läuft als persistenter Runtime-Service mit Live-Frame (`/api/frame`) für immersive Einsicht.
+
+### Start (lokal)
+
+```bash
+uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
+# öffne http://localhost:8787
+```
+
+### Start (Docker)
+
+```bash
+docker compose up tpm-forge-web
+# öffne http://localhost:8787
+```
+
 ## TPM Playground (interaktiver MVP)
 
 Du kannst das TPM-Verhalten jetzt interaktiv im Browser testen:
@@ -470,4 +494,13 @@ Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
 | **Sprachübergreifende Resonanz / i18n-Ausbau** | **Teilweise erledigt 🟡** – mehrere Sprach-Landingpages existieren; Ausbau ist explizit als „in progress“ markiert. | Synchronisationsprozess definieren (wann Änderungen aus Root-README in alle i18n-READMEs propagiert werden). |
 
 Kurzfazit: Die früheren „Nächsten Ausbaustufen“ sind **technisch zu großen Teilen gestartet oder umgesetzt**; der größte Hebel liegt jetzt in **fachlicher Operationalisierung** (Governance, Policies, Domänenlogik, Realdaten-Evidenz) und **konsistentem Doku-/i18n-Betrieb**.
+
+## LOP (Endnote – priorisiert)
+
+1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
+2. **P2 Reflexive Governance finalisieren:** harte Auto-Safe-Mode-Regeln bei Unsicherheit definieren.
+3. **P3 Collective Memory standardisieren:** versionssichere Lernmuster inkl. Review-Prozess je Domäne.
+4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
+
+**Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
 
