@@ -131,6 +131,44 @@ Output: `state/stress_test_report.json`
 
 
 
+
+## Live-Status: Was der TPM-Agent aktuell kann
+
+**Aktueller Stand (heute):**
+- Produktive Forge-Web-Runtime ist vorhanden (`production.forge_runtime:app`).
+- Startkonfiguration ist finance-first mit **BTC + COFFEE**.
+- Live-Frame, Agent-Fitness, Transfer-Entropy und Domain-Summary sind im Web-Dashboard sichtbar.
+- User können neue Markt-Agenten zur Laufzeit hinzufügen (`POST /api/agents`).
+
+**Was er können sollte (Sollbild):**
+- Realdaten-Benchmarking mit klaren Akzeptanzgrenzen (Precision/Recall/FPR/Drift).
+- Harte reflexive Governance-Regeln für Auto-Safe-Mode.
+- Collective-Memory-Prozess für versionierte Lernmuster je Domäne.
+
+**Nächste Ausbaustufe:**
+- Regime-basierter Policy-Orchestrator (Trend/Schock/Sideways) über allen Agenten.
+- Domänenpilot außerhalb Finance (z. B. Medical oder Seismic) mit klaren Datenverträgen.
+
+## Windows Live-Test (2-Wege-System)
+
+### Weg A — Developer/Power-User (PowerShell, CMD, PyCharm, IDE)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
+```
+
+### Weg B — Low-Level User (Klick & Start)
+
+1. Doppelklick auf `scripts/windows_click_start.bat`
+2. Script wählt automatisch den besten Pfad:
+   - Python vorhanden → venv + pip + Runtime-Start
+   - sonst Docker Compose (falls verfügbar)
+
+Technische Basis: `scripts/windows_bootstrap.ps1`.
+
 ## Forge Production Web Runtime (BTC + COFFEE, erweiterbar)
 
 Ja, das ist im Repo **bereits begonnen** worden und jetzt weitergeführt:

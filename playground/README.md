@@ -32,3 +32,26 @@ API:
 
 Runtime is designed for immersive operations visibility and iterative agent expansion.
 It is not an order execution engine.
+
+
+## Windows dependencies (easy install)
+
+- Python 3.10+
+- pip (bundled with Python)
+- Optional: Docker Desktop (for click-start fallback)
+
+Fast path:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
+```
+
+Click-start path:
+
+```text
+scripts/windows_click_start.bat
+```
+

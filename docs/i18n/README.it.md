@@ -151,6 +151,16 @@ docker compose up tpm-forge-web
 # open http://localhost:8787
 ```
 
+### Windows two-path quick access (synchronized)
+
+```powershell
+python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
+```
+
+Or click-start:
+- `scripts/windows_click_start.bat`
+- auto-mode logic in `scripts/windows_bootstrap.ps1`
+
 ## TPM Playground (MVP interattivo)
 
 Ora puoi esplorare il comportamento TPM in modo interattivo nel browser:
