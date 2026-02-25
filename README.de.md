@@ -1,6 +1,6 @@
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](./README.md) | [🇩🇪 Deutsch](./README.de.md) | [🇪🇸 Español](./docs/i18n/README.es.md) | [🇮🇹 Italiano](./docs/i18n/README.it.md) | [🇧🇦 Bosanski](./docs/i18n/README.bs.md) | [🇷🇺 Русский](./docs/i18n/README.ru.md) | [🇨🇳 中文](./docs/i18n/README.zh-CN.md) | [🇫🇷 Français](./docs/i18n/README.fr.md) | [🇧🇷 Português (BR)](./docs/i18n/README.pt-BR.md) | [🇮🇳 हिन्दी](./docs/i18n/README.hi.md) | [🇯🇵 日本語](./docs/i18n/README.ja.md)
+[🇬🇧 English](./README.md) | [🇩🇪 Deutsch](./README.de.md) | [🇪🇸 Español](./docs/i18n/README.es.md) | [🇮🇹 Italiano](./docs/i18n/README.it.md) | [🇧🇦 Bosanski](./docs/i18n/README.bs.md) | [🇷🇺 Русский](./docs/i18n/README.ru.md) | [🇨🇳 中文](./docs/i18n/README.zh-CN.md) | [🇫🇷 Français](./docs/i18n/README.fr.md) | [🇧🇷 Português (BR)](./docs/i18n/README.pt-BR.md) | [🇮🇳 हिन्दी](./docs/i18n/README.hi.md) | [🇹🇷 Türkçe](./docs/i18n/README.tr.md) | [🇯🇵 日本語](./docs/i18n/README.ja.md)
 
 Ein sauberer Bootstrap für ein autonomes Multi-Agent-Setup (BTC, COFFEE und weitere Märkte) mit plattformübergreifenden Laufoptionen.
 
@@ -128,6 +128,73 @@ Output: `state/stress_test_report.json`
 
 
 
+
+
+
+
+## Live-Status: Was der TPM-Agent aktuell kann
+
+**Aktueller Stand (heute):**
+- Produktive Forge-Web-Runtime ist vorhanden (`production.forge_runtime:app`).
+- Startkonfiguration ist finance-first mit **BTC + COFFEE**.
+- Live-Frame, Agent-Fitness, Transfer-Entropy und Domain-Summary sind im Web-Dashboard sichtbar.
+- User können neue Markt-Agenten zur Laufzeit hinzufügen (`POST /api/agents`).
+
+**Was er können sollte (Sollbild):**
+- Realdaten-Benchmarking mit klaren Akzeptanzgrenzen (Precision/Recall/FPR/Drift).
+- Harte reflexive Governance-Regeln für Auto-Safe-Mode.
+- Collective-Memory-Prozess für versionierte Lernmuster je Domäne.
+
+**Nächste Ausbaustufe:**
+- Regime-basierter Policy-Orchestrator (Trend/Schock/Sideways) über allen Agenten.
+- Domänenpilot außerhalb Finance (z. B. Medical oder Seismic) mit klaren Datenverträgen.
+
+
+## Merge-Hilfe für PR-Konflikte
+
+- Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
+
+## Windows Live-Test (2-Wege-System)
+
+### Weg A — Developer/Power-User (PowerShell, CMD, PyCharm, IDE)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
+```
+
+### Weg B — Low-Level User (Klick & Start)
+
+1. Doppelklick auf `scripts/windows_click_start.bat`
+2. Script wählt automatisch den besten Pfad:
+   - Python vorhanden → venv + pip + Runtime-Start
+   - sonst Docker Compose (falls verfügbar)
+
+Technische Basis: `scripts/windows_bootstrap.ps1`.
+
+## Forge Production Web Runtime (BTC + COFFEE, erweiterbar)
+
+Ja, das ist im Repo **bereits begonnen** worden und jetzt weitergeführt:
+
+- Startet standardmäßig mit einem Finanz-TPM-Agenten für **BTC** und einem für **COFFEE**.
+- User können weitere Märkte/Agenten direkt im Web-UI hinzufügen (`/api/agents`).
+- Läuft als persistenter Runtime-Service mit Live-Frame (`/api/frame`) für immersive Einsicht.
+
+### Start (lokal)
+
+```bash
+uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
+# öffne http://localhost:8787
+```
+
+### Start (Docker)
+
+```bash
+docker compose up tpm-forge-web
+# öffne http://localhost:8787
+```
 
 ## TPM Playground (interaktiver MVP)
 
@@ -470,4 +537,13 @@ Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
 | **Sprachübergreifende Resonanz / i18n-Ausbau** | **Teilweise erledigt 🟡** – mehrere Sprach-Landingpages existieren; Ausbau ist explizit als „in progress“ markiert. | Synchronisationsprozess definieren (wann Änderungen aus Root-README in alle i18n-READMEs propagiert werden). |
 
 Kurzfazit: Die früheren „Nächsten Ausbaustufen“ sind **technisch zu großen Teilen gestartet oder umgesetzt**; der größte Hebel liegt jetzt in **fachlicher Operationalisierung** (Governance, Policies, Domänenlogik, Realdaten-Evidenz) und **konsistentem Doku-/i18n-Betrieb**.
+
+## LOP (Endnote – priorisiert)
+
+1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
+2. **P2 Reflexive Governance finalisieren:** harte Auto-Safe-Mode-Regeln bei Unsicherheit definieren.
+3. **P3 Collective Memory standardisieren:** versionssichere Lernmuster inkl. Review-Prozess je Domäne.
+4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
+
+**Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
 
