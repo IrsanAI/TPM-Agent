@@ -149,6 +149,11 @@ Output: `state/stress_test_report.json`
 - Regime-basierter Policy-Orchestrator (Trend/Schock/Sideways) über allen Agenten.
 - Domänenpilot außerhalb Finance (z. B. Medical oder Seismic) mit klaren Datenverträgen.
 
+
+## Merge-Hilfe für PR-Konflikte
+
+- Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
+
 ## Windows Live-Test (2-Wege-System)
 
 ### Weg A — Developer/Power-User (PowerShell, CMD, PyCharm, IDE)

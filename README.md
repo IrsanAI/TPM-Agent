@@ -149,6 +149,11 @@ Output: `state/stress_test_report.json`
 - Regime-based policy orchestrator (trend/shock/sideways) across all agents.
 - One non-finance domain pilot (e.g. medical or seismic) with explicit data contracts.
 
+
+## PR merge conflict helper
+
+- Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
+
 ## Windows live test (two-path system)
 
 ### Path A — Developer/power users (PowerShell, CMD, PyCharm, IDE)
