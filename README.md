@@ -154,6 +154,7 @@ Output: `state/stress_test_report.json`
 
 - Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
 
+<<<<<<< codex/prioritize-and-implement-open-items-list-mmctpm
 
 ### Scope today: Windows + smartphone for finance TPM
 
@@ -162,6 +163,8 @@ Output: `state/stress_test_report.json`
 - **Realtime multi-agent:** BTC + COFFEE active by default; additional markets can be added dynamically in the web UI.
 - **Source boundary rule:** if requested market is not covered by built-in sources, provide explicit source URL + authorization data.
 
+=======
+>>>>>>> main
 ## Windows live test (two-path system)
 
 ### Path A — Developer/power users (PowerShell, CMD, PyCharm, IDE)
