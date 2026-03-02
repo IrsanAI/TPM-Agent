@@ -154,6 +154,17 @@ Output: `state/stress_test_report.json`
 
 - Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
 
+<<<<<<< codex/prioritize-and-implement-open-items-list-mmctpm
+
+### Umfang heute: Windows + Smartphone für Finance-TPM
+
+- **Windows:** Forge Runtime + Webinterface + Docker/PowerShell/Klickstart sind einsatzfähig.
+- **Smartphone:** Android/Termux live-monitoring ist einsatzfähig; Web-UI mobil responsiv nutzbar.
+- **Realtime-Multi-Agent:** BTC + COFFEE aktiv; weitere Märkte können im Webinterface dynamisch ergänzt werden.
+- **Quellgrenzen:** wenn ein gewünschter Markt nicht aus den eingebundenen Quellen stammt, müssen URL + API-Daten angegeben werden.
+
+=======
+>>>>>>> main
 ## Windows Live-Test (2-Wege-System)
 
 ### Weg A — Developer/Power-User (PowerShell, CMD, PyCharm, IDE)

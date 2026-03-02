@@ -7,12 +7,12 @@
   <title>The Forge | TPM Runtime Console</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
-    :root { --accent:#7c5cff; --bg:#080b14; --card:#12172a; --line:#2a3353; --text:#dce6ff; }
+    :root { --accent:#7c5cff; --bg:#080b14; --line:#2a3353; --text:#dce6ff; }
     * { box-sizing: border-box; }
     body { margin:0; color:var(--text); font-family:Segoe UI, Inter, Arial, sans-serif; background:radial-gradient(circle at 10% -10%, #1c2558 0, transparent 40%), var(--bg); min-height:100vh; padding:14px; }
     .wrap { max-width: 1320px; margin: 0 auto; }
     .glass { background:linear-gradient(145deg, rgba(18,23,42,0.92), rgba(16,19,34,0.92)); border:1px solid var(--line); border-radius:16px; padding:12px; margin-bottom:12px; }
-    .meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .meta,.tips { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
     .pill { padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#151b31; font-size:12px; }
     .grid { display:grid; grid-template-columns: 1.5fr 1fr; gap:12px; }
     .subgrid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
@@ -20,21 +20,26 @@
     .domain-card { border:1px solid var(--line); border-radius:12px; padding:10px; background:#10162a; }
     .kpi { font-size:1.2rem; font-weight:700; margin-top:6px; }
     .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
-    input { width:100%; border-radius:8px; border:1px solid var(--line); padding:8px; background:#0e1426; color:var(--text); }
+    input,select { width:100%; border-radius:8px; border:1px solid var(--line); padding:8px; background:#0e1426; color:var(--text); }
     button { border-radius:8px; border:1px solid var(--line); padding:8px 10px; background:#1e2d52; color:var(--text); cursor:pointer; }
     pre { margin:0; max-height:260px; overflow:auto; font-size:12px; }
+    .hint { font-size:12px; opacity:.85; }
     @media (max-width: 980px){ .grid,.subgrid,.form-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 <div class="wrap">
   <section class="glass">
-    <h1 style="margin:0">⚒️ TPM Production Runtime (Finance: BTC + COFFEE)</h1>
+    <h1 style="margin:0">⚒️ TPM Production Runtime (Finance: BTC + COFFEE + dynamic markets)</h1>
     <div class="meta">
       <span class="pill" id="os"></span>
       <span class="pill" id="device"></span>
       <span class="pill" id="agents">Agents: 0</span>
       <span class="pill">Windows + Smartphone first</span>
+    </div>
+    <div class="tips">
+      <span class="pill">Realtime swarm: active agents + shared frame</span>
+      <span class="pill">Suggestions derive from active + observed TPM markets</span>
     </div>
   </section>
 
@@ -53,14 +58,23 @@
     <div class="glass">
       <h3 style="margin-top:0">Add market agent</h3>
       <div class="form-grid">
-        <input id="name" placeholder="Name (e.g. ETH_BINANCE)" />
-        <input id="market" placeholder="Market (e.g. ETH)" />
-        <input id="domain" placeholder="Domain (e.g. finance)" value="finance" />
-        <input id="sourceType" placeholder="source_type (binance/kraken/alphavantage_commodity/open_meteo)" value="binance" />
-        <input id="url" placeholder="https://..." style="grid-column:1/-1" />
+        <select id="sourceType" onchange="applySourceSuggestion()">
+          <option value="binance">binance (public)</option>
+          <option value="kraken">kraken (public)</option>
+          <option value="alphavantage_commodity">alphavantage_commodity (api key)</option>
+          <option value="open_meteo">open_meteo (public)</option>
+        </select>
+        <select id="marketSelect" onchange="applyMarketSelection()"></select>
+        <input id="name" placeholder="Agent name (e.g. ETH_BINANCE)" />
+        <input id="market" placeholder="Market code (e.g. ETH)" />
+        <input id="domain" placeholder="Domain" value="finance" />
+        <input id="apiKey" placeholder="API key (required for protected sources)" />
+        <input id="url" placeholder="Source URL" style="grid-column:1/-1" />
       </div>
       <button onclick="addAgent()" style="margin-top:8px">Agent hinzufügen</button>
-      <p id="addResult" style="font-size:12px; opacity:0.85"></p>
+      <p id="addResult" class="hint"></p>
+      <p class="hint">If market is not available from existing sources, provide exact source URL + credentials (API key etc.).</p>
+      <p class="hint" id="sourceHints"></p>
     </div>
     <div class="glass">
       <h3 style="margin-top:0">Live Frame</h3>
@@ -70,6 +84,43 @@
 </div>
 
 <script>
+let suggestions = {suggested_by_source:{}, active_markets:[], observed_markets:[], requires_api_key:[]};
+
+async function loadSuggestions(){
+  const r = await fetch('/api/suggestions');
+  suggestions = await r.json();
+  applySourceSuggestion();
+}
+
+function applySourceSuggestion(){
+  const source = document.getElementById('sourceType').value;
+  const list = suggestions.suggested_by_source?.[source] || [];
+  const sel = document.getElementById('marketSelect');
+  sel.innerHTML = '<option value="">Suggested markets...</option>';
+  list.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify(item);
+    opt.textContent = `${item.market}`;
+    sel.appendChild(opt);
+  });
+  const apiNeeded = (suggestions.requires_api_key || []).includes(source);
+  document.getElementById('sourceHints').textContent = apiNeeded
+    ? 'Source requires API key for realtime access.'
+    : 'Public source. API key optional/not required.';
+}
+
+function applyMarketSelection(){
+  const v = document.getElementById('marketSelect').value;
+  if (!v) return;
+  const item = JSON.parse(v);
+  document.getElementById('market').value = item.market || '';
+  document.getElementById('url').value = item.url || '';
+  const source = document.getElementById('sourceType').value;
+  if (!document.getElementById('name').value) {
+    document.getElementById('name').value = `${item.market}_${source}`.toUpperCase();
+  }
+}
+
 async function pullFrame(){
   try {
     const res = await fetch('/api/frame');
@@ -81,7 +132,6 @@ async function pullFrame(){
   }
 }
 setInterval(pullFrame, 2000);
-pullFrame();
 
 async function addAgent(){
   const payload = {
@@ -90,13 +140,20 @@ async function addAgent(){
     domain: document.getElementById('domain').value.trim(),
     source_type: document.getElementById('sourceType').value.trim(),
     url: document.getElementById('url').value.trim(),
+    api_key: document.getElementById('apiKey').value.trim() || null,
     weight: 1.0
   };
   const out = document.getElementById('addResult');
-  if (!payload.name || !payload.market || !payload.url) { out.textContent = 'Bitte Name/Market/URL ausfüllen.'; return; }
+  if (!payload.name || !payload.market || !payload.url) {
+    out.textContent = 'Bitte Name/Market/URL ausfüllen.'; return;
+  }
   const res = await fetch('/api/agents', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
   const data = await res.json();
   out.textContent = res.ok ? `OK - agent_count=${data.agent_count}` : `Fehler: ${data.detail || 'unknown'}`;
+  if (res.ok) {
+    document.getElementById('apiKey').value = '';
+    await loadSuggestions();
+  }
 }
 
 function applyTheme(frame){
@@ -135,6 +192,9 @@ function render(frame){
     box.appendChild(el);
   });
 }
+
+loadSuggestions();
+pullFrame();
 </script>
 </body>
 </html>

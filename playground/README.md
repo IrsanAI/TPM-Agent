@@ -25,6 +25,7 @@ uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
 API:
 - `GET /api/frame`
 - `GET /api/agents`
+- `GET /api/suggestions`
 - `POST /api/agents`
 - `POST /api/tick`
 
@@ -54,4 +55,23 @@ Click-start path:
 ```text
 scripts/windows_click_start.bat
 ```
+
+
+## Windows Docker + Android completion path
+
+- **Windows Docker:**
+  - install Docker Desktop
+  - run: `docker compose up --build tpm-forge-web`
+  - open: `http://localhost:8787`
+- **Android (Termux):**
+  - run CLI live monitor quickly:
+    - `pkg install python termux-api -y`
+    - `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000`
+  - for web runtime on phone, use a host where Docker/Python runtime is already running and open browser URL.
+
+### Dynamic market onboarding behavior
+
+- UI now proposes suggested markets per available source (binance/kraken/alphavantage).
+- Suggestions include markets observed/active in runtime.
+- If a market is not available from built-in sources, user must provide explicit URL and credentials (`api_key` where required).
 

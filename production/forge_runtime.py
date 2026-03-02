@@ -6,6 +6,39 @@ import time
 from pathlib import Path
 from typing import Any
 
+from fastapi import FastAPI, HTTPException, WebSocket
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field
+
+from core.forge_config import load_config
+from production.forge_orchestrator import ForgeOrchestrator
+
+
+SUGGESTED_MARKETS: dict[str, list[dict[str, str]]] = {
+    "binance": [
+        {"market": "BTC", "url": "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"},
+        {"market": "ETH", "url": "https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT"},
+        {"market": "SOL", "url": "https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT"},
+    ],
+    "kraken": [
+        {"market": "BTC", "url": "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60"},
+        {"market": "ETH", "url": "https://api.kraken.com/0/public/OHLC?pair=ETHUSD&interval=60"},
+    ],
+    "alphavantage_commodity": [
+        {
+            "market": "COFFEE",
+            "url": "https://www.alphavantage.co/query?function=COFFEE&interval=monthly&apikey={API_KEY}",
+        },
+        {
+            "market": "WTI",
+            "url": "https://www.alphavantage.co/query?function=WTI&interval=monthly&apikey={API_KEY}",
+        },
+    ],
+}
+
+
+REQUIRES_API_KEY = {"alphavantage_commodity"}
+
 
 def _sanitize(value: Any) -> Any:
     if isinstance(value, str):
@@ -16,13 +49,6 @@ def _sanitize(value: Any) -> Any:
         return [_sanitize(v) for v in value]
     return value
 
-from fastapi import FastAPI, HTTPException, WebSocket
-from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
-
-from core.forge_config import load_config
-from production.forge_orchestrator import ForgeOrchestrator
-
 
 class AgentSpec(BaseModel):
     name: str = Field(..., description="Unique agent name")
@@ -31,6 +57,7 @@ class AgentSpec(BaseModel):
     source_type: str = Field(..., description="Supported: kraken, binance, open_meteo, alphavantage_commodity")
     url: str
     weight: float = 1.0
+    api_key: str | None = Field(default=None, description="Optional API key for protected/external sources")
 
 
 class ForgeRuntime:
@@ -71,13 +98,42 @@ class ForgeRuntime:
     def list_agents(self) -> list[dict]:
         return self._merged_config().get("agents", [])
 
+    def market_suggestions(self) -> dict:
+        active_markets = sorted({a.get("market", "") for a in self.list_agents() if a.get("market")})
+        observed_markets = sorted({s.get("market", "") for s in self.latest_frame.get("signals", []) if s.get("market")})
+        return {
+            "suggested_by_source": SUGGESTED_MARKETS,
+            "active_markets": active_markets,
+            "observed_markets": observed_markets,
+            "requires_api_key": sorted(REQUIRES_API_KEY),
+        }
+
+    def _validate_spec(self, spec: AgentSpec) -> dict:
+        payload = spec.model_dump()
+        source = payload["source_type"]
+        if source not in {"kraken", "binance", "open_meteo", "alphavantage_commodity"}:
+            raise HTTPException(status_code=400, detail=f"unsupported source_type={source}")
+
+        url = payload["url"].strip()
+        if source in REQUIRES_API_KEY:
+            key = (payload.get("api_key") or "").strip()
+            if "{API_KEY}" in url and not key:
+                raise HTTPException(status_code=400, detail="source requires API key; provide api_key")
+            if key and "{API_KEY}" in url:
+                url = url.replace("{API_KEY}", key)
+            elif key and "apikey=" in url and "apikey=demo" in url:
+                url = url.replace("apikey=demo", f"apikey={key}")
+        payload["url"] = url
+        payload.pop("api_key", None)
+        return payload
+
     def add_agent(self, spec: AgentSpec) -> None:
         with self._lock:
             agents = self.list_agents()
             if any(item["name"] == spec.name for item in agents):
                 raise HTTPException(status_code=409, detail=f"Agent '{spec.name}' already exists")
             override = self._load_override_agents()
-            override.append(spec.model_dump())
+            override.append(self._validate_spec(spec))
             self.override_agents_file.write_text(json.dumps(override, indent=2), encoding="utf-8")
             self.orchestrator = self._build_orchestrator()
 
@@ -90,11 +146,10 @@ class ForgeRuntime:
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             try:
-                frame = self.run_tick()
+                self.run_tick()
                 interval = int(self.orchestrator.config["engine"]["interval_seconds"])
             except Exception as exc:  # runtime guard for long-running service
-                frame = {"error": str(exc), "ts": int(time.time()), "signals": []}
-                self.latest_frame = frame
+                self.latest_frame = {"error": str(exc), "ts": int(time.time()), "signals": []}
                 interval = 5
             self._stop_event.wait(max(1, interval))
 
@@ -143,6 +198,11 @@ def api_tick() -> dict:
 @app.get("/api/agents")
 def api_agents() -> dict:
     return {"agents": runtime.list_agents()}
+
+
+@app.get("/api/suggestions")
+def api_suggestions() -> dict:
+    return _sanitize(runtime.market_suggestions())
 
 
 @app.post("/api/agents")
