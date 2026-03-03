@@ -123,6 +123,8 @@ docker compose run --rm tpm-live
 
 If `tpm-preflight` reports `ALPHAVANTAGE_KEY not set`, COFFEE still works via fallbacks.
 
+If you previously saw `sqlite3.OperationalError: no such table: price_history` in optional Step 3, update to the latest repo state. Preflight now auto-initializes DB schema before probing sources in CLI and runtime paths.
+
 If the page looks blank:
 - test API directly: `http://localhost:8787/api/frame`
 - test FastAPI docs: `http://localhost:8787/docs`
