@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import subprocess
 import threading
 import time
+import urllib.parse
+import urllib.request
 from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
@@ -105,6 +109,13 @@ class AgentSpec(BaseModel):
     api_key: str | None = Field(default=None, description="Optional API key for protected/external sources")
 
 
+class AlertPrefs(BaseModel):
+    termux_notify_enabled: bool = True
+    vibrate_ms: int = 800
+    beep_enabled: bool = False
+    telegram_enabled: bool = False
+
+
 class ForgeRuntime:
     def __init__(self, config_path: Path | None = None):
         self._lock = threading.Lock()
@@ -125,6 +136,8 @@ class ForgeRuntime:
         self._worker: threading.Thread | None = None
         self._market_history: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=240))
         self._agent_history: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=240))
+        self.alert_prefs_file = self.paths.state_dir / "alert_prefs.json"
+        self._last_alert_ts: dict[str, float] = {}
 
     def _load_override_agents(self) -> list[dict]:
         if not self.override_agents_file.exists():
@@ -265,11 +278,17 @@ class ForgeRuntime:
             prev = points[-2] if len(points) > 1 else latest
             delta = latest["value"] - prev["value"]
             pct = (delta / prev["value"] * 100.0) if prev["value"] else 0.0
+            outlook = self._market_outlook(list(points))
+            glitch = self._is_glitch(list(points))
+            if glitch:
+                self._dispatch_alert(market, outlook, float(latest["value"]))
             markets.append({
                 "market": market,
                 "latest": latest,
                 "delta": delta,
                 "delta_pct": pct,
+                "outlook": outlook,
+                "glitch": glitch,
                 "points": list(points),
             })
 
@@ -290,6 +309,90 @@ class ForgeRuntime:
             "markets": markets,
             "agents": agents,
         }
+
+    def _is_termux(self) -> bool:
+        prefix = os.environ.get("PREFIX", "")
+        return "com.termux" in prefix
+
+    def _load_alert_prefs(self) -> dict[str, Any]:
+        defaults = AlertPrefs().model_dump() if hasattr(AlertPrefs, "model_dump") else AlertPrefs().dict()
+        if self.alert_prefs_file.exists():
+            try:
+                payload = json.loads(self.alert_prefs_file.read_text(encoding="utf-8"))
+                if isinstance(payload, dict):
+                    defaults.update(payload)
+            except Exception:
+                pass
+        return defaults
+
+    def alert_preferences(self) -> dict[str, Any]:
+        prefs = self._load_alert_prefs()
+        prefs["termux_available"] = self._is_termux()
+        return prefs
+
+    def save_alert_preferences(self, spec: AlertPrefs) -> dict[str, Any]:
+        payload = spec.model_dump() if hasattr(spec, "model_dump") else spec.dict()
+        self.alert_prefs_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return self.alert_preferences()
+
+    def _market_outlook(self, points: list[dict[str, Any]]) -> dict[str, Any]:
+        if len(points) < 3:
+            return {"direction": "unknown", "confidence": 0.0, "horizon_ticks": 3}
+        tail = points[-5:]
+        vals = [float(p.get("value", 0.0)) for p in tail]
+        start, end = vals[0], vals[-1]
+        slope = (end - start) / max(1, len(vals) - 1)
+        avg = sum(vals) / max(1, len(vals))
+        rel = abs(slope) / (abs(avg) + 1e-9)
+        if rel < 0.0005:
+            direction = "sideways"
+        else:
+            direction = "up" if slope > 0 else "down"
+        confidence = max(0.0, min(1.0, rel * 200))
+        return {"direction": direction, "confidence": round(confidence, 3), "horizon_ticks": 3}
+
+    def _is_glitch(self, points: list[dict[str, Any]]) -> bool:
+        if len(points) < 3:
+            return False
+        a = float(points[-3].get("value", 0.0))
+        b = float(points[-2].get("value", 0.0))
+        c = float(points[-1].get("value", 0.0))
+        accel = c - (2 * b - a)
+        baseline = abs(b) + 1e-9
+        return abs(accel) / baseline > 0.01
+
+    def _dispatch_alert(self, market: str, outlook: dict[str, Any], latest_value: float) -> None:
+        prefs = self._load_alert_prefs()
+        now = time.time()
+        key = f"{market}:{outlook.get('direction')}"
+        if now - self._last_alert_ts.get(key, 0) < 120:
+            return
+        self._last_alert_ts[key] = now
+        message = f"IrsanAI GLITCH {market}: outlook={outlook.get('direction')} conf={outlook.get('confidence')} value={latest_value:.4f}"
+
+        if prefs.get("termux_notify_enabled") and self._is_termux():
+            try:
+                subprocess.run(["termux-toast", message], check=False, capture_output=True, text=True)
+                if int(prefs.get("vibrate_ms", 0)) > 0:
+                    subprocess.run(["termux-vibrate", "-d", str(int(prefs.get("vibrate_ms", 0)))], check=False, capture_output=True, text=True)
+                if prefs.get("beep_enabled"):
+                    subprocess.run(["termux-notification", "--title", "IrsanAI TPM", "--content", message], check=False, capture_output=True, text=True)
+            except Exception:
+                pass
+
+        telegram_cfg = (self.base_config.get("alerts", {}).get("telegram", {}) or {}).copy()
+        if prefs.get("telegram_enabled"):
+            telegram_cfg["enabled"] = True
+        if telegram_cfg.get("enabled") and telegram_cfg.get("bot_token") and telegram_cfg.get("chat_id"):
+            tg = f"https://api.telegram.org/bot{telegram_cfg['bot_token']}/sendMessage?chat_id={telegram_cfg['chat_id']}&text={urllib.parse.quote(message)}"
+            try:
+                urllib.request.urlopen(tg, timeout=4).read()
+            except Exception:
+                pass
+
+    def trigger_test_alert(self) -> dict[str, Any]:
+        self._dispatch_alert("TEST", {"direction": "up", "confidence": 0.99}, 1.0)
+        return {"ok": True, "message": "test alert dispatched"}
 
     def _loop(self) -> None:
         while not self._stop_event.is_set():
@@ -365,6 +468,21 @@ def api_locales() -> dict:
 @app.get("/api/markets/live")
 def api_markets_live() -> dict:
     return _sanitize(runtime.live_market_snapshot())
+
+
+@app.get("/api/alerts/preferences")
+def api_alert_prefs() -> dict:
+    return _sanitize(runtime.alert_preferences())
+
+
+@app.post("/api/alerts/preferences")
+def api_alert_prefs_save(spec: AlertPrefs) -> dict:
+    return _sanitize(runtime.save_alert_preferences(spec))
+
+
+@app.post("/api/alerts/test")
+def api_alert_test() -> dict:
+    return _sanitize(runtime.trigger_test_alert())
 
 
 @app.get("/api/runtime/status")

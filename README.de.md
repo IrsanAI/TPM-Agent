@@ -137,16 +137,17 @@ export ALPHAVANTAGE_KEY="<dein_key>"
 docker compose run --rm tpm-preflight
 ```
 
+## Glitch-Prognose & Mobile-Alerts
 
-
-### Docker-Fix bei `uvicorn: executable file not found`
-
-Wenn Docker schon einmal ohne Dependencies gebaut wurde, neu bauen:
-
-```bash
-docker compose build --no-cache tpm-forge-web
-docker compose up tpm-forge-web
-```
+- Das Forge-Live-Cockpit liefert jetzt pro Markt eine Kurzfrist-Tendenz (`up/down/sideways`) mit Konfidenz über `/api/markets/live`.
+- Bei erkannter Glitch-Situation (Beschleunigungsspitze) kann die Runtime auslösen:
+  - Termux-Toast + Vibration
+  - optional Notification/Beep
+  - optional Telegram-Push (wenn Bot-Token/Chat-ID in `config/config.yaml` gesetzt sind).
+- Konfiguration im Dashboard über **Save Alerts** / **Test Alert** oder via API:
+  - `GET /api/alerts/preferences`
+  - `POST /api/alerts/preferences`
+  - `POST /api/alerts/test`
 
 ## Validierung
 

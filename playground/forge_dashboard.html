@@ -45,6 +45,15 @@
       <select id="localeSelect" onchange="setLocale(this.value)" style="max-width:220px"></select>
       <a id="localeDoc" class="pill" href="/README.md" target="_blank" rel="noopener">Open language guide</a>
     </div>
+    <div class="tips">
+      <label class="pill"><input type="checkbox" id="termuxNotify"> termux notify</label>
+      <label class="pill"><input type="checkbox" id="beepEnabled"> beep</label>
+      <label class="pill">vibrate ms <input id="vibrateMs" type="number" min="0" value="800" style="width:90px"></label>
+      <label class="pill"><input type="checkbox" id="telegramEnabled"> telegram</label>
+      <button onclick="saveAlertPrefs()">Save Alerts</button>
+      <button onclick="sendTestAlert()">Test Alert</button>
+      <span class="pill" id="alertStatus">alerts: n/a</span>
+    </div>
     <div class="glass" id="runtimeControls" style="margin-top:10px">
       <div class="hint">Service control with persisted state. You can stop/start from browser.</div>
       <div style="width:100%;height:12px;background:#0f1729;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:6px">
@@ -240,6 +249,38 @@ function applyMarketSelection(){
   }
 }
 
+async function loadAlertPrefs(){
+  try {
+    const r = await fetch('/api/alerts/preferences');
+    const p = await r.json();
+    document.getElementById('termuxNotify').checked = !!p.termux_notify_enabled;
+    document.getElementById('beepEnabled').checked = !!p.beep_enabled;
+    document.getElementById('telegramEnabled').checked = !!p.telegram_enabled;
+    document.getElementById('vibrateMs').value = p.vibrate_ms ?? 800;
+    document.getElementById('alertStatus').textContent = `alerts: termux=${p.termux_available ? 'yes' : 'no'}`;
+  } catch (e) {
+    document.getElementById('alertStatus').textContent = `alerts error: ${e}`;
+  }
+}
+
+async function saveAlertPrefs(){
+  const payload = {
+    termux_notify_enabled: document.getElementById('termuxNotify').checked,
+    beep_enabled: document.getElementById('beepEnabled').checked,
+    telegram_enabled: document.getElementById('telegramEnabled').checked,
+    vibrate_ms: Number(document.getElementById('vibrateMs').value || 0)
+  };
+  const r = await fetch('/api/alerts/preferences', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
+  const out = await r.json();
+  document.getElementById('alertStatus').textContent = `alerts saved: termux=${out.termux_available ? 'yes' : 'no'}`;
+}
+
+async function sendTestAlert(){
+  const r = await fetch('/api/alerts/test', {method:'POST'});
+  const out = await r.json();
+  document.getElementById('alertStatus').textContent = out.message || 'test alert sent';
+}
+
 async function loadLiveMarkets(){
   try {
     const r = await fetch('/api/markets/live');
@@ -263,7 +304,7 @@ function renderLiveCards(){
     card.className = 'domain-card';
     card.style.textAlign = 'left';
     card.style.background = up ? '#0d2a1d' : '#32121b';
-    card.innerHTML = `<strong>${item.market}</strong><div class="kpi">${Number(latest.value || 0).toLocaleString()}</div><div>${up ? '▲' : '▼'} ${Number(item.delta_pct || 0).toFixed(2)}%</div><div>fitness: ${Number(latest.fitness || 0).toFixed(3)}</div>`;
+    card.innerHTML = `<strong>${item.market}</strong><div class="kpi">${Number(latest.value || 0).toLocaleString()}</div><div>${up ? '▲' : '▼'} ${Number(item.delta_pct || 0).toFixed(2)}%</div><div>fitness: ${Number(latest.fitness || 0).toFixed(3)}</div><div>outlook: ${(item.outlook||{}).direction || 'unknown'} (${Number((item.outlook||{}).confidence||0).toFixed(2)})</div><div>${item.glitch ? '⚠️ glitch detected' : 'stable'}</div>`;
     card.onclick = () => openInsightModal(`Market ${item.market}`, item.points || [], item);
     root.appendChild(card);
   });
@@ -407,6 +448,7 @@ async function runtimeStop(){
 }
 
 loadLocales();
+loadAlertPrefs();
 loadSuggestions();
 loadLiveMarkets();
 pullFrame();
