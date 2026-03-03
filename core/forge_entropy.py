@@ -2,10 +2,46 @@ from __future__ import annotations
 
 import importlib.util
 import math
+from collections import Counter
+
+import numpy as np
+
+
+class EntropySignalEngine:
+    """Windowed Shannon entropy + coarse compression helpers."""
+
+    def __init__(self, bins: int = 20):
+        self.bins = max(4, bins)
+
+    def shannon_entropy(self, seq: list[float]) -> float:
+        if len(seq) < 2:
+            return 0.0
+        hist, _ = np.histogram(np.asarray(seq, dtype=float), bins=self.bins)
+        probs = hist / max(1, hist.sum())
+        probs = probs[probs > 0]
+        return float(-(probs * np.log2(probs)).sum())
+
+    def sliding_entropy(self, seq: list[float], window: int = 1000, stride: int = 50) -> list[float]:
+        if len(seq) < 2:
+            return []
+        if len(seq) <= window:
+            return [self.shannon_entropy(seq)]
+        out: list[float] = []
+        for i in range(0, len(seq) - window + 1, max(1, stride)):
+            out.append(self.shannon_entropy(seq[i : i + window]))
+        return out
+
+    def bottleneck_compress(self, seq: list[float], out_points: int = 20) -> list[float]:
+        if not seq:
+            return []
+        if len(seq) <= out_points:
+            return [float(v) for v in seq]
+        buckets = np.array_split(np.asarray(seq, dtype=float), out_points)
+        return [float(np.mean(b)) for b in buckets if len(b)]
 
 
 class TransferEntropyEngine:
-    """Transfer entropy estimator with optional scipy acceleration."""
+    """Transfer entropy estimator plus histogram-based mutual information."""
 
     def __init__(self, bins: int = 12, lag: int = 1):
         self.bins = bins
@@ -20,6 +56,24 @@ class TransferEntropyEngine:
             return [0] * len(seq)
         step = (hi - lo) / self.bins
         return [min(self.bins - 1, max(0, int((v - lo) / step))) for v in seq]
+
+    def mutual_information_hist(self, x: list[float], y: list[float]) -> float:
+        n = min(len(x), len(y))
+        if n < 4:
+            return 0.0
+        xd = self._digitize(x[:n])
+        yd = self._digitize(y[:n])
+        px = Counter(xd)
+        py = Counter(yd)
+        pxy = Counter(zip(xd, yd))
+        mi = 0.0
+        for (xi, yi), cxy in pxy.items():
+            pxy_v = cxy / n
+            denom = (px[xi] / n) * (py[yi] / n)
+            if denom <= 0:
+                continue
+            mi += pxy_v * math.log2(pxy_v / denom)
+        return max(0.0, float(mi))
 
     def score(self, x: list[float], y: list[float]) -> float:
         n = min(len(x), len(y))
