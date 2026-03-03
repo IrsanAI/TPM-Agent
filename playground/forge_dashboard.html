@@ -70,6 +70,24 @@
     </div>
   </section>
 
+  <section class="glass">
+    <h3 id="liveMarketsTitle" style="margin-top:0">IrsanAI Live Market Cockpit</h3>
+    <div class="hint" id="liveMarketsHint">Tap any market or agent card for immersive drill-down insights.</div>
+    <div id="liveCards" class="domains" style="margin-top:10px"></div>
+  </section>
+
+  <div id="insightModal" style="display:none;position:fixed;inset:0;background:rgba(4,8,18,.82);z-index:50;padding:16px">
+    <div class="glass" style="max-width:1100px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <h3 id="insightTitle" style="margin:0">IrsanAI Market Insight</h3>
+        <button onclick="closeInsightModal()">Close</button>
+      </div>
+      <div id="insightMeta" class="hint" style="margin-top:6px"></div>
+      <div id="insightChart" style="height:360px;margin-top:10px"></div>
+      <pre id="insightJson" style="margin-top:10px;max-height:180px"></pre>
+    </div>
+  </div>
+
   <section class="grid">
     <div class="glass">
       <h3 id="addAgentTitle" style="margin-top:0">Add market agent</h3>
@@ -111,7 +129,9 @@ const I18N = {
     domainsTitle: 'IrsanAI Domain Pulse',
     addAgentTitle: 'Add market agent',
     addAgentBtn: 'Add Agent',
-    liveFrameTitle: 'IrsanAI Live Frame'
+    liveFrameTitle: 'IrsanAI Live Frame',
+    liveMarketsTitle: 'IrsanAI Live Market Cockpit',
+    liveMarketsHint: 'Tap any market or agent card for immersive drill-down insights.'
   },
   de: {
     titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finanzen: BTC + COFFEE + dynamische Märkte)',
@@ -123,7 +143,9 @@ const I18N = {
     domainsTitle: 'IrsanAI Domain-Puls',
     addAgentTitle: 'Markt-Agent hinzufügen',
     addAgentBtn: 'Agent hinzufügen',
-    liveFrameTitle: 'IrsanAI Live-Frame'
+    liveFrameTitle: 'IrsanAI Live-Frame',
+    liveMarketsTitle: 'IrsanAI Live-Markt-Cockpit',
+    liveMarketsHint: 'Tippe auf Markt- oder Agent-Karten für immersive Detail-Einsichten.'
   }
 };
 
@@ -131,6 +153,7 @@ let currentLocale = 'en';
 let locales = [];
 
 let suggestions = {suggested_by_source:{}, active_markets:[], observed_markets:[], requires_api_key:[]};
+let liveSnapshot = {markets: [], agents: []};
 
 async function loadLocales(){
   try {
@@ -171,6 +194,8 @@ function setLocale(code){
   document.getElementById('addAgentTitle').textContent = lang.addAgentTitle;
   document.getElementById('addAgentBtn').textContent = lang.addAgentBtn;
   document.getElementById('liveFrameTitle').textContent = lang.liveFrameTitle;
+  document.getElementById('liveMarketsTitle').textContent = lang.liveMarketsTitle;
+  document.getElementById('liveMarketsHint').textContent = lang.liveMarketsHint;
   const localeDoc = document.getElementById('localeDoc');
   const found = locales.find(l => l.code === code);
   if (found) localeDoc.href = '/' + found.doc_path;
@@ -215,6 +240,74 @@ function applyMarketSelection(){
   }
 }
 
+async function loadLiveMarkets(){
+  try {
+    const r = await fetch('/api/markets/live');
+    liveSnapshot = await r.json();
+    renderLiveCards();
+  } catch (e) {
+    document.getElementById('liveMarketsHint').textContent = `Live market feed error: ${e}`;
+  }
+}
+
+function renderLiveCards(){
+  const root = document.getElementById('liveCards');
+  root.innerHTML = '';
+  const markets = liveSnapshot.markets || [];
+  const agents = liveSnapshot.agents || [];
+
+  markets.forEach(item => {
+    const up = (item.delta || 0) >= 0;
+    const latest = item.latest || {};
+    const card = document.createElement('button');
+    card.className = 'domain-card';
+    card.style.textAlign = 'left';
+    card.style.background = up ? '#0d2a1d' : '#32121b';
+    card.innerHTML = `<strong>${item.market}</strong><div class="kpi">${Number(latest.value || 0).toLocaleString()}</div><div>${up ? '▲' : '▼'} ${Number(item.delta_pct || 0).toFixed(2)}%</div><div>fitness: ${Number(latest.fitness || 0).toFixed(3)}</div>`;
+    card.onclick = () => openInsightModal(`Market ${item.market}`, item.points || [], item);
+    root.appendChild(card);
+  });
+
+  agents.slice(0, 8).forEach(item => {
+    const latest = item.latest || {};
+    const card = document.createElement('button');
+    card.className = 'domain-card';
+    card.style.textAlign = 'left';
+    card.style.background = '#121a34';
+    card.innerHTML = `<strong>${item.agent}</strong><div>market: ${item.market}</div><div>value: ${Number(latest.value || 0).toLocaleString()}</div><div>reward: ${Number(latest.reward || 0).toFixed(3)}</div>`;
+    card.onclick = () => openInsightModal(`Agent ${item.agent}`, item.points || [], item);
+    root.appendChild(card);
+  });
+
+  if (markets.length === 0 && agents.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'hint';
+    empty.textContent = 'Waiting for first successful ticks...';
+    root.appendChild(empty);
+  }
+}
+
+function openInsightModal(title, points, payload){
+  document.getElementById('insightModal').style.display = 'block';
+  document.getElementById('insightTitle').textContent = `IrsanAI Insight • ${title}`;
+  document.getElementById('insightMeta').textContent = `samples: ${points.length}`;
+  document.getElementById('insightJson').textContent = JSON.stringify(payload, null, 2);
+  const xs = points.map(p => new Date((p.ts || 0) * 1000).toLocaleTimeString());
+  const ys = points.map(p => Number(p.value || 0));
+  const fit = points.map(p => Number(p.fitness || 0));
+  Plotly.newPlot('insightChart', [
+    {x: xs, y: ys, mode:'lines+markers', name:'value', line:{color:'#60a5fa'}},
+    {x: xs, y: fit, mode:'lines', name:'fitness', yaxis:'y2', line:{color:'#f472b6'}}
+  ], {
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'},
+    yaxis2:{overlaying:'y', side:'right'}, margin:{l:40,r:40,t:30,b:30}
+  });
+}
+
+function closeInsightModal(){
+  document.getElementById('insightModal').style.display = 'none';
+}
+
 async function pullFrame(){
   try {
     const res = await fetch('/api/frame');
@@ -227,6 +320,7 @@ async function pullFrame(){
 }
 setInterval(pullFrame, 2000);
 setInterval(refreshRuntimeStatus, 1000);
+setInterval(loadLiveMarkets, 2500);
 
 async function addAgent(){
   const payload = {
@@ -314,6 +408,7 @@ async function runtimeStop(){
 
 loadLocales();
 loadSuggestions();
+loadLiveMarkets();
 pullFrame();
 refreshRuntimeStatus();
 </script>

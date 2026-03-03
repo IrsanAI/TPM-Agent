@@ -4,6 +4,7 @@ import json
 import re
 import threading
 import time
+from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
 
@@ -122,6 +123,8 @@ class ForgeRuntime:
             "runtime": self.base_config.get("runtime", {}),
         }
         self._worker: threading.Thread | None = None
+        self._market_history: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=240))
+        self._agent_history: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=240))
 
     def _load_override_agents(self) -> list[dict]:
         if not self.override_agents_file.exists():
@@ -232,7 +235,61 @@ class ForgeRuntime:
         with self._lock:
             self.latest_frame = self.orchestrator.tick()
             self.latest_frame["agent_count"] = len(self.list_agents())
+            self._record_live_metrics(self.latest_frame)
             return self.latest_frame
+
+    def _record_live_metrics(self, frame: dict[str, Any]) -> None:
+        ts = int(frame.get("ts") or time.time())
+        for signal in frame.get("signals", []):
+            market = str(signal.get("market") or "").upper()
+            agent = str(signal.get("agent") or "")
+            if not market or not agent:
+                continue
+            point = {
+                "ts": ts,
+                "value": float(signal.get("value") or 0.0),
+                "fitness": float(signal.get("fitness") or 0.0),
+                "reward": float(signal.get("reward") or 0.0),
+                "agent": agent,
+                "market": market,
+            }
+            self._market_history[market].append(point)
+            self._agent_history[agent].append(point)
+
+    def live_market_snapshot(self) -> dict:
+        markets: list[dict[str, Any]] = []
+        for market, points in sorted(self._market_history.items()):
+            if not points:
+                continue
+            latest = points[-1]
+            prev = points[-2] if len(points) > 1 else latest
+            delta = latest["value"] - prev["value"]
+            pct = (delta / prev["value"] * 100.0) if prev["value"] else 0.0
+            markets.append({
+                "market": market,
+                "latest": latest,
+                "delta": delta,
+                "delta_pct": pct,
+                "points": list(points),
+            })
+
+        agents: list[dict[str, Any]] = []
+        for agent, points in sorted(self._agent_history.items()):
+            if not points:
+                continue
+            latest = points[-1]
+            agents.append({
+                "agent": agent,
+                "market": latest.get("market", ""),
+                "latest": latest,
+                "points": list(points),
+            })
+
+        return {
+            "ts": int(time.time()),
+            "markets": markets,
+            "agents": agents,
+        }
 
     def _loop(self) -> None:
         while not self._stop_event.is_set():
@@ -303,6 +360,11 @@ def api_suggestions() -> dict:
 @app.get("/api/locales")
 def api_locales() -> dict:
     return _sanitize(runtime.locales())
+
+
+@app.get("/api/markets/live")
+def api_markets_live() -> dict:
+    return _sanitize(runtime.live_market_snapshot())
 
 
 @app.get("/api/runtime/status")
