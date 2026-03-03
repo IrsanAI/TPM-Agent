@@ -138,6 +138,7 @@ class ForgeRuntime:
         self._agent_history: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=240))
         self.alert_prefs_file = self.paths.state_dir / "alert_prefs.json"
         self._last_alert_ts: dict[str, float] = {}
+        self.validation_report_file = self.paths.state_dir / "TPM_test_results.json"
 
     def _load_override_agents(self) -> list[dict]:
         if not self.override_agents_file.exists():
@@ -394,6 +395,32 @@ class ForgeRuntime:
         self._dispatch_alert("TEST", {"direction": "up", "confidence": 0.99}, 1.0)
         return {"ok": True, "message": "test alert dispatched"}
 
+
+    def backtest_summary(self) -> dict[str, Any]:
+        if not self.validation_report_file.exists():
+            return {"available": False, "reason": "validation report not found"}
+        try:
+            payload = json.loads(self.validation_report_file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {"available": False, "reason": f"invalid report: {exc}"}
+
+        tests = payload.get("tests", []) if isinstance(payload, dict) else []
+        compact = []
+        for t in tests:
+            if not isinstance(t, dict):
+                continue
+            compact.append({
+                "name": t.get("name", "unknown"),
+                "metric": t.get("metric"),
+                "passed": bool(t.get("passed")),
+                "p_value": t.get("p_value"),
+            })
+        return {
+            "available": True,
+            "generated_at_utc": payload.get("generated_at_utc"),
+            "tests": compact,
+        }
+
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             try:
@@ -488,6 +515,11 @@ def api_alert_test() -> dict:
 @app.get("/api/runtime/status")
 def api_runtime_status() -> dict:
     return _sanitize(runtime.runtime_status())
+
+
+@app.get("/api/backtest/summary")
+def api_backtest_summary() -> dict:
+    return _sanitize(runtime.backtest_summary())
 
 
 @app.post("/api/runtime/start")

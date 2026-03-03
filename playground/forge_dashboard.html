@@ -103,6 +103,13 @@
     <div class="domains" id="liveCards"></div>
   </section>
 
+  <section class="glass">
+    <h3>🧠 Engine Transparency</h3>
+    <div id="engineTransparency" class="hint">Waiting for runtime details…</div>
+    <h3 style="margin-top:10px;">📉 Validation / Backtest Snapshot</h3>
+    <div id="backtestSummary" class="hint">Waiting for validation report…</div>
+  </section>
+
   <section class="grid">
     <div class="glass">
       <h3>➕ Add Market Agent</h3>
@@ -126,7 +133,7 @@
 </div>
 
 <script>
-const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, pollErrors: 0 };
+const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, pollErrors: 0 };
 
 function setInfo() {
   document.getElementById('os').textContent = navigator.platform || 'unknown platform';
@@ -141,19 +148,21 @@ async function fetchJSON(url, opts={}) {
 }
 
 async function refreshAll() {
-  const [frameRes, runtimeRes, liveRes] = await Promise.allSettled([
+  const [frameRes, runtimeRes, liveRes, backtestRes] = await Promise.allSettled([
     fetchJSON('/api/frame'),
     fetchJSON('/api/runtime/status'),
-    fetchJSON('/api/markets/live')
+    fetchJSON('/api/markets/live'),
+    fetchJSON('/api/backtest/summary')
   ]);
 
   const frame = frameRes.status === 'fulfilled' ? frameRes.value : state.frame;
   const runtime = runtimeRes.status === 'fulfilled' ? runtimeRes.value : null;
   const live = liveRes.status === 'fulfilled' ? liveRes.value : state.markets;
+  const backtest = backtestRes.status === 'fulfilled' ? backtestRes.value : state.backtest;
 
-  if (frameRes.status === 'rejected' || runtimeRes.status === 'rejected' || liveRes.status === 'rejected') {
+  if (frameRes.status === 'rejected' || runtimeRes.status === 'rejected' || liveRes.status === 'rejected' || backtestRes.status === 'rejected') {
     state.pollErrors += 1;
-    const problems = [frameRes, runtimeRes, liveRes]
+    const problems = [frameRes, runtimeRes, liveRes, backtestRes]
       .filter(r => r.status === 'rejected')
       .map(r => r.reason?.message || 'unknown error')
       .join(' | ');
@@ -164,6 +173,7 @@ async function refreshAll() {
 
   state.frame = frame;
   state.markets = live;
+  state.backtest = backtest;
   renderRuntime(runtime || {
     engine_state: (frame.signals || []).length > 0 ? 'running' : 'idle',
     transition_action: 'poll-fallback',
@@ -172,6 +182,7 @@ async function refreshAll() {
   });
   renderFrame(frame);
   renderLive(live);
+  renderEngineTransparency(frame, backtest);
   document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
 }
 
@@ -249,6 +260,31 @@ function renderLive(live) {
       <div class="hint">glitch: ${m.glitch ? 'YES' : 'no'}</div>`;
     wrap.appendChild(card);
   });
+}
+
+
+function renderEngineTransparency(frame, backtest) {
+  const root = document.getElementById('engineTransparency');
+  const info = frame.engine_transparency || {};
+  const entropySummary = frame.entropy_summary || {};
+  const first = Object.entries(entropySummary)[0];
+  if (!Object.keys(info).length) {
+    root.innerHTML = '<div class="hint">No engine metadata yet. Wait for first processed tick.</div>';
+  } else {
+    const line = first ? `${first[0]} raw=${first[1].raw_points} filtered=${first[1].filtered_points} compressed=${first[1].compressed_points}` : 'no series yet';
+    root.innerHTML = `<div class="pill">${info.transfer_entropy_formula || ''}</div><div class="pill" style="margin-top:6px;">${info.black_hole_pipeline || ''}</div><div class="hint" style="margin-top:8px;">Series mode: ${info.series_used_for_te || 'n/a'} | ${line}</div>`;
+  }
+
+  const bt = document.getElementById('backtestSummary');
+  if (!backtest || !backtest.available) {
+    bt.innerHTML = '<div class="hint">No backtest report found at state/TPM_test_results.json yet.</div>';
+    return;
+  }
+  const rows = (backtest.tests || []).slice(0, 5).map(t => {
+    const mark = t.passed ? '✅' : '❌';
+    return `<div class="hint">${mark} ${t.name}: metric=${Number(t.metric || 0).toFixed(4)} p=${t.p_value}</div>`;
+  }).join('');
+  bt.innerHTML = `<div class="hint">Report: ${backtest.generated_at_utc || 'n/a'}</div>${rows}`;
 }
 
 async function runtimeStart() { await fetchJSON('/api/runtime/start', {method:'POST'}); refreshAll(); }
