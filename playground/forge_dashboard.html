@@ -126,7 +126,7 @@
 </div>
 
 <script>
-const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] } };
+const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, pollErrors: 0 };
 
 function setInfo() {
   document.getElementById('os').textContent = navigator.platform || 'unknown platform';
@@ -141,21 +141,38 @@ async function fetchJSON(url, opts={}) {
 }
 
 async function refreshAll() {
-  try {
-    const [frame, runtime, live] = await Promise.all([
-      fetchJSON('/api/frame'),
-      fetchJSON('/api/runtime/status'),
-      fetchJSON('/api/markets/live')
-    ]);
-    state.frame = frame;
-    state.markets = live;
-    renderRuntime(runtime);
-    renderFrame(frame);
-    renderLive(live);
-    document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
-  } catch (err) {
-    document.getElementById('alertStatus').textContent = `refresh failed: ${err.message}`;
+  const [frameRes, runtimeRes, liveRes] = await Promise.allSettled([
+    fetchJSON('/api/frame'),
+    fetchJSON('/api/runtime/status'),
+    fetchJSON('/api/markets/live')
+  ]);
+
+  const frame = frameRes.status === 'fulfilled' ? frameRes.value : state.frame;
+  const runtime = runtimeRes.status === 'fulfilled' ? runtimeRes.value : null;
+  const live = liveRes.status === 'fulfilled' ? liveRes.value : state.markets;
+
+  if (frameRes.status === 'rejected' || runtimeRes.status === 'rejected' || liveRes.status === 'rejected') {
+    state.pollErrors += 1;
+    const problems = [frameRes, runtimeRes, liveRes]
+      .filter(r => r.status === 'rejected')
+      .map(r => r.reason?.message || 'unknown error')
+      .join(' | ');
+    document.getElementById('alertStatus').textContent = `live warning (${state.pollErrors}): ${problems}`;
+  } else {
+    state.pollErrors = 0;
   }
+
+  state.frame = frame;
+  state.markets = live;
+  renderRuntime(runtime || {
+    engine_state: (frame.signals || []).length > 0 ? 'running' : 'idle',
+    transition_action: 'poll-fallback',
+    progress_pct: 100,
+    agent_count: (frame.signals || []).length
+  });
+  renderFrame(frame);
+  renderLive(live);
+  document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
 }
 
 function renderRuntime(runtime) {
@@ -165,22 +182,48 @@ function renderRuntime(runtime) {
   document.getElementById('agents').textContent = `Agents: ${runtime.agent_count || 0}`;
 }
 
+
+function renderMiniBars(elId, labels, values, color) {
+  const root = document.getElementById(elId);
+  if (!labels.length) {
+    root.innerHTML = '<div class="hint">No data yet – waiting for next runtime ticks.</div>';
+    return;
+  }
+  const maxVal = Math.max(...values.map(v => Math.abs(v)), 1e-9);
+  root.innerHTML = `<div class="hint">Chart fallback (Plotly unavailable)</div>` + labels.map((l, i) => {
+    const width = Math.max(2, Math.round((Math.abs(values[i]) / maxVal) * 100));
+    return `<div style="display:flex;align-items:center;gap:6px;margin:6px 0;"><span style="min-width:95px;font-size:11px;color:#9fb0d4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l}</span><div style="height:8px;border-radius:8px;background:${color};width:${width}%;"></div></div>`;
+  }).join('');
+}
+
 function renderFrame(frame) {
   document.getElementById('json').textContent = JSON.stringify(frame, null, 2);
   const signals = frame.signals || [];
   const x = signals.map(s => s.agent);
   const y = signals.map(s => Number(s.value || 0));
-  Plotly.react('signals', [{ x, y, type:'bar', marker:{color:'#7c5cff'} }], { title:'Signal Values' }, {displayModeBar:false});
+  if (window.Plotly && typeof window.Plotly.react === 'function') {
+    Plotly.react('signals', [{ x, y, type:'bar', marker:{color:'#7c5cff'} }], { title:'Signal Values' }, {displayModeBar:false});
+  } else {
+    renderMiniBars('signals', x, y, '#7c5cff');
+  }
 
   const graph = frame.transfer_entropy_graph || {};
   const edges = Object.keys(graph);
   const scores = edges.map(k => Number(graph[k] || 0));
-  Plotly.react('entropy', [{ x:edges, y:scores, type:'bar', marker:{color:'#60a5fa'} }], { title:'Transfer Entropy Graph' }, {displayModeBar:false});
+  if (window.Plotly && typeof window.Plotly.react === 'function') {
+    Plotly.react('entropy', [{ x:edges, y:scores, type:'bar', marker:{color:'#60a5fa'} }], { title:'Transfer Entropy Graph' }, {displayModeBar:false});
+  } else {
+    renderMiniBars('entropy', edges, scores, '#60a5fa');
+  }
 
   const domains = frame.domain_summary || {};
   const domEl = document.getElementById('domains');
   domEl.innerHTML = '';
-  Object.entries(domains).forEach(([name, d]) => {
+  const entries = Object.entries(domains);
+  if (!entries.length) {
+    domEl.innerHTML = '<div class="hint">No domain aggregates yet. Runtime will fill this after successful ticks.</div>';
+  }
+  entries.forEach(([name, d]) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `<div>${name}</div><div class="kpi">${(d.avg_fitness || 0).toFixed(2)}</div><div class="hint">markets: ${(d.markets || []).join(', ')}</div>`;
@@ -191,7 +234,12 @@ function renderFrame(frame) {
 function renderLive(live) {
   const wrap = document.getElementById('liveCards');
   wrap.innerHTML = '';
-  (live.markets || []).forEach(m => {
+  const markets = live.markets || [];
+  if (!markets.length) {
+    wrap.innerHTML = '<div class="hint">No live markets yet. Check source connectivity or wait for initial tick.</div>';
+    return;
+  }
+  markets.forEach(m => {
     const trend = m.delta_pct > 0 ? 'ok' : (m.delta_pct < 0 ? 'bad' : 'warn');
     const card = document.createElement('div');
     card.className = `card`;
