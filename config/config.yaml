@@ -6,8 +6,15 @@
     "logs_dir": "logs"
   },
   "alerts": {
-    "telegram": {"enabled": false, "bot_token": "", "chat_id": ""},
-    "signal": {"enabled": false, "endpoint": ""}
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": ""
+    },
+    "signal": {
+      "enabled": false,
+      "endpoint": ""
+    }
   },
   "engine": {
     "interval_seconds": 30,
@@ -27,40 +34,72 @@
       "future_tuple": "domain+future"
     },
     "domain_themes": {
-      "finance": {"accent": "#00d4ff", "gradient": ["#0a0f1f", "#11213a"], "icon": "📈"},
-      "weather": {"accent": "#3ddc97", "gradient": ["#071a1e", "#13343c"], "icon": "🌦️"},
-      "medical": {"accent": "#ff5f8a", "gradient": ["#220c16", "#3c1326"], "icon": "🧬"},
-      "seismic": {"accent": "#ffb347", "gradient": ["#2a1604", "#4e2a0a"], "icon": "🌋"}
+      "finance": {
+        "accent": "#00d4ff",
+        "gradient": [
+          "#0a0f1f",
+          "#11213a"
+        ],
+        "icon": "\ud83d\udcc8"
+      },
+      "weather": {
+        "accent": "#3ddc97",
+        "gradient": [
+          "#071a1e",
+          "#13343c"
+        ],
+        "icon": "\ud83c\udf26\ufe0f"
+      },
+      "medical": {
+        "accent": "#ff5f8a",
+        "gradient": [
+          "#220c16",
+          "#3c1326"
+        ],
+        "icon": "\ud83e\uddec"
+      },
+      "seismic": {
+        "accent": "#ffb347",
+        "gradient": [
+          "#2a1604",
+          "#4e2a0a"
+        ],
+        "icon": "\ud83c\udf0b"
+      }
     }
   },
   "agents": [
-    {
-      "name": "BTC_KRAKEN",
-      "domain": "finance",
-      "market": "BTC",
-      "source_type": "kraken",
-      "url": "https://api.kraken.com/0/public/OHLC?pair=XBTUSD&interval=60",
-      "weight": 1.0
-    },
     {
       "name": "BTC_BINANCE",
       "domain": "finance",
       "market": "BTC",
       "source_type": "binance",
       "url": "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
-      "weight": 0.9
+      "weight": 1.0
     },
     {
-      "name": "WEATHER_OPEN_METEO",
-      "domain": "weather",
-      "market": "BERLIN_TEMP",
-      "source_type": "open_meteo",
-      "url": "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m",
-      "weight": 0.7
+      "name": "COFFEE_ALPHA",
+      "domain": "finance",
+      "market": "COFFEE",
+      "source_type": "alphavantage_commodity",
+      "url": "https://www.alphavantage.co/query?function=COFFEE&interval=monthly&apikey=demo",
+      "weight": 0.95
     }
   ],
   "domain_templates": {
-    "medical": {"metric_keys": ["risk_index", "latency", "uptime"]},
-    "seismic": {"metric_keys": ["magnitude", "depth", "confidence"]}
+    "medical": {
+      "metric_keys": [
+        "risk_index",
+        "latency",
+        "uptime"
+      ]
+    },
+    "seismic": {
+      "metric_keys": [
+        "magnitude",
+        "depth",
+        "confidence"
+      ]
+    }
   }
 }
