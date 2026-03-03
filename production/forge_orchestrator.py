@@ -9,7 +9,7 @@ from urllib import request
 
 from core.forge_agents import DynamicAgentFactory
 from core.forge_config import load_config
-from core.forge_entropy import TransferEntropyEngine
+from core.forge_entropy import EntropySignalEngine, TransferEntropyEngine
 from core.forge_optimizer import NeuronalOptimizationEngine
 
 
@@ -26,6 +26,7 @@ class ForgeOrchestrator:
         self.agents = DynamicAgentFactory.build(self.config["agents"])
         engine_cfg = self.config["engine"]
         self.entropy = TransferEntropyEngine(bins=int(engine_cfg["entropy_bins"]), lag=int(engine_cfg["transfer_lag"]))
+        self.signal_entropy = EntropySignalEngine(bins=int(engine_cfg["entropy_bins"]))
         self.optimizer = NeuronalOptimizationEngine(lr=float(engine_cfg["reward_learning_rate"]))
         self.cache_file = self.paths.state_dir / "latest_prices.json"
         self.series = defaultdict(lambda: deque(maxlen=int(engine_cfg["lookback_window"])))
@@ -67,7 +68,16 @@ class ForgeOrchestrator:
                 agent.failures += 1
                 self.fail_state[agent.name] += 1
 
-        graph = self.entropy.correlation_graph({name: list(values) for name, values in self.series.items()})
+        series_payload = {name: list(values) for name, values in self.series.items()}
+        graph = self.entropy.correlation_graph(series_payload)
+        entropy_summary = {
+            name: {
+                "window_entropy": self.signal_entropy.shannon_entropy(values),
+                "compressed": self.signal_entropy.bottleneck_compress(values, out_points=20),
+            }
+            for name, values in series_payload.items()
+            if values
+        }
         predictive_power = (sum(graph.values()) / max(1, len(graph))) if graph else 0.0
 
         scored = []
@@ -101,6 +111,7 @@ class ForgeOrchestrator:
             "domain_summary": self._domain_summary(scored),
             "ui_profile": self.config.get("ui", {}),
             "transfer_entropy_graph": graph,
+            "entropy_summary": entropy_summary,
             "cull_candidates": cull,
         }
         self._store_cache(frame)
