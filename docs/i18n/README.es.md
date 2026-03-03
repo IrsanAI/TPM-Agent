@@ -1,10 +1,15 @@
+# TPM-Agent (es) — Full Canonical Mirror
+
+> This localized file is maintained in full parity with `README.md` to avoid content gaps across languages.
+> Automatic mirror mode ensures all sections, mermaid diagrams, commands and runbooks are identical in scope.
+
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](./README.es.md) | [🇮🇹 Italiano](./README.it.md) | [🇧🇦 Bosanski](./README.bs.md) | [🇷🇺 Русский](./README.ru.md) | [🇨🇳 中文](./README.zh-CN.md) | [🇫🇷 Français](./README.fr.md) | [🇧🇷 Português (BR)](./README.pt-BR.md) | [🇮🇳 हिन्दी](./README.hi.md) | [🇹🇷 Türkçe](./README.tr.md) | [🇯🇵 日本語](./README.ja.md)
+[🇬🇧 English](./README.md) | [🇩🇪 Deutsch](./README.de.md) | [🇪🇸 Español](./docs/i18n/README.es.md) | [🇮🇹 Italiano](./docs/i18n/README.it.md) | [🇧🇦 Bosanski](./docs/i18n/README.bs.md) | [🇷🇺 Русский](./docs/i18n/README.ru.md) | [🇨🇳 中文](./docs/i18n/README.zh-CN.md) | [🇫🇷 Français](./docs/i18n/README.fr.md) | [🇧🇷 Português (BR)](./docs/i18n/README.pt-BR.md) | [🇮🇳 हिन्दी](./docs/i18n/README.hi.md) | [🇹🇷 Türkçe](./docs/i18n/README.tr.md) | [🇯🇵 日本語](./docs/i18n/README.ja.md)
 
-Bootstrap limpio para una configuración autónoma multiagente (BTC, COFFEE y más), con opciones de ejecución multiplataforma.
+A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) with cross-platform runtime options.
 
-## Qué incluye
+## What's Included
 
 - `production/preflight_manager.py` – resilient market source probing with Alpha Vantage + fallback chain and local cache fallback.
 - `production/tpm_agent_process.py` – simple per-market agent loop.
@@ -15,7 +20,7 @@ Bootstrap limpio para una configuración autónoma multiagente (BTC, COFFEE y m�
 - `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – process ops helpers.
 - `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operational core tooling.
 
-## Inicio rápido universal
+## Universal Quickstart
 
 ```bash
 python scripts/tpm_cli.py env
@@ -24,77 +29,133 @@ python scripts/tpm_cli.py preflight --market ALL
 python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600
 ```
 
-## Verificación de cadena runtime (sanidad causal/orden)
+## Runtime Chain Check (causal/order sanity)
 
-El flujo por defecto del repositorio es intencionalmente lineal para evitar deriva de estado oculta y "falsa confianza" durante ejecuciones en vivo.
+The default repo flow is intentionally linear to avoid hidden-state drift and "false confidence" during live runs.
 
 ```mermaid
 flowchart LR
-  A[1. verificación de entorno] --> B[2. validar]
+  A[1. env check] --> B[2. validate]
   B --> C[3. preflight ALL]
-  C --> D[4. monitor en vivo]
-  D --> E[5. prueba de estrés]
+  C --> D[4. live monitor]
+  D --> E[5. stress test]
 ```
 
-### Lógica de puertas (qué debe cumplirse antes del siguiente paso)
-- **Gate 1 – Entorno:** el contexto Python/plataforma es correcto (`env`).
-- **Gate 2 – Solidez científica:** el comportamiento base del modelo es reproducible (`validate`).
-- **Gate 3 – Fiabilidad de fuentes:** datos de mercado + cadena fallback disponibles (`preflight --market ALL`).
-- **Gate 4 – Ejecución runtime:** el bucle live corre con historial de entrada conocido (`live`).
-- **Gate 5 – Confianza adversarial:** objetivos de latencia/failover se mantienen bajo estrés (`stress_test_suite.py`).
+### Gate logic (what must be true before the next step)
+- **Gate 1 – Environment:** Python/platform context is correct (`env`).
+- **Gate 2 – Scientific sanity:** baseline model behavior is reproducible (`validate`).
+- **Gate 3 – Source reliability:** market data + fallback chain are reachable (`preflight --market ALL`).
+- **Gate 4 – Runtime execution:** live loop runs with known input history (`live`).
+- **Gate 5 – Adversarial confidence:** latency/failover targets hold under stress (`stress_test_suite.py`).
 
-✅ Ya corregido en código: el preflight del CLI ya soporta `--market ALL`, alineado con quickstart + flujo docker.
+✅ Already fixed in code: CLI preflight now supports `--market ALL`, matching quickstart + docker flow.
 
-## Elige tu misión (CTA por rol)
+## Choose Your Mission (role-based CTA)
 
-> **¿Eres X? Elige tu ruta. Comienza en <60 segundos.**
+> **You are X? Click your lane. Start in <60 seconds.**
 
-| Perfil | Lo que te importa | Ruta | Primer comando |
+| Persona | What you care about | Click path | First command |
 |---|---|---|---|
-| 📈 **Trader** | Pulso rápido, runtime accionable | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
-| 💼 **Inversor** | Estabilidad, confianza en fuentes, resiliencia | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
-| 🔬 **Científico** | Evidencia, pruebas, señal estadística | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
-| 🧠 **Teórico** | Estructura causal + arquitectura futura | [`core/scout.py`](./core/scout.py) + [`Próximos pasos`](#próximos-pasos) | `python scripts/tpm_cli.py validate` |
-| 🛡️ **Escéptico (prioridad)** | Romper supuestos antes de producción | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
-| ⚙️ **Operador / DevOps** | Uptime, salud de proceso, recuperabilidad | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
+| 📈 **Trader** | Fast pulse, actionable runtime | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
+| 💼 **Investor** | Stability, source trust, resilience | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
+| 🔬 **Scientist** | Evidence, tests, statistical signal | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
+| 🧠 **Theoretician** | Causal structure + future architecture | [`core/scout.py`](./core/scout.py) + [`Next Steps`](#next-steps) | `python scripts/tpm_cli.py validate` |
+| 🛡️ **Skeptic (priority)** | Break assumptions before production | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
+| ⚙️ **Operator / DevOps** | Uptime, process health, recoverability | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
 
-### Desafío escéptico (recomendado primero para nuevos visitantes)
-Si haces **solo una cosa**, ejecuta esto y revisa la salida del informe:
+### Skeptic Challenge (recommended first for new visitors)
+If you do **only one thing**, run this and inspect the report output:
 
 ```bash
 python scripts/tpm_cli.py preflight --market ALL
 python scripts/stress_test_suite.py
 ```
 
-Si esta ruta te convence, probablemente el resto del repositorio también te encaje.
+If this lane convinces you, the rest of the repository will likely resonate too.
 
-## Notas de plataforma
+## Platform Notes
 
 - **Android / Termux (Samsung, etc.)**
   ```bash
-  pkg install termux-api -y
+  bash scripts/termux_bootstrap.sh
+  cd ~/TPM-Agent
+  python scripts/tpm_cli.py env
+  python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
-- **iPhone (mejor esfuerzo):** usa apps shell como iSH / a-Shell. Los hooks de notificación específicos de Termux no están disponibles allí.
-- **Windows / Linux / macOS**: usa los mismos comandos CLI; ejecútalos vía tmux/scheduler/cron para persistencia.
+  For direct Android (Termux) web UI demo, start Forge runtime locally:
+  ```bash
+  cd ~/TPM-Agent
+  bash scripts/termux_forge.sh start
+  # stop: bash scripts/termux_forge.sh stop
+  # status: bash scripts/termux_forge.sh status
+  ```
+  The script auto-opens browser (if available) and keeps service running in background.
+  If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
+  `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
+  In the web interface you can control runtime start/stop; a progress bar shows transition status.
+- **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
+- **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
 
-## Docker (camino más fácil entre sistemas)
+## Docker (Cross-OS Easiest Path)
+
+Use Docker in this exact order (no guessing):
+
+### Step 1: Build the web runtime image
+
+```bash
+docker compose build --no-cache tpm-forge-web
+```
+
+### Step 2: Start the web dashboard service
+
+```bash
+docker compose up tpm-forge-web
+```
+
+Now open `http://localhost:8787` in your browser (**not** `http://0.0.0.0:8787`). Uvicorn binds to `0.0.0.0` internally, but clients should use `localhost` (or the host LAN IP).
+
+### Step 3 (optional checks): understand the non-web services
 
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-Opcional para mejorar la calidad de la fuente COFFEE:
+- `tpm-preflight` = source/connectivity checks (CLI output only).
+- `tpm-live` = terminal live-monitor logs (CLI output only, **no web UI**).
+- `tpm-forge-web` = FastAPI + dashboard UI (the one with layout/progress/runtime control).
+
+If `tpm-preflight` reports `ALPHAVANTAGE_KEY not set`, COFFEE still works via fallbacks.
+
+If the page looks blank:
+- test API directly: `http://localhost:8787/api/frame`
+- test FastAPI docs: `http://localhost:8787/docs`
+- hard refresh browser (`Ctrl+F5`)
+- if needed, restart only web service: `docker compose restart tpm-forge-web`
+
+Optional for better COFFEE quality:
 
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
 docker compose run --rm tpm-preflight
 ```
 
-## Validación
+## Glitch predictions & mobile alerts
 
-Ejecuta el pipeline de validación científica:
+- Forge live cockpit now exposes per-market short-horizon outlook (`up/down/sideways`) with confidence in `/api/markets/live`.
+- When a market glitch is detected (acceleration spike), runtime can trigger:
+  - Termux toast + vibration
+  - optional notification/beep hook
+  - optional Telegram push (if bot token/chat id configured in `config/config.yaml`).
+- Configure in dashboard via **Save Alerts** / **Test Alert** or API:
+  - `GET /api/alerts/preferences`
+  - `POST /api/alerts/preferences`
+  - `POST /api/alerts/test`
+
+## Validation
+
+Run the scientific validation pipeline:
 
 ```bash
 python core/tpm_scientific_validation.py
@@ -104,7 +165,7 @@ Artifacts:
 - `state/TPM_Scientific_Report.md`
 - `state/TPM_test_results.json`
 
-## Fuentes y failover
+## Sources & Failover
 
 `production/preflight_manager.py` supports:
 - Alpha Vantage first for COFFEE (when `ALPHAVANTAGE_KEY` is set)
@@ -129,13 +190,66 @@ Output: `state/stress_test_report.json`
 
 
 
+
+
+
+## Live status: what the TPM agent can do today
+
+**Current state:**
+- Production Forge web runtime is available (`production.forge_runtime:app`).
+- Finance-first start configuration uses **BTC + COFFEE**.
+- Live frame, agent fitness, transfer entropy, and domain summary are visible in the web dashboard.
+- Users can add new market agents at runtime (`POST /api/agents`).
+
+**Target capability (should-have):**
+- Real-data benchmarking with explicit acceptance thresholds (precision/recall/FPR/drift).
+- Strict reflexive governance rules for auto safe-mode.
+- Collective-memory workflow for versioned per-domain learning patterns.
+
+**Next expansion stage:**
+- Regime-based policy orchestrator (trend/shock/sideways) across all agents.
+- One non-finance domain pilot (e.g. medical or seismic) with explicit data contracts.
+
+
+## PR merge conflict helper
+
+- Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
+
+
+### Scope today: Windows + smartphone for finance TPM
+
+- **Windows:** Forge runtime + web interface + Docker/PowerShell/click-start are operational.
+- **Smartphone:** Android/Termux live-monitoring is operational; web UI is responsive on mobile.
+- **Realtime multi-agent:** BTC + COFFEE active by default; additional markets can be added dynamically in the web UI.
+- **Source boundary rule:** if requested market is not covered by built-in sources, provide explicit source URL + authorization data.
+
+## Windows live test (two-path system)
+
+### Path A — Developer/power users (PowerShell, CMD, PyCharm, IDE)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
+```
+
+### Path B — Low-level users (click & start)
+
+1. Double-click `scripts/windows_click_start.bat`
+2. Script auto-selects best available path:
+   - Python available -> venv + pip + runtime
+   - otherwise Docker Compose (if available)
+
+Technical base: `scripts/windows_bootstrap.ps1`.
+
 ## Forge Production Web Runtime (BTC + COFFEE, extensible)
 
-This runtime is now synchronized with the EN/DE canonical versions:
+Yes, this has **already started** in the repo and is now extended:
 
 - Starts by default with one finance TPM agent for **BTC** and one for **COFFEE**.
-- Users can add more markets/agents directly in the web UI (`/api/agents`).
-- Runs as a persistent service with live frame visibility (`/api/frame`).
+- Users can add more markets/agents directly from the web UI (`/api/agents`).
+- Runs as a persistent runtime service with live frame output (`/api/frame`) for immersive insight.
 
 ### Start (local)
 
@@ -151,65 +265,55 @@ docker compose up tpm-forge-web
 # open http://localhost:8787
 ```
 
-### Windows two-path quick access (synchronized)
+## TPM Playground (interactive MVP)
 
-```powershell
-python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
-```
-
-Or click-start:
-- `scripts/windows_click_start.bat`
-- auto-mode logic in `scripts/windows_bootstrap.ps1`
-
-## TPM Playground (MVP interactivo)
-
-Ahora puedes explorar el comportamiento de TPM de forma interactiva en el navegador:
+You can now explore TPM behavior interactively in the browser:
 
 ```bash
 python -m http.server 8765
 # open http://localhost:8765/playground/index.html
 ```
 
-Incluye:
-- Vista de anomalías de señal débil en agente único
-- Mini enjambre (BTC/COFFEE/VOL) con presión de consenso
-- Resonancia de transferencia entre dominios (sintético: finanzas/clima/salud)
+Includes:
+- Single agent weak-signal anomaly view
+- Mini swarm (BTC/COFFEE/VOL) consensus pressure
+- Cross-domain transfer resonance (synthetic finance/weather/health)
 
 See: `playground/README.md`.
-## Próximos pasos
+## Next Steps
 
-- Módulo de entropía de transferencia para análisis causal entre mercados.
-- Optimizador con actualizaciones de política basadas en rendimiento histórico.
+- Transfer entropy module for cross-market causal analysis.
+- Optimizer with policy updates based on historical performance.
 - Alert channels (Telegram/Signal) + boot persistence.
 
 
 ---
 
-## IrsanAI Deep Dive: cómo "piensa" el núcleo TPM en sistemas complejos
+## IrsanAI Deep Dive: How the TPM core "thinks" in complex systems
 
-### 1) Transformación visionaria: de agente de trading a ecosistema TPM universal
+### 1) Visionary transformation: from trading agent to universal TPM ecosystem
 
-### ¿Qué hace único al algoritmo IrsanAI-TPM? (marco corregido)
+### What is unique about the IrsanAI-TPM algorithm? (corrected framing)
 
-Hipótesis de trabajo del núcleo TPM:
+Working hypothesis of the TPM core:
 
-- En sistemas complejos y caóticos, la señal temprana suele ocultarse en el **micro-residual**: pequeñas desviaciones, correlaciones débiles y puntos casi vacíos.
-- Donde los sistemas clásicos solo ven `0` o "relevancia insuficiente", TPM busca **anomalías estructuradas** (patrones glitch) en el flujo de contexto.
-- TPM no evalúa solo el valor, sino también el **cambio de relaciones en el tiempo, la calidad de fuente, el régimen y el vecindario causal**.
+- In complex, chaotic systems, early-warning signal is often hidden in the **micro-residual**: tiny deviations, weak correlations, almost-empty data points.
+- Where classic systems see only `0` or "not enough relevance", TPM searches for **structured anomalies** (glitch patterns) in context flow.
+- TPM evaluates not only a value itself, but the **change of relationships over time, source quality, regime, and causal neighborhood**.
 
-Nota de corrección importante: TPM **no** predice mágicamente el futuro. Busca **detección probabilística temprana** de cambios de régimen, rupturas y disrupciones, cuando se cumplen calidad de datos y compuertas de validación.
+Important correctness note: TPM does **not** magically predict the future. It aims for **earlier probabilistic detection** of regime shifts, breakouts, and disruptions — when data quality and validation gates are satisfied.
 
-### Pensar en GRANDE: por qué esto va más allá de finanzas
+### Think BIG: why this extends beyond finance
 
-Si TPM puede detectar patrones precursores débiles en instrumentos financieros (identificadores tipo index/ticker/ISIN, liquidez, microestructura), el mismo principio puede generalizarse a muchos dominios:
+If TPM can detect weak precursor patterns in financial instruments (index/ticker/ISIN-like identifiers, liquidity, microstructure), the same principle can generalize to many domains:
 
 - **Event/sensor stream + context model + anomaly layer + feedback loop**
-- Cada profesión puede modelarse como un "mercado" con rasgos de dominio, nodos, correlaciones y anomalías
-- Agentes TPM especializados pueden aprender entre dominios preservando lógica y ética profesional local
+- Every profession can be modeled as a "market" with domain-specific features, nodes, correlations, and anomalies
+- Specialized TPM agents can learn across domains while preserving local professional logic and ethics
 
-### 100 profesiones como espacios objetivo TPM
+### 100 professions as TPM target spaces
 
-| # | Profesión | Análogo de datos TPM | Objetivo de detección de anomalías/patrones |
+| # | Profession | TPM data analog | Anomaly/pattern-detection target |
 |---|---|---|---|
 | 1 | Police analyst | Incident logs, geotemporal crime maps, networks | Early signals of escalating crime clusters |
 | 2 | Fire service commander | Alarm chains, sensor feeds, weather, building profiles | Predict fire and hazard propagation windows |
@@ -312,26 +416,26 @@ Si TPM puede detectar patrones precursores débiles en instrumentos financieros 
 | 99 | Anthropologist | Field observations, language/social networks | Detect cultural-shift conflict precursors |
 | 100 | Foresight strategist | Tech curves, regulation, behavior data | Connect scenarios with early indicators |
 
-### Notas por país (equivalencia profesional entre jurisdicciones)
+### Country-fit notes (profession equivalence across jurisdictions)
 
-Para mantener la lista lógicamente correcta entre regiones, el mapeo de roles TPM debe interpretarse como **equivalentes funcionales**, no como traducción literal de cargos:
+To keep the list logically correct across regions, TPM role-mapping should be interpreted as **functional equivalents**, not literal job-title translation:
 
 - **Germany ↔ US/UK:** `Polizei` vs split functions (`Police Department`, `Sheriff`, `State Trooper`) and prosecution differences (`Staatsanwaltschaft` vs `District Attorney/Crown Prosecution`).
-- **España / Italia:** estructuras de derecho civil con flujos judiciales y policiales diferenciados; los pipelines de datos suelen dividirse entre sistemas regionales y nacionales.
-- **Bosnia y Herzegovina:** la gobernanza multi-entidad implica propiedad de datos fragmentada; TPM se beneficia de fusión federada de anomalías.
-- **Rusia / China:** las definiciones de rol y restricciones de gobierno de datos difieren; TPM debe configurarse con límites locales de cumplimiento y equivalentes institucionales.
-- **Regiones adicionales de alto impacto:** Francia, Brasil, India, Japón, estados MENA y África Subsahariana pueden incorporarse mapeando funciones equivalentes y telemetría disponible.
+- **Spain / Italy:** civil-law structures with distinct court and policing workflows; data pipelines often split between regional and national systems.
+- **Bosnia and Herzegovina:** multi-entity governance means fragmented data ownership; TPM benefits from federated anomaly fusion.
+- **Russia / China:** role definitions and data-governance constraints differ; TPM must be configured with local compliance boundaries and institutional equivalents.
+- **Additional high-impact regions:** France, Brazil, India, Japan, MENA states, and Sub-Saharan Africa can be onboarded by mapping equivalent functions and available telemetry.
 
-### Perspectiva filosófico-científica
+### Philosophical-scientific outlook
 
-- De herramienta a **infraestructura epistémica**: los dominios operacionalizan el "conocimiento temprano débil".
-- De sistemas aislados a **federaciones de agentes**: ética local + gramática compartida de anomalías.
-- De respuesta reactiva a **gobernanza anticipatoria**: prevenir en vez de controlar tarde la crisis.
-- De modelos estáticos a **teorías vivas**: recalibración continua ante shocks del mundo real.
+- From tool to **epistemic infrastructure**: domains operationalize "weak early knowledge".
+- From isolated systems to **agent federations**: local ethics + shared anomaly grammar.
+- From reactive response to **anticipatory governance**: prevention over late crisis control.
+- From static models to **living theories**: continuous recalibration under real-world shocks.
 
-Idea central: un clúster TPM gobernado con responsabilidad no controla el caos, pero ayuda a las instituciones a entenderlo antes, conducirlo con mayor robustez y decidir de forma más humana.
+Core idea: a responsibly governed TPM cluster cannot control chaos — but it can help institutions understand it earlier, steer it more robustly, and decide more humanely.
 
-## Expansión multilingüe (en progreso)
+## Multilingual expansion (in progress)
 
 To support cross-language resonance, localized strategic overviews are available in:
 
@@ -346,14 +450,50 @@ To support cross-language resonance, localized strategic overviews are available
 - Turkish (`docs/i18n/README.tr.md`)
 - Japanese (`docs/i18n/README.ja.md`)
 
-Cada archivo localizado incluye notas de ajuste regional y remite a esta sección canónica para la matriz completa de 100 profesiones.
+Each localized file includes region-fit notes and points back to this canonical English section for the full 100-profession matrix.
 
-## LOP (Endnote – prioritized)
+## IrsanAI Quality Meta (SOLL vs IST)
 
-1. **P1 Expand real-data evidence:** benchmarking with explicit acceptance criteria (precision/recall/FPR/drift).
-2. **P2 Finalize reflexive governance:** define strict auto safe-mode rules for uncertainty.
-3. **P3 Standardize collective memory:** versioned learning patterns with per-domain review process.
-4. **P4 Continue web immersion rollout:** role-based views for additional TPM sectors on top of the responsive runtime layout.
+Für den aktuellen Reifegrad des Repos, den Qualitätszwischenstand und die kausale Roadmap auf Basis realer Nutzererwartungen siehe:
 
-**Platform note:** current primary focus is **Windows + smartphone**. **Add later at the end of LOP:** macOS, Linux, and further platform profiles.
+- `docs/IRSANAI_QUALITY_META.md`
+
+Dieses Dokument ist ab sofort Referenz für:
+- Anspruchstiefe bei Features (UX/UI + operative Robustheit),
+- Docker/Android-Paritätsanforderungen,
+- sowie Akzeptanz-Qualitätsgates für kommende PRs.
+
+## Hinweis für Entwickler (LOP – Liste offener Punkte)
+
+Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
+
+| Punkt | Aktueller Stand | Wie man sinnvoll fortsetzt |
+|---|---|---|
+| **Transfer-Entropy-Modul für Cross-Market-Kausalität** | **Erledigt ✅** – als `TransferEntropyEngine` implementiert und im Forge-Orchestrator verdrahtet. | Fachliche Kalibrierung ergänzen: domänenspezifische Schwellen und Interpretationsregeln definieren. |
+| **Optimizer/Policy-Update auf Basis Historie** | **Erledigt ✅** – Fitness-Scoring, Reward-Update und Candidate-Culling laufen im Tick-Zyklus. | Betriebsmodi dokumentieren (konservativ/aggressiv) und als Governance-Profile testbar machen. |
+| **Alerting (Telegram/Signal)** | **Teilweise erledigt 🟡** – Infrastruktur ist vorhanden, standardmäßig aber deaktiviert. | Alarmrichtlinie festlegen: welche Events, welche Schweregrade, welcher Kanal, wer reagiert. |
+| **Boot-Persistenz / Dauerbetrieb** | **Teilweise erledigt 🟡** – Start- und Health-Monitoring per tmux existieren, aber kein einheitliches Boot-Runbook für alle Zielplattformen. | Plattformprofile (Termux/Linux/Docker) mit Start-bei-Boot, Restart-Policy und Eskalationspfad schriftlich definieren. |
+| **Koordiniertes Meta-Layer (aus „Nächste Ausbaustufe (promotet)“)** | **Teilweise erledigt 🟡** – Teile sind vorhanden (Orchestrator + Entropie + Reward), aber noch nicht als vollständiger Regime-Policy-Orchestrator beschrieben. | Ein explizites fachliches Steuerungsmodell (Trend/Schock/Sideways) für Agentengewichte ergänzen. |
+| **Collective Memory (versionssicheres Lernmuster-Archiv)** | **Offen 🔴** – in den Vision/Weiterentwicklungsabschnitten genannt, aber noch ohne klaren fachlichen Speicher- und Review-Prozess. | Lernmuster-Format, Versionslogik und Qualitätskriterien (wann Muster „gültig“ wird) definieren. |
+| **Reflexive Governance (automatisch konservativer Modus bei Unsicherheit)** | **Offen 🔴** – als Zielbild benannt, aber noch nicht als fachliche Entscheidungsregel formalisiert. | Unsicherheitsindikatoren und harte Umschaltbedingungen in ein Governance-Regelwerk überführen. |
+| **Domänenausbau über Finance/Weather hinaus** | **Offen 🔴** – weitere Domänen sind als Vision/Templates angelegt, aber fachlich noch nicht in produktive Datenverträge überführt. | Einen nächsten Domänenpiloten (z. B. Medical oder Seismic) mit klaren Metriken und Datenquellen starten. |
+| **Wissenschaftliche Evidenz auf Realdaten erweitern** | **Offen 🔴** – aktuelle Validierung ist robust, jedoch auf synthetischen Regime-Segmenten aufgebaut. | Realdaten-Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift) ergänzen. |
+| **Sprachübergreifende Resonanz / i18n-Ausbau** | **Teilweise erledigt 🟡** – mehrere Sprach-Landingpages existieren; Ausbau ist explizit als „in progress“ markiert. | Synchronisationsprozess definieren (wann Änderungen aus Root-README in alle i18n-READMEs propagiert werden). |
+
+Kurzfazit: Die früheren „Next Steps“ sind **technisch zu großen Teilen gestartet oder umgesetzt**; der größte Hebel liegt jetzt in **fachlicher Operationalisierung** (Governance, Policies, Domänenlogik, Realdaten-Evidenz) und **konsistentem Doku-/i18n-Betrieb**.
+
+### LOP execution plan
+
+For implementation sequencing, done-criteria and evidence gates for each open LOP point, see:
+
+- `docs/LOP_EXECUTION_PLAN.md`
+
+## LOP (Endnote – priorisiert)
+
+1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
+2. **P2 Reflexive Governance finalisieren:** harte Auto-Safe-Mode-Regeln bei Unsicherheit definieren.
+3. **P3 Collective Memory standardisieren:** versionssichere Lernmuster inkl. Review-Prozess je Domäne.
+4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
+
+**Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
 

@@ -595,6 +595,16 @@ Dieses Dokument ist ab sofort Referenz für:
 - Docker/Android-Paritätsanforderungen,
 - sowie Akzeptanz-Qualitätsgates für kommende PRs.
 
+## i18n parity mode (full mirror)
+
+To ensure no language community is content-disadvantaged, i18n files are now maintained in full canonical parity with `README.md`.
+
+Sync command:
+
+```bash
+python scripts/i18n_full_mirror_sync.py
+```
+
 ## Hinweis für Entwickler (LOP – Liste offener Punkte)
 
 Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
