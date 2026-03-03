@@ -2,6 +2,8 @@
 
 ## 1) Playground (simulation onboarding)
 
+## 1) Playground (simulation onboarding)
+
 Run:
 
 ```bash

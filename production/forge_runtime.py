@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import threading
 import time
 from pathlib import Path
@@ -31,6 +32,56 @@ SUGGESTED_MARKETS: dict[str, list[dict[str, str]]] = {
 }
 
 REQUIRES_API_KEY = {"alphavantage_commodity"}
+
+LOCALE_LABELS = {
+    "en": "English",
+    "de": "Deutsch",
+    "bs": "Bosanski",
+    "es": "Español",
+    "fr": "Français",
+    "hi": "हिन्दी",
+    "it": "Italiano",
+    "ja": "日本語",
+    "pt-BR": "Português (Brasil)",
+    "ru": "Русский",
+    "tr": "Türkçe",
+    "zh-CN": "中文（简体）",
+}
+
+
+def _discover_locales() -> list[dict[str, str]]:
+    repo_root = Path(__file__).resolve().parents[1]
+    i18n_dir = repo_root / "docs" / "i18n"
+    locales: list[dict[str, str]] = [{
+        "code": "en",
+        "label": LOCALE_LABELS.get("en", "English"),
+        "doc_path": "README.md",
+    }, {
+        "code": "de",
+        "label": LOCALE_LABELS.get("de", "Deutsch"),
+        "doc_path": "README.de.md",
+    }]
+    if i18n_dir.exists():
+        for file in sorted(i18n_dir.glob("README.*.md")):
+            match = re.match(r"README\.(.+)\.md$", file.name)
+            if not match:
+                continue
+            code = match.group(1)
+            locales.append({
+                "code": code,
+                "label": LOCALE_LABELS.get(code, code),
+                "doc_path": f"docs/i18n/{file.name}",
+            })
+
+    seen: set[str] = set()
+    deduped: list[dict[str, str]] = []
+    for item in locales:
+        code = item["code"]
+        if code in seen:
+            continue
+        seen.add(code)
+        deduped.append(item)
+    return deduped
 
 
 def _sanitize(value: Any) -> Any:
@@ -102,6 +153,9 @@ class ForgeRuntime:
             "observed_markets": observed_markets,
             "requires_api_key": sorted(REQUIRES_API_KEY),
         }
+
+    def locales(self) -> dict:
+        return {"locales": _discover_locales()}
 
     def runtime_status(self) -> dict:
         transition = self._transition
@@ -244,6 +298,11 @@ def api_agents() -> dict:
 @app.get("/api/suggestions")
 def api_suggestions() -> dict:
     return _sanitize(runtime.market_suggestions())
+
+
+@app.get("/api/locales")
+def api_locales() -> dict:
+    return _sanitize(runtime.locales())
 
 
 @app.get("/api/runtime/status")

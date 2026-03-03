@@ -30,17 +30,20 @@
 <body>
 <div class="wrap">
   <section class="glass">
-    <h1 style="margin:0">⚒️ TPM Production Runtime (Finance: BTC + COFFEE + dynamic markets)</h1>
+    <h1 id="titleMain" style="margin:0">⚒️ IrsanAI TPM-Agent Forge Runtime (Finance: BTC + COFFEE + dynamic markets)</h1>
     <div class="meta">
       <span class="pill" id="os"></span>
       <span class="pill" id="device"></span>
       <span class="pill" id="agents">Agents: 0</span>
-      <span class="pill">Windows + Smartphone first</span>
+      <span class="pill" id="platformPill">Windows + Smartphone first</span>
+      <span class="pill" id="localeCount">Locales: 0</span>
     </div>
     <div class="tips">
       <span class="pill" id="runtimeState">Runtime: unknown</span>
-      <button onclick="runtimeStart()">Start Runtime</button>
-      <button onclick="runtimeStop()">Stop Runtime</button>
+      <button id="startBtn" onclick="runtimeStart()">Start Runtime</button>
+      <button id="stopBtn" onclick="runtimeStop()">Stop Runtime</button>
+      <select id="localeSelect" onchange="setLocale(this.value)" style="max-width:220px"></select>
+      <a id="localeDoc" class="pill" href="/README.md" target="_blank" rel="noopener">Open language guide</a>
     </div>
     <div class="glass" id="runtimeControls" style="margin-top:10px">
       <div class="hint">Service control with persisted state. You can stop/start from browser.</div>
@@ -62,14 +65,14 @@
       <div id="entropy" style="height:300px"></div>
     </div>
     <div class="glass">
-      <h3 style="margin-top:0">Domains</h3>
+      <h3 id="domainsTitle" style="margin-top:0">IrsanAI Domain Pulse</h3>
       <div class="domains" id="domains"></div>
     </div>
   </section>
 
   <section class="grid">
     <div class="glass">
-      <h3 style="margin-top:0">Add market agent</h3>
+      <h3 id="addAgentTitle" style="margin-top:0">Add market agent</h3>
       <div class="form-grid">
         <select id="sourceType" onchange="applySourceSuggestion()">
           <option value="binance">binance (public)</option>
@@ -84,20 +87,98 @@
         <input id="apiKey" placeholder="API key (required for protected sources)" />
         <input id="url" placeholder="Source URL" style="grid-column:1/-1" />
       </div>
-      <button onclick="addAgent()" style="margin-top:8px">Agent hinzufügen</button>
+      <button id="addAgentBtn" onclick="addAgent()" style="margin-top:8px">Add Agent</button>
       <p id="addResult" class="hint"></p>
       <p class="hint">If market is not available from existing sources, provide exact source URL + credentials (API key etc.).</p>
       <p class="hint" id="sourceHints"></p>
     </div>
     <div class="glass">
-      <h3 style="margin-top:0">Live Frame</h3>
+      <h3 id="liveFrameTitle" style="margin-top:0">IrsanAI Live Frame</h3>
       <pre id="json"></pre>
     </div>
   </section>
 </div>
 
 <script>
+const I18N = {
+  en: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finance: BTC + COFFEE + dynamic markets)',
+    platformPill: 'Windows + Smartphone first',
+    runtimeUnknown: 'Runtime: unknown',
+    startBtn: 'Start Runtime',
+    stopBtn: 'Stop Runtime',
+    localeDoc: 'Open language guide',
+    domainsTitle: 'IrsanAI Domain Pulse',
+    addAgentTitle: 'Add market agent',
+    addAgentBtn: 'Add Agent',
+    liveFrameTitle: 'IrsanAI Live Frame'
+  },
+  de: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finanzen: BTC + COFFEE + dynamische Märkte)',
+    platformPill: 'Windows + Smartphone zuerst',
+    runtimeUnknown: 'Runtime: unbekannt',
+    startBtn: 'Runtime starten',
+    stopBtn: 'Runtime stoppen',
+    localeDoc: 'Sprach-Guide öffnen',
+    domainsTitle: 'IrsanAI Domain-Puls',
+    addAgentTitle: 'Markt-Agent hinzufügen',
+    addAgentBtn: 'Agent hinzufügen',
+    liveFrameTitle: 'IrsanAI Live-Frame'
+  }
+};
+
+let currentLocale = 'en';
+let locales = [];
+
 let suggestions = {suggested_by_source:{}, active_markets:[], observed_markets:[], requires_api_key:[]};
+
+async function loadLocales(){
+  try {
+    const r = await fetch('/api/locales');
+    const data = await r.json();
+    locales = data.locales || [];
+  } catch (_) {
+    locales = [{code:'en',label:'English',doc_path:'README.md'}];
+  }
+  const select = document.getElementById('localeSelect');
+  select.innerHTML = '';
+  locales.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.code;
+    opt.textContent = `${item.label} (${item.code})`;
+    select.appendChild(opt);
+  });
+  const browserLang = (navigator.language || 'en').toLowerCase();
+  const hit = locales.find(l => l.code.toLowerCase() === browserLang)
+    || locales.find(l => l.code.toLowerCase() === browserLang.split('-')[0])
+    || locales.find(l => l.code === 'en')
+    || locales[0];
+  if (hit) {
+    select.value = hit.code;
+    setLocale(hit.code);
+  }
+  document.getElementById('localeCount').textContent = `Locales: ${locales.length}`;
+}
+
+function setLocale(code){
+  currentLocale = code;
+  const lang = I18N[code] || I18N[(code || '').split('-')[0]] || I18N.en;
+  document.getElementById('titleMain').textContent = lang.titleMain;
+  document.getElementById('platformPill').textContent = lang.platformPill;
+  document.getElementById('startBtn').textContent = lang.startBtn;
+  document.getElementById('stopBtn').textContent = lang.stopBtn;
+  document.getElementById('domainsTitle').textContent = lang.domainsTitle;
+  document.getElementById('addAgentTitle').textContent = lang.addAgentTitle;
+  document.getElementById('addAgentBtn').textContent = lang.addAgentBtn;
+  document.getElementById('liveFrameTitle').textContent = lang.liveFrameTitle;
+  const localeDoc = document.getElementById('localeDoc');
+  const found = locales.find(l => l.code === code);
+  if (found) localeDoc.href = '/' + found.doc_path;
+  localeDoc.textContent = lang.localeDoc;
+  if (document.getElementById('runtimeState').textContent.includes('unknown') || document.getElementById('runtimeState').textContent.includes('unbekannt')) {
+    document.getElementById('runtimeState').textContent = lang.runtimeUnknown;
+  }
+}
 
 async function loadSuggestions(){
   const r = await fetch('/api/suggestions');
@@ -231,6 +312,7 @@ async function runtimeStop(){
   refreshRuntimeStatus();
 }
 
+loadLocales();
 loadSuggestions();
 pullFrame();
 refreshRuntimeStatus();
