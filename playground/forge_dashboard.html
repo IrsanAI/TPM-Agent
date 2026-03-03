@@ -50,8 +50,8 @@
       <label class="pill"><input type="checkbox" id="beepEnabled"> beep</label>
       <label class="pill">vibrate ms <input id="vibrateMs" type="number" min="0" value="800" style="width:90px"></label>
       <label class="pill"><input type="checkbox" id="telegramEnabled"> telegram</label>
-      <button onclick="saveAlertPrefs()">Save Alerts</button>
-      <button onclick="sendTestAlert()">Test Alert</button>
+      <button id="saveAlertsBtn" onclick="saveAlertPrefs()">Save Alerts</button>
+      <button id="testAlertBtn" onclick="sendTestAlert()">Test Alert</button>
       <span class="pill" id="alertStatus">alerts: n/a</span>
     </div>
     <div class="glass" id="runtimeControls" style="margin-top:10px">
@@ -140,12 +140,39 @@ const I18N = {
     addAgentBtn: 'Add Agent',
     liveFrameTitle: 'IrsanAI Live Frame',
     liveMarketsTitle: 'IrsanAI Live Market Cockpit',
-    liveMarketsHint: 'Tap any market or agent card for immersive drill-down insights.'
+    liveMarketsHint: 'Tap any market or agent card for immersive drill-down insights.',
+    saveAlerts: 'Save Alerts',
+    testAlert: 'Test Alert',
+    sourceNeedsKey: 'Source requires API key for realtime access.',
+    sourcePublic: 'Public source. API key optional/not required.',
+    fillRequired: 'Please fill name/market/url.',
+    addedOk: 'OK',
+    addError: 'Error',
+    frameError: 'Frame error',
+    waitingTicks: 'Waiting for first successful ticks...',
+    samples: 'samples',
+    runtime: 'Runtime',
+    progress: 'Progress',
+    runtimeStatusError: 'Runtime status error',
+    alertsSaved: 'alerts saved',
+    alertsTermux: 'termux',
+    alertsError: 'alerts error',
+    testAlertSent: 'test alert sent',
+    outlook: 'outlook',
+    glitchDetected: '⚠️ glitch detected',
+    stable: 'stable',
+    market: 'market',
+    value: 'value',
+    reward: 'reward',
+    agents: 'Agents',
+    template: 'Template',
+    agentFitness: 'Agent Fitness',
+    transferEntropy: 'Transfer Entropy'
   },
   de: {
     titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finanzen: BTC + COFFEE + dynamische Märkte)',
     platformPill: 'Windows + Smartphone zuerst',
-    runtimeUnknown: 'Runtime: unbekannt',
+    runtimeUnknown: 'Laufzeit: unbekannt',
     startBtn: 'Runtime starten',
     stopBtn: 'Runtime stoppen',
     localeDoc: 'Sprach-Guide öffnen',
@@ -154,9 +181,50 @@ const I18N = {
     addAgentBtn: 'Agent hinzufügen',
     liveFrameTitle: 'IrsanAI Live-Frame',
     liveMarketsTitle: 'IrsanAI Live-Markt-Cockpit',
-    liveMarketsHint: 'Tippe auf Markt- oder Agent-Karten für immersive Detail-Einsichten.'
+    liveMarketsHint: 'Tippe auf Markt- oder Agent-Karten für immersive Detail-Einsichten.',
+    saveAlerts: 'Alerts speichern',
+    testAlert: 'Test-Alert',
+    sourceNeedsKey: 'Quelle benötigt API-Key für Echtzeit-Zugriff.',
+    sourcePublic: 'Öffentliche Quelle. API-Key optional/nicht erforderlich.',
+    fillRequired: 'Bitte Name/Markt/URL ausfüllen.',
+    addedOk: 'OK',
+    addError: 'Fehler',
+    frameError: 'Frame-Fehler',
+    waitingTicks: 'Warte auf erste erfolgreiche Ticks...',
+    samples: 'Samples',
+    runtime: 'Laufzeit',
+    progress: 'Fortschritt',
+    runtimeStatusError: 'Laufzeitstatus-Fehler',
+    alertsSaved: 'Alerts gespeichert',
+    alertsTermux: 'termux',
+    alertsError: 'Alert-Fehler',
+    testAlertSent: 'Test-Alert gesendet',
+    outlook: 'Tendenz',
+    glitchDetected: '⚠️ Glitch erkannt',
+    stable: 'stabil',
+    market: 'Markt',
+    value: 'Wert',
+    reward: 'Reward',
+    agents: 'Agenten',
+    template: 'Template',
+    agentFitness: 'Agenten-Fitness',
+    transferEntropy: 'Transfer-Entropie'
   }
 };
+
+const SUPPORTED_LOCALE_FALLBACKS = ['bs','es','fr','hi','it','ja','pt-BR','ru','tr','zh-CN'];
+SUPPORTED_LOCALE_FALLBACKS.forEach(code => { if (!I18N[code]) I18N[code] = I18N.en; });
+
+function tr(key){
+  const lang = I18N[currentLocale] || I18N[(currentLocale || '').split('-')[0]] || I18N.en;
+  return lang[key] ?? I18N.en[key] ?? key;
+}
+
+function normalizeRuntimeAction(action){
+  if (action === 'starting') return currentLocale === 'de' ? 'startet' : 'starting';
+  if (action === 'stopping') return currentLocale === 'de' ? 'stoppt' : 'stopping';
+  return currentLocale === 'de' ? 'idle' : 'idle';
+}
 
 let currentLocale = 'en';
 let locales = [];
@@ -197,20 +265,24 @@ function setLocale(code){
   const lang = I18N[code] || I18N[(code || '').split('-')[0]] || I18N.en;
   document.getElementById('titleMain').textContent = lang.titleMain;
   document.getElementById('platformPill').textContent = lang.platformPill;
-  document.getElementById('startBtn').textContent = lang.startBtn;
-  document.getElementById('stopBtn').textContent = lang.stopBtn;
+  document.getElementById('startBtn').textContent = tr('startBtn');
+  document.getElementById('stopBtn').textContent = tr('stopBtn');
   document.getElementById('domainsTitle').textContent = lang.domainsTitle;
   document.getElementById('addAgentTitle').textContent = lang.addAgentTitle;
   document.getElementById('addAgentBtn').textContent = lang.addAgentBtn;
   document.getElementById('liveFrameTitle').textContent = lang.liveFrameTitle;
   document.getElementById('liveMarketsTitle').textContent = lang.liveMarketsTitle;
-  document.getElementById('liveMarketsHint').textContent = lang.liveMarketsHint;
+  document.getElementById('liveMarketsHint').textContent = tr('liveMarketsHint');
+  document.getElementById('saveAlertsBtn').textContent = tr('saveAlerts');
+  document.getElementById('testAlertBtn').textContent = tr('testAlert');
+  applySourceSuggestion();
+  renderLiveCards();
   const localeDoc = document.getElementById('localeDoc');
   const found = locales.find(l => l.code === code);
   if (found) localeDoc.href = '/' + found.doc_path;
-  localeDoc.textContent = lang.localeDoc;
+  localeDoc.textContent = tr('localeDoc');
   if (document.getElementById('runtimeState').textContent.includes('unknown') || document.getElementById('runtimeState').textContent.includes('unbekannt')) {
-    document.getElementById('runtimeState').textContent = lang.runtimeUnknown;
+    document.getElementById('runtimeState').textContent = tr('runtimeUnknown');
   }
 }
 
@@ -233,8 +305,8 @@ function applySourceSuggestion(){
   });
   const apiNeeded = (suggestions.requires_api_key || []).includes(source);
   document.getElementById('sourceHints').textContent = apiNeeded
-    ? 'Source requires API key for realtime access.'
-    : 'Public source. API key optional/not required.';
+    ? tr('sourceNeedsKey')
+    : tr('sourcePublic');
 }
 
 function applyMarketSelection(){
@@ -257,9 +329,9 @@ async function loadAlertPrefs(){
     document.getElementById('beepEnabled').checked = !!p.beep_enabled;
     document.getElementById('telegramEnabled').checked = !!p.telegram_enabled;
     document.getElementById('vibrateMs').value = p.vibrate_ms ?? 800;
-    document.getElementById('alertStatus').textContent = `alerts: termux=${p.termux_available ? 'yes' : 'no'}`;
+    document.getElementById('alertStatus').textContent = `${tr('alertsTermux')}: ${p.termux_available ? 'yes' : 'no'}`;
   } catch (e) {
-    document.getElementById('alertStatus').textContent = `alerts error: ${e}`;
+    document.getElementById('alertStatus').textContent = `${tr('alertsError')}: ${e}`;
   }
 }
 
@@ -272,13 +344,13 @@ async function saveAlertPrefs(){
   };
   const r = await fetch('/api/alerts/preferences', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
   const out = await r.json();
-  document.getElementById('alertStatus').textContent = `alerts saved: termux=${out.termux_available ? 'yes' : 'no'}`;
+  document.getElementById('alertStatus').textContent = `${tr('alertsSaved')}: ${tr('alertsTermux')}=${out.termux_available ? 'yes' : 'no'}`;
 }
 
 async function sendTestAlert(){
   const r = await fetch('/api/alerts/test', {method:'POST'});
   const out = await r.json();
-  document.getElementById('alertStatus').textContent = out.message || 'test alert sent';
+  document.getElementById('alertStatus').textContent = out.message || tr('testAlertSent');
 }
 
 async function loadLiveMarkets(){
@@ -304,7 +376,7 @@ function renderLiveCards(){
     card.className = 'domain-card';
     card.style.textAlign = 'left';
     card.style.background = up ? '#0d2a1d' : '#32121b';
-    card.innerHTML = `<strong>${item.market}</strong><div class="kpi">${Number(latest.value || 0).toLocaleString()}</div><div>${up ? '▲' : '▼'} ${Number(item.delta_pct || 0).toFixed(2)}%</div><div>fitness: ${Number(latest.fitness || 0).toFixed(3)}</div><div>outlook: ${(item.outlook||{}).direction || 'unknown'} (${Number((item.outlook||{}).confidence||0).toFixed(2)})</div><div>${item.glitch ? '⚠️ glitch detected' : 'stable'}</div>`;
+    card.innerHTML = `<strong>${item.market}</strong><div class="kpi">${Number(latest.value || 0).toLocaleString()}</div><div>${up ? '▲' : '▼'} ${Number(item.delta_pct || 0).toFixed(2)}%</div><div>fitness: ${Number(latest.fitness || 0).toFixed(3)}</div><div>${tr('outlook')}: ${(item.outlook||{}).direction || 'unknown'} (${Number((item.outlook||{}).confidence||0).toFixed(2)})</div><div>${item.glitch ? tr('glitchDetected') : tr('stable')}</div>`;
     card.onclick = () => openInsightModal(`Market ${item.market}`, item.points || [], item);
     root.appendChild(card);
   });
@@ -315,7 +387,7 @@ function renderLiveCards(){
     card.className = 'domain-card';
     card.style.textAlign = 'left';
     card.style.background = '#121a34';
-    card.innerHTML = `<strong>${item.agent}</strong><div>market: ${item.market}</div><div>value: ${Number(latest.value || 0).toLocaleString()}</div><div>reward: ${Number(latest.reward || 0).toFixed(3)}</div>`;
+    card.innerHTML = `<strong>${item.agent}</strong><div>${tr('market')}: ${item.market}</div><div>${tr('value')}: ${Number(latest.value || 0).toLocaleString()}</div><div>${tr('reward')}: ${Number(latest.reward || 0).toFixed(3)}</div>`;
     card.onclick = () => openInsightModal(`Agent ${item.agent}`, item.points || [], item);
     root.appendChild(card);
   });
@@ -323,7 +395,7 @@ function renderLiveCards(){
   if (markets.length === 0 && agents.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'hint';
-    empty.textContent = 'Waiting for first successful ticks...';
+    empty.textContent = tr('waitingTicks');
     root.appendChild(empty);
   }
 }
@@ -331,7 +403,7 @@ function renderLiveCards(){
 function openInsightModal(title, points, payload){
   document.getElementById('insightModal').style.display = 'block';
   document.getElementById('insightTitle').textContent = `IrsanAI Insight • ${title}`;
-  document.getElementById('insightMeta').textContent = `samples: ${points.length}`;
+  document.getElementById('insightMeta').textContent = `${tr('samples')}: ${points.length}`;
   document.getElementById('insightJson').textContent = JSON.stringify(payload, null, 2);
   const xs = points.map(p => new Date((p.ts || 0) * 1000).toLocaleTimeString());
   const ys = points.map(p => Number(p.value || 0));
@@ -356,7 +428,7 @@ async function pullFrame(){
     applyTheme(frame);
     render(frame);
   } catch (err) {
-    document.getElementById('addResult').textContent = `Frame error: ${err}`;
+    document.getElementById('addResult').textContent = `${tr('frameError')}: ${err}`;
   }
 }
 setInterval(pullFrame, 2000);
@@ -375,11 +447,11 @@ async function addAgent(){
   };
   const out = document.getElementById('addResult');
   if (!payload.name || !payload.market || !payload.url) {
-    out.textContent = 'Bitte Name/Market/URL ausfüllen.'; return;
+    out.textContent = tr('fillRequired'); return;
   }
   const res = await fetch('/api/agents', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
   const data = await res.json();
-  out.textContent = res.ok ? `OK - agent_count=${data.agent_count}` : `Fehler: ${data.detail || 'unknown'}`;
+  out.textContent = res.ok ? `${tr('addedOk')} - agent_count=${data.agent_count}` : `${tr('addError')}: ${data.detail || 'unknown'}`;
   if (res.ok) {
     document.getElementById('apiKey').value = '';
     await loadSuggestions();
@@ -400,17 +472,17 @@ function render(frame){
   document.getElementById('json').textContent = JSON.stringify(frame, null, 2);
   document.getElementById('os').textContent = `OS: ${frame.runtime?.os || 'unknown'}`;
   document.getElementById('device').textContent = `Root: ${frame.runtime?.device_root || 'n/a'}`;
-  document.getElementById('agents').textContent = `Agents: ${frame.agent_count || (frame.signals||[]).length}`;
+  document.getElementById('agents').textContent = `${tr('agents')}: ${frame.agent_count || (frame.signals||[]).length}`;
 
   const labels = (frame.signals || []).map(s => `${s.market} / ${s.agent}`);
   const fitness = (frame.signals || []).map(s => s.fitness);
   Plotly.newPlot('signals', [{x: labels, y: fitness, type:'bar', marker:{color:'var(--accent)'}}],
-    {title:'Agent Fitness', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+    {title:tr('agentFitness'), paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
 
   const edges = Object.keys(frame.transfer_entropy_graph || {});
   const values = Object.values(frame.transfer_entropy_graph || {});
   Plotly.newPlot('entropy', [{x: edges, y: values, mode:'lines+markers', line:{color:'#3ddc97'}}],
-    {title:'Transfer Entropy', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+    {title:tr('transferEntropy'), paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
 
   const domains = frame.domain_summary || {};
   const box = document.getElementById('domains');
@@ -418,7 +490,7 @@ function render(frame){
   Object.entries(domains).forEach(([name, item]) => {
     const el = document.createElement('div');
     el.className = 'domain-card';
-    el.innerHTML = `<strong>${name.toUpperCase()}</strong><div class="kpi">${(item.avg_fitness||0).toFixed(3)}</div><div>Agents: ${item.count}</div><div>Template: ${item.template}</div>`;
+    el.innerHTML = `<strong>${name.toUpperCase()}</strong><div class="kpi">${(item.avg_fitness||0).toFixed(3)}</div><div>${tr('agents')}: ${item.count}</div><div>${tr('template')}: ${item.template}</div>`;
     box.appendChild(el);
   });
 }
@@ -429,11 +501,11 @@ async function refreshRuntimeStatus(){
   try {
     const r = await fetch('/api/runtime/status');
     const st = await r.json();
-    document.getElementById('runtimeState').textContent = `Runtime: ${st.engine_state} (${st.transition_action})`;
+    document.getElementById('runtimeState').textContent = `${tr('runtime')}: ${st.engine_state} (${normalizeRuntimeAction(st.transition_action)})`;
     document.getElementById('runtimeBar').style.width = `${st.progress_pct||0}%`;
-    document.getElementById('runtimeProgress').textContent = `Progress: ${st.progress_pct||0}%`;
+    document.getElementById('runtimeProgress').textContent = `${tr('progress')}: ${st.progress_pct||0}%`;
   } catch (e) {
-    document.getElementById('runtimeProgress').textContent = `Runtime status error: ${e}`;
+    document.getElementById('runtimeProgress').textContent = `${tr('runtimeStatusError')}: ${e}`;
   }
 }
 
