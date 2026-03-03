@@ -75,6 +75,9 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   bash scripts/termux_bootstrap.sh
   cd ~/TPM-Agent
   python scripts/tpm_cli.py env
+  bash scripts/termux_bootstrap.sh
+  cd ~/TPM-Agent
+  python scripts/tpm_cli.py env
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
@@ -88,6 +91,8 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   The script auto-opens browser (if available) and keeps service running in background.
   If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
   `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
+  If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
+  `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required)
   In the web interface you can control runtime start/stop; a progress bar shows transition status.
 - **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
 - **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
@@ -134,6 +139,17 @@ Optional for better COFFEE quality:
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
 docker compose run --rm tpm-preflight
+```
+
+
+
+### Docker fix for `uvicorn: executable file not found`
+
+If an older image was built without dependencies, rebuild it:
+
+```bash
+docker compose build --no-cache tpm-forge-web
+docker compose up tpm-forge-web
 ```
 
 ## Validation
