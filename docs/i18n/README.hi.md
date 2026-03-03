@@ -1,11 +1,6 @@
-# TPM-Agent (hi) — Full Canonical Mirror
-
-> This localized file is maintained in full parity with `README.md` to avoid content gaps across languages.
-> Automatic mirror mode ensures all sections, mermaid diagrams, commands and runbooks are identical in scope.
-
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](./README.es.md) | [🇮🇹 Italiano](./README.it.md) | [🇧🇦 Bosanski](./README.bs.md) | [🇷🇺 Русский](./README.ru.md) | [🇨🇳 中文](./README.zh-CN.md) | [🇫🇷 Français](./README.fr.md) | [🇧🇷 Português (BR)](./README.pt-BR.md) | [🇮🇳 हिन्दी](./README.hi.md) | [🇹🇷 Türkçe](./README.tr.md) | [🇯🇵 日本語](./README.ja.md)
+[🇬🇧 English](./README.md) | [HI Hi](./docs/i18n/README.hi.md) |
 
 A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) with cross-platform runtime options.
 
@@ -42,11 +37,11 @@ flowchart LR
 ```
 
 ### Gate logic (what must be true before the next step)
-- **Gate 1 – Environment:** Python/platform context is correct (`env`).
-- **Gate 2 – Scientific sanity:** baseline model behavior is reproducible (`validate`).
-- **Gate 3 – Source reliability:** market data + fallback chain are reachable (`preflight --market ALL`).
-- **Gate 4 – Runtime execution:** live loop runs with known input history (`live`).
-- **Gate 5 – Adversarial confidence:** latency/failover targets hold under stress (`stress_test_suite.py`).
+- **Gate 1 – वातावरण:** Python/प्लेटफ़ॉर्म संदर्भ सही है (`env`)।
+- **Gate 2 – वैज्ञानिक सुदृढ़ता:** बेसलाइन मॉडल व्यवहार पुनरुत्पादित हो सकता है (`validate`)।
+- **Gate 3 – स्रोत विश्वसनीयता:** मार्केट डेटा + fallback chain उपलब्ध हैं (`preflight --market ALL`)।
+- **Gate 4 – रनटाइम निष्पादन:** live लूप ज्ञात इनपुट हिस्ट्री के साथ चलता है (`live`)।
+- **Gate 5 – एडवर्सेरियल भरोसा:** latency/failover लक्ष्य स्ट्रेस में टिकते हैं (`stress_test_suite.py`)।
 
 ✅ Already fixed in code: CLI preflight now supports `--market ALL`, matching quickstart + docker flow.
 
@@ -94,8 +89,8 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
   `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
   In the web interface you can control runtime start/stop; a progress bar shows transition status.
-- **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
-- **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
+- **iPhone (best effort):** iSH / a-Shell जैसे shell ऐप्स का उपयोग करें। Termux-विशिष्ट notification hooks वहाँ उपलब्ध नहीं हैं।
+- **Windows / Linux / macOS**: वही CLI कमांड्स उपयोग करें; निरंतरता के लिए tmux/scheduler/cron से चलाएँ।
 
 ## Docker (Cross-OS Easiest Path)
 
@@ -155,7 +150,7 @@ docker compose run --rm tpm-preflight
 
 ## Validation
 
-Run the scientific validation pipeline:
+वैज्ञानिक वैलिडेशन पाइपलाइन चलाएँ:
 
 ```bash
 python core/tpm_scientific_validation.py
@@ -267,23 +262,23 @@ docker compose up tpm-forge-web
 
 ## TPM Playground (interactive MVP)
 
-You can now explore TPM behavior interactively in the browser:
+अब आप ब्राउज़र में TPM व्यवहार को इंटरैक्टिव तरीके से देख सकते हैं:
 
 ```bash
 python -m http.server 8765
 # open http://localhost:8765/playground/index.html
 ```
 
-Includes:
-- Single agent weak-signal anomaly view
-- Mini swarm (BTC/COFFEE/VOL) consensus pressure
-- Cross-domain transfer resonance (synthetic finance/weather/health)
+इसमें शामिल है:
+- सिंगल एजेंट कमजोर-सिग्नल एनॉमली व्यू
+- मिनी स्वार्म (BTC/COFFEE/VOL) कंसेंसस दबाव
+- क्रॉस-डोमेन ट्रांसफर रेज़ोनेंस (सिंथेटिक: फाइनेंस/मौसम/हेल्थ)
 
 See: `playground/README.md`.
 ## Next Steps
 
-- Transfer entropy module for cross-market causal analysis.
-- Optimizer with policy updates based on historical performance.
+- क्रॉस-मार्केट कारणात्मक विश्लेषण के लिए ट्रांसफर-एंट्रॉपी मॉड्यूल।
+- ऐतिहासिक प्रदर्शन के आधार पर policy अपडेट वाला ऑप्टिमाइज़र।
 - Alert channels (Telegram/Signal) + boot persistence.
 
 
@@ -297,23 +292,23 @@ See: `playground/README.md`.
 
 Working hypothesis of the TPM core:
 
-- In complex, chaotic systems, early-warning signal is often hidden in the **micro-residual**: tiny deviations, weak correlations, almost-empty data points.
+- जटिल और कैओटिक सिस्टम में early-warning संकेत अक्सर **micro-residual** में छिपे होते हैं: सूक्ष्म विचलन, कमजोर सहसंबंध, लगभग-खाली डेटा पॉइंट्स।
 - Where classic systems see only `0` or "not enough relevance", TPM searches for **structured anomalies** (glitch patterns) in context flow.
-- TPM evaluates not only a value itself, but the **change of relationships over time, source quality, regime, and causal neighborhood**.
+- TPM केवल मान को नहीं, बल्कि **समय के साथ संबंधों का परिवर्तन, स्रोत गुणवत्ता, रेजीम और causal neighborhood** भी आकलित करता है।
 
-Important correctness note: TPM does **not** magically predict the future. It aims for **earlier probabilistic detection** of regime shifts, breakouts, and disruptions — when data quality and validation gates are satisfied.
+महत्वपूर्ण स्पष्टता: TPM भविष्य की **जादुई** भविष्यवाणी नहीं करता। इसका लक्ष्य डेटा गुणवत्ता और validation gates पूरे होने पर रेजीम बदलाव, breakout और disruption की **पहले से संभाव्य पहचान** है।
 
 ### Think BIG: why this extends beyond finance
 
 If TPM can detect weak precursor patterns in financial instruments (index/ticker/ISIN-like identifiers, liquidity, microstructure), the same principle can generalize to many domains:
 
 - **Event/sensor stream + context model + anomaly layer + feedback loop**
-- Every profession can be modeled as a "market" with domain-specific features, nodes, correlations, and anomalies
-- Specialized TPM agents can learn across domains while preserving local professional logic and ethics
+- प्रत्येक पेशे को डोमेन-विशिष्ट फीचर्स, नोड्स, सहसंबंध और एनॉमलीज़ वाले "मार्केट" की तरह मॉडल किया जा सकता है
+- विशेषीकृत TPM एजेंट डोमेन्स के बीच सीख सकते हैं, जबकि स्थानीय पेशेवर लॉजिक और एथिक्स बनाए रखते हैं
 
-### 100 professions as TPM target spaces
+### TPM लक्ष्य-क्षेत्र के रूप में 100 पेशे
 
-| # | Profession | TPM data analog | Anomaly/pattern-detection target |
+| # | पेशा | TPM डेटा अनुरूप | एनॉमली/पैटर्न डिटेक्शन लक्ष्य |
 |---|---|---|---|
 | 1 | Police analyst | Incident logs, geotemporal crime maps, networks | Early signals of escalating crime clusters |
 | 2 | Fire service commander | Alarm chains, sensor feeds, weather, building profiles | Predict fire and hazard propagation windows |
@@ -416,7 +411,7 @@ If TPM can detect weak precursor patterns in financial instruments (index/ticker
 | 99 | Anthropologist | Field observations, language/social networks | Detect cultural-shift conflict precursors |
 | 100 | Foresight strategist | Tech curves, regulation, behavior data | Connect scenarios with early indicators |
 
-### Country-fit notes (profession equivalence across jurisdictions)
+### Country-fit नोट्स (विभिन्न न्यायक्षेत्रों में पेशागत समतुल्यता)
 
 To keep the list logically correct across regions, TPM role-mapping should be interpreted as **functional equivalents**, not literal job-title translation:
 
@@ -426,7 +421,7 @@ To keep the list logically correct across regions, TPM role-mapping should be in
 - **Russia / China:** role definitions and data-governance constraints differ; TPM must be configured with local compliance boundaries and institutional equivalents.
 - **Additional high-impact regions:** France, Brazil, India, Japan, MENA states, and Sub-Saharan Africa can be onboarded by mapping equivalent functions and available telemetry.
 
-### Philosophical-scientific outlook
+### दार्शनिक-वैज्ञानिक दृष्टिकोण
 
 - From tool to **epistemic infrastructure**: domains operationalize "weak early knowledge".
 - From isolated systems to **agent federations**: local ethics + shared anomaly grammar.
@@ -463,6 +458,16 @@ Dieses Dokument ist ab sofort Referenz für:
 - Docker/Android-Paritätsanforderungen,
 - sowie Akzeptanz-Qualitätsgates für kommende PRs.
 
+## i18n parity mode (full mirror)
+
+To ensure no language community is content-disadvantaged, i18n files are now maintained in full canonical parity with `README.md`.
+
+Sync command:
+
+```bash
+python scripts/i18n_full_mirror_sync.py
+```
+
 ## Hinweis für Entwickler (LOP – Liste offener Punkte)
 
 Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
@@ -496,4 +501,3 @@ For implementation sequencing, done-criteria and evidence gates for each open LO
 4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
 
 **Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
-

@@ -1,10 +1,10 @@
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](./README.es.md) | [🇮🇹 Italiano](./README.it.md) | [🇧🇦 Bosanski](./README.bs.md) | [🇷🇺 Русский](./README.ru.md) | [🇨🇳 中文](./README.zh-CN.md) | [🇫🇷 Français](./README.fr.md) | [🇧🇷 Português (BR)](./README.pt-BR.md) | [🇮🇳 हिन्दी](./README.hi.md) | [🇹🇷 Türkçe](./README.tr.md) | [🇯🇵 日本語](./README.ja.md)
+[🇬🇧 English](./README.md) | [TR Tr](./docs/i18n/README.tr.md) |
 
-Çapraz platform çalışma seçenekleriyle (BTC, COFFEE ve daha fazlası) otonom çoklu-agent kurulum için temiz bir başlangıç.
+A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) with cross-platform runtime options.
 
-## Neler Dahil
+## What's Included
 
 - `production/preflight_manager.py` – resilient market source probing with Alpha Vantage + fallback chain and local cache fallback.
 - `production/tpm_agent_process.py` – simple per-market agent loop.
@@ -458,6 +458,16 @@ Dieses Dokument ist ab sofort Referenz für:
 - Docker/Android-Paritätsanforderungen,
 - sowie Akzeptanz-Qualitätsgates für kommende PRs.
 
+## i18n parity mode (full mirror)
+
+To ensure no language community is content-disadvantaged, i18n files are now maintained in full canonical parity with `README.md`.
+
+Sync command:
+
+```bash
+python scripts/i18n_full_mirror_sync.py
+```
+
 ## Hinweis für Entwickler (LOP – Liste offener Punkte)
 
 Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
@@ -491,4 +501,3 @@ For implementation sequencing, done-criteria and evidence gates for each open LO
 4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
 
 **Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
-

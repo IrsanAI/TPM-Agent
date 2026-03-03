@@ -1,11 +1,6 @@
-# TPM-Agent (es) — Full Canonical Mirror
-
-> This localized file is maintained in full parity with `README.md` to avoid content gaps across languages.
-> Automatic mirror mode ensures all sections, mermaid diagrams, commands and runbooks are identical in scope.
-
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](./README.es.md) | [🇮🇹 Italiano](./README.it.md) | [🇧🇦 Bosanski](./README.bs.md) | [🇷🇺 Русский](./README.ru.md) | [🇨🇳 中文](./README.zh-CN.md) | [🇫🇷 Français](./README.fr.md) | [🇧🇷 Português (BR)](./README.pt-BR.md) | [🇮🇳 हिन्दी](./README.hi.md) | [🇹🇷 Türkçe](./README.tr.md) | [🇯🇵 日本語](./README.ja.md)
+[🇬🇧 English](./README.md) | [ES Es](./docs/i18n/README.es.md) |
 
 A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) with cross-platform runtime options.
 
@@ -42,11 +37,11 @@ flowchart LR
 ```
 
 ### Gate logic (what must be true before the next step)
-- **Gate 1 – Environment:** Python/platform context is correct (`env`).
-- **Gate 2 – Scientific sanity:** baseline model behavior is reproducible (`validate`).
-- **Gate 3 – Source reliability:** market data + fallback chain are reachable (`preflight --market ALL`).
-- **Gate 4 – Runtime execution:** live loop runs with known input history (`live`).
-- **Gate 5 – Adversarial confidence:** latency/failover targets hold under stress (`stress_test_suite.py`).
+- **Gate 1 – Entorno:** el contexto Python/plataforma es correcto (`env`).
+- **Gate 2 – Solidez científica:** el comportamiento base del modelo es reproducible (`validate`).
+- **Gate 3 – Fiabilidad de fuentes:** datos de mercado + cadena fallback disponibles (`preflight --market ALL`).
+- **Gate 4 – Ejecución runtime:** el bucle live corre con historial de entrada conocido (`live`).
+- **Gate 5 – Confianza adversarial:** objetivos de latencia/failover se mantienen bajo estrés (`stress_test_suite.py`).
 
 ✅ Already fixed in code: CLI preflight now supports `--market ALL`, matching quickstart + docker flow.
 
@@ -94,8 +89,8 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
   `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
   In the web interface you can control runtime start/stop; a progress bar shows transition status.
-- **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
-- **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
+- **iPhone (mejor esfuerzo):** usa apps shell como iSH / a-Shell. Los hooks de notificación específicos de Termux no están disponibles allí.
+- **Windows / Linux / macOS**: usa los mismos comandos CLI; ejecútalos vía tmux/scheduler/cron para persistencia.
 
 ## Docker (Cross-OS Easiest Path)
 
@@ -155,7 +150,7 @@ docker compose run --rm tpm-preflight
 
 ## Validation
 
-Run the scientific validation pipeline:
+Ejecuta el pipeline de validación científica:
 
 ```bash
 python core/tpm_scientific_validation.py
@@ -267,23 +262,23 @@ docker compose up tpm-forge-web
 
 ## TPM Playground (interactive MVP)
 
-You can now explore TPM behavior interactively in the browser:
+Ahora puedes explorar el comportamiento de TPM de forma interactiva en el navegador:
 
 ```bash
 python -m http.server 8765
 # open http://localhost:8765/playground/index.html
 ```
 
-Includes:
-- Single agent weak-signal anomaly view
-- Mini swarm (BTC/COFFEE/VOL) consensus pressure
-- Cross-domain transfer resonance (synthetic finance/weather/health)
+Incluye:
+- Vista de anomalías de señal débil en agente único
+- Mini enjambre (BTC/COFFEE/VOL) con presión de consenso
+- Resonancia de transferencia entre dominios (sintético: finanzas/clima/salud)
 
 See: `playground/README.md`.
 ## Next Steps
 
-- Transfer entropy module for cross-market causal analysis.
-- Optimizer with policy updates based on historical performance.
+- Módulo de entropía de transferencia para análisis causal entre mercados.
+- Optimizador con actualizaciones de política basadas en rendimiento histórico.
 - Alert channels (Telegram/Signal) + boot persistence.
 
 
@@ -297,23 +292,23 @@ See: `playground/README.md`.
 
 Working hypothesis of the TPM core:
 
-- In complex, chaotic systems, early-warning signal is often hidden in the **micro-residual**: tiny deviations, weak correlations, almost-empty data points.
+- En sistemas complejos y caóticos, la señal temprana suele ocultarse en el **micro-residual**: pequeñas desviaciones, correlaciones débiles y puntos casi vacíos.
 - Where classic systems see only `0` or "not enough relevance", TPM searches for **structured anomalies** (glitch patterns) in context flow.
-- TPM evaluates not only a value itself, but the **change of relationships over time, source quality, regime, and causal neighborhood**.
+- TPM no evalúa solo el valor, sino también el **cambio de relaciones en el tiempo, la calidad de fuente, el régimen y el vecindario causal**.
 
-Important correctness note: TPM does **not** magically predict the future. It aims for **earlier probabilistic detection** of regime shifts, breakouts, and disruptions — when data quality and validation gates are satisfied.
+Nota de corrección importante: TPM **no** predice mágicamente el futuro. Busca **detección probabilística temprana** de cambios de régimen, breakouts y disrupciones, cuando se cumplen calidad de datos y gates de validación.
 
 ### Think BIG: why this extends beyond finance
 
 If TPM can detect weak precursor patterns in financial instruments (index/ticker/ISIN-like identifiers, liquidity, microstructure), the same principle can generalize to many domains:
 
 - **Event/sensor stream + context model + anomaly layer + feedback loop**
-- Every profession can be modeled as a "market" with domain-specific features, nodes, correlations, and anomalies
-- Specialized TPM agents can learn across domains while preserving local professional logic and ethics
+- Cada profesión puede modelarse como un "mercado" con rasgos de dominio, nodos, correlaciones y anomalías
+- Agentes TPM especializados pueden aprender entre dominios preservando lógica y ética profesional local
 
-### 100 professions as TPM target spaces
+### TPM como espacio objetivo para 100 profesiones
 
-| # | Profession | TPM data analog | Anomaly/pattern-detection target |
+| # | Profesión | Análogo de datos TPM | Objetivo de detección de anomalías/patrones |
 |---|---|---|---|
 | 1 | Police analyst | Incident logs, geotemporal crime maps, networks | Early signals of escalating crime clusters |
 | 2 | Fire service commander | Alarm chains, sensor feeds, weather, building profiles | Predict fire and hazard propagation windows |
@@ -416,7 +411,7 @@ If TPM can detect weak precursor patterns in financial instruments (index/ticker
 | 99 | Anthropologist | Field observations, language/social networks | Detect cultural-shift conflict precursors |
 | 100 | Foresight strategist | Tech curves, regulation, behavior data | Connect scenarios with early indicators |
 
-### Country-fit notes (profession equivalence across jurisdictions)
+### Notas country-fit (equivalencia profesional entre jurisdicciones)
 
 To keep the list logically correct across regions, TPM role-mapping should be interpreted as **functional equivalents**, not literal job-title translation:
 
@@ -426,7 +421,7 @@ To keep the list logically correct across regions, TPM role-mapping should be in
 - **Russia / China:** role definitions and data-governance constraints differ; TPM must be configured with local compliance boundaries and institutional equivalents.
 - **Additional high-impact regions:** France, Brazil, India, Japan, MENA states, and Sub-Saharan Africa can be onboarded by mapping equivalent functions and available telemetry.
 
-### Philosophical-scientific outlook
+### Perspectiva filosófico-científica
 
 - From tool to **epistemic infrastructure**: domains operationalize "weak early knowledge".
 - From isolated systems to **agent federations**: local ethics + shared anomaly grammar.
@@ -463,6 +458,16 @@ Dieses Dokument ist ab sofort Referenz für:
 - Docker/Android-Paritätsanforderungen,
 - sowie Akzeptanz-Qualitätsgates für kommende PRs.
 
+## i18n parity mode (full mirror)
+
+To ensure no language community is content-disadvantaged, i18n files are now maintained in full canonical parity with `README.md`.
+
+Sync command:
+
+```bash
+python scripts/i18n_full_mirror_sync.py
+```
+
 ## Hinweis für Entwickler (LOP – Liste offener Punkte)
 
 Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
@@ -496,4 +501,3 @@ For implementation sequencing, done-criteria and evidence gates for each open LO
 4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
 
 **Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
-

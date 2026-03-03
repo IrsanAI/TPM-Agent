@@ -1,0 +1,1 @@
+es titleMain platformPill runtimeUnknown startBtn stopBtn localeDoc domainsTitle addAgentTitle addAgentBtn liveFrameTitle liveMarketsTitle liveMarketsHint saveAlerts sourceNeedsKey addedOk
