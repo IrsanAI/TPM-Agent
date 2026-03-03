@@ -108,6 +108,8 @@
     <div id="engineTransparency" class="hint">Waiting for runtime details…</div>
     <h3 style="margin-top:10px;">📉 Validation / Backtest Snapshot</h3>
     <div id="backtestSummary" class="hint">Waiting for validation report…</div>
+    <h3 style="margin-top:10px;">🛡️ IrsanAI Source Resilience Manager</h3>
+    <div id="sourceResilience" class="hint">Waiting for source diagnostics…</div>
   </section>
 
   <section class="grid">
@@ -133,7 +135,7 @@
 </div>
 
 <script>
-const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, pollErrors: 0 };
+const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, sourceHealth: {}, pollErrors: 0, caps: null, optionalEndpointDisabled: {} };
 
 function setInfo() {
   document.getElementById('os').textContent = navigator.platform || 'unknown platform';
@@ -148,32 +150,55 @@ async function fetchJSON(url, opts={}) {
 }
 
 async function refreshAll() {
-  const [frameRes, runtimeRes, liveRes, backtestRes] = await Promise.allSettled([
+  if (!state.caps) {
+    try { state.caps = await fetchJSON('/api/capabilities'); } catch (_) { state.caps = {}; }
+  }
+
+  const requests = [
     fetchJSON('/api/frame'),
     fetchJSON('/api/runtime/status'),
     fetchJSON('/api/markets/live'),
-    fetchJSON('/api/backtest/summary')
-  ]);
+    state.optionalEndpointDisabled['/api/backtest/summary'] ? Promise.resolve(state.backtest) : fetchJSON('/api/backtest/summary'),
+    state.optionalEndpointDisabled['/api/sources/health'] ? Promise.resolve(state.sourceHealth) : fetchJSON('/api/sources/health')
+  ];
+  const [frameRes, runtimeRes, liveRes, backtestRes, sourceRes] = await Promise.allSettled(requests);
 
   const frame = frameRes.status === 'fulfilled' ? frameRes.value : state.frame;
   const runtime = runtimeRes.status === 'fulfilled' ? runtimeRes.value : null;
   const live = liveRes.status === 'fulfilled' ? liveRes.value : state.markets;
-  const backtest = backtestRes.status === 'fulfilled' ? backtestRes.value : state.backtest;
 
-  if (frameRes.status === 'rejected' || runtimeRes.status === 'rejected' || liveRes.status === 'rejected' || backtestRes.status === 'rejected') {
+  let backtest = state.backtest;
+  if (backtestRes.status === 'fulfilled') {
+    backtest = backtestRes.value;
+  } else if (String(backtestRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/backtest/summary'] = true;
+    backtest = { available: false, reason: 'optional endpoint not supported by current runtime image' };
+  }
+
+  let sourceHealth = state.sourceHealth;
+  if (sourceRes.status === 'fulfilled') {
+    sourceHealth = sourceRes.value;
+  } else if (String(sourceRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/sources/health'] = true;
+    sourceHealth = { agents: {}, detected_issues: [], reason: 'optional endpoint not supported by current runtime image' };
+  }
+
+  const hardErrors = [frameRes, runtimeRes, liveRes].filter(r => r.status === 'rejected');
+  if (hardErrors.length) {
     state.pollErrors += 1;
-    const problems = [frameRes, runtimeRes, liveRes, backtestRes]
-      .filter(r => r.status === 'rejected')
-      .map(r => r.reason?.message || 'unknown error')
-      .join(' | ');
+    const problems = hardErrors.map(r => r.reason?.message || 'unknown error').join(' | ');
     document.getElementById('alertStatus').textContent = `live warning (${state.pollErrors}): ${problems}`;
   } else {
     state.pollErrors = 0;
+    if (!document.getElementById('alertStatus').textContent.startsWith('alerts:')) {
+      document.getElementById('alertStatus').textContent = 'alerts: connected';
+    }
   }
 
   state.frame = frame;
   state.markets = live;
-  state.backtest = backtest;
+  state.backtest = backtest || {};
+  state.sourceHealth = sourceHealth || {};
   renderRuntime(runtime || {
     engine_state: (frame.signals || []).length > 0 ? 'running' : 'idle',
     transition_action: 'poll-fallback',
@@ -182,7 +207,7 @@ async function refreshAll() {
   });
   renderFrame(frame);
   renderLive(live);
-  renderEngineTransparency(frame, backtest);
+  renderEngineTransparency(frame, state.backtest, state.sourceHealth);
   document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
 }
 
@@ -263,7 +288,7 @@ function renderLive(live) {
 }
 
 
-function renderEngineTransparency(frame, backtest) {
+function renderEngineTransparency(frame, backtest, sourceHealth) {
   const root = document.getElementById('engineTransparency');
   const info = frame.engine_transparency || {};
   const entropySummary = frame.entropy_summary || {};
@@ -277,14 +302,25 @@ function renderEngineTransparency(frame, backtest) {
 
   const bt = document.getElementById('backtestSummary');
   if (!backtest || !backtest.available) {
-    bt.innerHTML = '<div class="hint">No backtest report found at state/TPM_test_results.json yet.</div>';
+    bt.innerHTML = `<div class="hint">${backtest?.reason || 'No backtest report found at state/TPM_test_results.json yet.'}</div>`;
+  } else {
+    const rows = (backtest.tests || []).slice(0, 5).map(t => {
+      const mark = t.passed ? '✅' : '❌';
+      return `<div class="hint">${mark} ${t.name}: metric=${Number(t.metric || 0).toFixed(4)} p=${t.p_value}</div>`;
+    }).join('');
+    bt.innerHTML = `<div class="hint">Report: ${backtest.generated_at_utc || 'n/a'}</div>${rows}`;
+  }
+
+  const sr = document.getElementById('sourceResilience');
+  const issues = sourceHealth?.detected_issues || frame?.source_resilience?.detected_issues || [];
+  const agents = sourceHealth?.agents || frame?.source_resilience?.agents || {};
+  if (!Object.keys(agents).length && !issues.length) {
+    sr.innerHTML = `<div class="hint">${sourceHealth?.reason || 'No source diagnostics yet.'}</div>`;
     return;
   }
-  const rows = (backtest.tests || []).slice(0, 5).map(t => {
-    const mark = t.passed ? '✅' : '❌';
-    return `<div class="hint">${mark} ${t.name}: metric=${Number(t.metric || 0).toFixed(4)} p=${t.p_value}</div>`;
-  }).join('');
-  bt.innerHTML = `<div class="hint">Report: ${backtest.generated_at_utc || 'n/a'}</div>${rows}`;
+  const issueLines = issues.slice(0, 5).map(i => `<div class="hint">⚠️ ${i.agent}: ${i.status} fail_ratio=${i.fail_ratio}</div>`).join('');
+  const healthyCount = Object.values(agents).filter(a => a.status === 'healthy').length;
+  sr.innerHTML = `<div class="hint">agents monitored: ${Object.keys(agents).length} | healthy: ${healthyCount}</div>${issueLines || '<div class="hint">No active source issues detected.</div>'}`;
 }
 
 async function runtimeStart() { await fetchJSON('/api/runtime/start', {method:'POST'}); refreshAll(); }

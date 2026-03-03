@@ -421,6 +421,18 @@ class ForgeRuntime:
             "tests": compact,
         }
 
+    def capabilities(self) -> dict[str, Any]:
+        return {
+            "backtest_summary": True,
+            "source_resilience": True,
+            "engine_transparency": True,
+            "version": 2,
+        }
+
+    def source_health(self) -> dict[str, Any]:
+        resilience = self.latest_frame.get("source_resilience", {}) if isinstance(self.latest_frame, dict) else {}
+        return resilience if isinstance(resilience, dict) else {"agents": {}, "detected_issues": []}
+
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             try:
@@ -517,9 +529,19 @@ def api_runtime_status() -> dict:
     return _sanitize(runtime.runtime_status())
 
 
+@app.get("/api/capabilities")
+def api_capabilities() -> dict:
+    return _sanitize(runtime.capabilities())
+
+
 @app.get("/api/backtest/summary")
 def api_backtest_summary() -> dict:
     return _sanitize(runtime.backtest_summary())
+
+
+@app.get("/api/sources/health")
+def api_sources_health() -> dict:
+    return _sanitize(runtime.source_health())
 
 
 @app.post("/api/runtime/start")

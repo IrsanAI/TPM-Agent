@@ -31,6 +31,7 @@ class ForgeOrchestrator:
         self.cache_file = self.paths.state_dir / "latest_prices.json"
         self.series = defaultdict(lambda: deque(maxlen=int(engine_cfg["lookback_window"])))
         self.fail_state = defaultdict(int)
+        self.source_health: dict[str, dict] = {}
 
     def _store_cache(self, frame: dict) -> None:
         self.cache_file.write_text(json.dumps(frame, indent=2), encoding="utf-8")
@@ -58,15 +59,35 @@ class ForgeOrchestrator:
 
     def tick(self) -> dict:
         signals = []
+        now = int(time.time())
         for agent in self.agents:
+            health = self.source_health.setdefault(agent.name, {
+                "source_type": agent.spec.get("source_type", "unknown"),
+                "url": agent.spec.get("url", ""),
+                "ok_count": 0,
+                "fail_count": 0,
+                "consecutive_failures": 0,
+                "avg_latency_ms": 0.0,
+                "last_ok_ts": None,
+                "last_error": "",
+            })
             try:
                 signal = agent.fetch()
                 self.series[agent.name].append(signal.value)
                 self.fail_state[agent.name] = 0
                 signals.append(signal)
-            except Exception:
+                health["ok_count"] += 1
+                health["consecutive_failures"] = 0
+                prev = float(health.get("avg_latency_ms", 0.0))
+                health["avg_latency_ms"] = (prev * 0.8) + (float(signal.latency_ms) * 0.2)
+                health["last_ok_ts"] = now
+                health["last_error"] = ""
+            except Exception as exc:
                 agent.failures += 1
                 self.fail_state[agent.name] += 1
+                health["fail_count"] += 1
+                health["consecutive_failures"] += 1
+                health["last_error"] = str(exc)
 
         series_payload = {name: list(values) for name, values in self.series.items()}
         entropy_summary: dict[str, dict] = {}
@@ -114,6 +135,35 @@ class ForgeOrchestrator:
             )
 
         cull = self.optimizer.cull_candidates()
+        detected_issues = []
+        health_snapshot: dict[str, dict] = {}
+        for name, h in self.source_health.items():
+            ok = int(h.get("ok_count", 0))
+            fail = int(h.get("fail_count", 0))
+            total = max(1, ok + fail)
+            fail_ratio = fail / total
+            consecutive = int(h.get("consecutive_failures", 0))
+            cooldown_s = min(300, 5 * (2 ** min(6, consecutive))) if consecutive else 0
+            status = "healthy"
+            if consecutive >= 3 or fail_ratio > 0.4:
+                status = "degraded"
+            if consecutive >= 6 or fail_ratio > 0.7:
+                status = "critical"
+            if status != "healthy":
+                detected_issues.append({
+                    "agent": name,
+                    "status": status,
+                    "fail_ratio": round(fail_ratio, 3),
+                    "consecutive_failures": consecutive,
+                    "recommended_action": "switch to fallback source or reduce request rate",
+                })
+            health_snapshot[name] = {
+                **h,
+                "status": status,
+                "fail_ratio": round(fail_ratio, 3),
+                "predicted_cooldown_s": cooldown_s,
+            }
+
         frame = {
             "ts": int(time.time()),
             "runtime": self.config["runtime"],
@@ -122,6 +172,7 @@ class ForgeOrchestrator:
             "ui_profile": self.config.get("ui", {}),
             "transfer_entropy_graph": graph,
             "entropy_summary": entropy_summary,
+            "source_resilience": {"agents": health_snapshot, "detected_issues": detected_issues},
             "engine_transparency": {
                 "transfer_entropy_formula": "TE(X→Y)=Σ p(y_t+1,y_t,x_t) log2(p(y_t+1|y_t,x_t)/p(y_t+1|y_t))",
                 "black_hole_pipeline": "sliding_entropy -> quantile_gate -> bottleneck_compress(20)",

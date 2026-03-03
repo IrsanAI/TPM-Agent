@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import FileResponse
@@ -11,7 +12,28 @@ from core.forge_config import load_config
 app = FastAPI(title="IrsanAI The Forge Dashboard")
 CONFIG, PATHS = load_config()
 CACHE_FILE = PATHS.state_dir / "latest_prices.json"
+BACKTEST_FILE = PATHS.state_dir / "TPM_test_results.json"
 HTML_FILE = Path(__file__).resolve().parents[1] / "playground" / "forge_dashboard.html"
+
+
+def _backtest_summary() -> dict[str, Any]:
+    if not BACKTEST_FILE.exists():
+        return {"available": False, "reason": "validation report not found"}
+    try:
+        payload = json.loads(BACKTEST_FILE.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {"available": False, "reason": f"invalid report: {exc}"}
+    tests = payload.get("tests", []) if isinstance(payload, dict) else []
+    compact = []
+    for t in tests:
+        if isinstance(t, dict):
+            compact.append({
+                "name": t.get("name", "unknown"),
+                "metric": t.get("metric"),
+                "passed": bool(t.get("passed")),
+                "p_value": t.get("p_value"),
+            })
+    return {"available": True, "generated_at_utc": payload.get("generated_at_utc"), "tests": compact}
 
 
 @app.get("/")
@@ -39,3 +61,20 @@ async def ws_stream(websocket: WebSocket) -> None:
         payload = api_frame()
         await websocket.send_text(json.dumps(payload))
         await websocket.receive_text()
+
+
+@app.get("/api/backtest/summary")
+def api_backtest_summary() -> dict:
+    return _backtest_summary()
+
+
+@app.get("/api/capabilities")
+def api_capabilities() -> dict:
+    return {"backtest_summary": True, "engine_transparency": True, "source_resilience": True, "version": 2}
+
+
+@app.get("/api/sources/health")
+def api_sources_health() -> dict:
+    frame = api_frame()
+    payload = frame.get("source_resilience", {}) if isinstance(frame, dict) else {}
+    return payload if isinstance(payload, dict) else {"agents": {}, "detected_issues": []}
