@@ -95,12 +95,35 @@ If this lane convinces you, the rest of the repository will likely resonate too.
 
 ## Docker (Cross-OS Easiest Path)
 
+Use Docker in this exact order (no guessing):
+
+### Step 1: Build the web runtime image
+
+```bash
+docker compose build --no-cache tpm-forge-web
+```
+
+### Step 2: Start the web dashboard service
+
+```bash
+docker compose up tpm-forge-web
+```
+
+Now open `http://localhost:8787` in your browser.
+
+### Step 3 (optional checks): understand the non-web services
+
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-Optional for COFFEE source quality:
+- `tpm-preflight` = source/connectivity checks (CLI output only).
+- `tpm-live` = terminal live-monitor logs (CLI output only, **no web UI**).
+- `tpm-forge-web` = FastAPI + dashboard UI (the one with layout/progress/runtime control).
+
+If `tpm-preflight` reports `ALPHAVANTAGE_KEY not set`, COFFEE still works via fallbacks.
+Optional for better COFFEE quality:
 
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"

@@ -95,12 +95,35 @@ Wenn diese Spur überzeugt, resoniert in der Regel auch der Rest des Repos.
 
 ## Docker (einfachster Cross-OS-Weg)
 
+Docker bitte genau in dieser Reihenfolge nutzen (ohne Rätseln):
+
+### Schritt 1: Web-Runtime-Image bauen
+
+```bash
+docker compose build --no-cache tpm-forge-web
+```
+
+### Schritt 2: Web-Dashboard-Service starten
+
+```bash
+docker compose up tpm-forge-web
+```
+
+Danach im Browser öffnen: `http://localhost:8787`.
+
+### Schritt 3 (optionale Checks): Nicht-Web-Services verstehen
+
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-Optional für bessere COFFEE-Quelle:
+- `tpm-preflight` = Quellen-/Connectivity-Checks (nur CLI-Ausgabe).
+- `tpm-live` = Live-Monitor-Logs im Terminal (nur CLI, **kein Web-UI**).
+- `tpm-forge-web` = FastAPI + Dashboard-UI (mit Layout/Fortschrittsbalken/Runtime-Control).
+
+Wenn `tpm-preflight` `ALPHAVANTAGE_KEY not set` meldet, läuft COFFEE trotzdem über Fallback-Quellen.
+Optional für bessere COFFEE-Qualität:
 
 ```bash
 export ALPHAVANTAGE_KEY="<dein_key>"
