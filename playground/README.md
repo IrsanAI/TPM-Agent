@@ -75,3 +75,15 @@ scripts/windows_click_start.bat
 - Suggestions include markets observed/active in runtime.
 - If a market is not available from built-in sources, user must provide explicit URL and credentials (`api_key` where required).
 
+
+
+### Android Termux service control
+
+```bash
+bash scripts/termux_forge.sh start
+bash scripts/termux_forge.sh status
+bash scripts/termux_forge.sh stop
+```
+
+State remains in `state/` (agent overrides, runtime cache) for restart continuity.
+Web dashboard provides start/stop controls and a progress bar for transition status.

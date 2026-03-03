@@ -38,6 +38,19 @@
       <span class="pill">Windows + Smartphone first</span>
     </div>
     <div class="tips">
+      <span class="pill" id="runtimeState">Runtime: unknown</span>
+      <button onclick="runtimeStart()">Start Runtime</button>
+      <button onclick="runtimeStop()">Stop Runtime</button>
+    </div>
+    <div class="glass" id="runtimeControls" style="margin-top:10px">
+      <div class="hint">Service control with persisted state. You can stop/start from browser.</div>
+      <div style="width:100%;height:12px;background:#0f1729;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:6px">
+        <div id="runtimeBar" style="height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#60a5fa)"></div>
+      </div>
+      <div class="hint" id="runtimeProgress">Progress: 0%</div>
+    </div>
+
+    <div class="tips">
       <span class="pill">Realtime swarm: active agents + shared frame</span>
       <span class="pill">Suggestions derive from active + observed TPM markets</span>
     </div>
@@ -132,6 +145,7 @@ async function pullFrame(){
   }
 }
 setInterval(pullFrame, 2000);
+setInterval(refreshRuntimeStatus, 1000);
 
 async function addAgent(){
   const payload = {
@@ -193,8 +207,33 @@ function render(frame){
   });
 }
 
+
+
+async function refreshRuntimeStatus(){
+  try {
+    const r = await fetch('/api/runtime/status');
+    const st = await r.json();
+    document.getElementById('runtimeState').textContent = `Runtime: ${st.engine_state} (${st.transition_action})`;
+    document.getElementById('runtimeBar').style.width = `${st.progress_pct||0}%`;
+    document.getElementById('runtimeProgress').textContent = `Progress: ${st.progress_pct||0}%`;
+  } catch (e) {
+    document.getElementById('runtimeProgress').textContent = `Runtime status error: ${e}`;
+  }
+}
+
+async function runtimeStart(){
+  await fetch('/api/runtime/start', {method:'POST'});
+  refreshRuntimeStatus();
+}
+
+async function runtimeStop(){
+  await fetch('/api/runtime/stop', {method:'POST'});
+  refreshRuntimeStatus();
+}
+
 loadSuggestions();
 pullFrame();
+refreshRuntimeStatus();
 </script>
 </body>
 </html>

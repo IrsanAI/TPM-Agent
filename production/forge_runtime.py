@@ -25,17 +25,10 @@ SUGGESTED_MARKETS: dict[str, list[dict[str, str]]] = {
         {"market": "ETH", "url": "https://api.kraken.com/0/public/OHLC?pair=ETHUSD&interval=60"},
     ],
     "alphavantage_commodity": [
-        {
-            "market": "COFFEE",
-            "url": "https://www.alphavantage.co/query?function=COFFEE&interval=monthly&apikey={API_KEY}",
-        },
-        {
-            "market": "WTI",
-            "url": "https://www.alphavantage.co/query?function=WTI&interval=monthly&apikey={API_KEY}",
-        },
+        {"market": "COFFEE", "url": "https://www.alphavantage.co/query?function=COFFEE&interval=monthly&apikey={API_KEY}"},
+        {"market": "WTI", "url": "https://www.alphavantage.co/query?function=WTI&interval=monthly&apikey={API_KEY}"},
     ],
 }
-
 
 REQUIRES_API_KEY = {"alphavantage_commodity"}
 
@@ -64,6 +57,8 @@ class ForgeRuntime:
     def __init__(self, config_path: Path | None = None):
         self._lock = threading.Lock()
         self._stop_event = threading.Event()
+        self._engine_enabled = True
+        self._transition: dict[str, Any] | None = None
         self._config_path = config_path or (Path(__file__).resolve().parents[1] / "config" / "config.yaml")
         self.base_config, self.paths = load_config(self._config_path)
         self.override_agents_file = self.paths.state_dir / "user_agents.json"
@@ -108,6 +103,48 @@ class ForgeRuntime:
             "requires_api_key": sorted(REQUIRES_API_KEY),
         }
 
+    def runtime_status(self) -> dict:
+        transition = self._transition
+        progress = 100
+        state = "running" if self._engine_enabled else "stopped"
+        action = "idle"
+        if transition:
+            elapsed = time.time() - transition["started_at"]
+            pct = int(min(100, max(0, (elapsed / transition["duration_s"]) * 100)))
+            progress = pct
+            action = transition["action"]
+            state = "running" if transition["target_enabled"] else "stopped"
+            if pct >= 100:
+                self._engine_enabled = bool(transition["target_enabled"])
+                self._transition = None
+                action = "idle"
+                state = "running" if self._engine_enabled else "stopped"
+                progress = 100
+        return {
+            "engine_state": state,
+            "transition_action": action,
+            "progress_pct": progress,
+            "agent_count": len(self.list_agents()),
+        }
+
+    def set_engine_state(self, enabled: bool) -> dict:
+        with self._lock:
+            if self._transition is not None:
+                # allow overriding an in-flight transition with a new target for better UX
+                if bool(self._transition.get("target_enabled")) == enabled:
+                    return self.runtime_status()
+                self._transition = None
+            current = self._engine_enabled
+            if current == enabled:
+                return self.runtime_status()
+            self._transition = {
+                "action": "starting" if enabled else "stopping",
+                "target_enabled": enabled,
+                "started_at": time.time(),
+                "duration_s": 3.0,
+            }
+            return self.runtime_status()
+
     def _validate_spec(self, spec: AgentSpec) -> dict:
         payload = spec.model_dump()
         source = payload["source_type"]
@@ -146,9 +183,13 @@ class ForgeRuntime:
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             try:
-                self.run_tick()
-                interval = int(self.orchestrator.config["engine"]["interval_seconds"])
-            except Exception as exc:  # runtime guard for long-running service
+                self.runtime_status()
+                if self._engine_enabled:
+                    self.run_tick()
+                    interval = int(self.orchestrator.config["engine"]["interval_seconds"])
+                else:
+                    interval = 1
+            except Exception as exc:
                 self.latest_frame = {"error": str(exc), "ts": int(time.time()), "signals": []}
                 interval = 5
             self._stop_event.wait(max(1, interval))
@@ -203,6 +244,21 @@ def api_agents() -> dict:
 @app.get("/api/suggestions")
 def api_suggestions() -> dict:
     return _sanitize(runtime.market_suggestions())
+
+
+@app.get("/api/runtime/status")
+def api_runtime_status() -> dict:
+    return _sanitize(runtime.runtime_status())
+
+
+@app.post("/api/runtime/start")
+def api_runtime_start() -> dict:
+    return _sanitize(runtime.set_engine_state(True))
+
+
+@app.post("/api/runtime/stop")
+def api_runtime_stop() -> dict:
+    return _sanitize(runtime.set_engine_state(False))
 
 
 @app.post("/api/agents")

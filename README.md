@@ -74,13 +74,22 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   ```bash
   pkg update -y && pkg upgrade -y
   pkg install -y git python curl termux-api
-  git clone https://github.com/<your-org-or-user>/TPM-Agent.git
+  git clone https://github.com/IrsanAI/TPM-Agent.git
   cd TPM-Agent
   python scripts/tpm_cli.py env
+  python -m pip install --upgrade pip
+  python -m pip install -r requirements.txt
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
-  For web UI demo on smartphone, open a running Forge host in browser (for example your Windows/Docker machine on the same network).
+  For direct Android (Termux) web UI demo, start Forge runtime locally:
+  ```bash
+  bash scripts/termux_forge.sh start
+  # stop: bash scripts/termux_forge.sh stop
+  # status: bash scripts/termux_forge.sh status
+  ```
+  The script auto-opens browser (if available) and keeps service running in background.
+  In the web interface you can control runtime start/stop; a progress bar shows transition status.
 - **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
 - **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
 
