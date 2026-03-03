@@ -4,80 +4,506 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080b14" />
-  <title>The Forge | Windows Immersive Console</title>
+  <title>The Forge | TPM Runtime Console</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <style>
-    :root { --accent:#7c5cff; --bg:#080b14; --card:#12172a; --line:#2a3353; --text:#dce6ff; }
+    :root { --accent:#7c5cff; --bg:#080b14; --line:#2a3353; --text:#dce6ff; }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      color: var(--text);
-      font-family: Segoe UI, Inter, Arial, sans-serif;
-      background: radial-gradient(circle at 10% -10%, #1c2558 0, transparent 40%), var(--bg);
-      min-height: 100vh;
-      padding: 18px;
-    }
-    .wrap { max-width: 1400px; margin: 0 auto; }
-    .glass {
-      background: linear-gradient(145deg, rgba(18,23,42,0.92), rgba(16,19,34,0.92));
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    h1 { margin: 0 0 10px; font-weight: 700; }
-    .meta { display:flex; flex-wrap:wrap; gap:8px; }
-    .pill { padding: 7px 10px; border-radius: 999px; border:1px solid var(--line); background:#151b31; font-size: 13px; }
-    .grid { display:grid; grid-template-columns: 1.7fr 1fr; gap:12px; }
+    body { margin:0; color:var(--text); font-family:Segoe UI, Inter, Arial, sans-serif; background:radial-gradient(circle at 10% -10%, #1c2558 0, transparent 40%), var(--bg); min-height:100vh; padding:14px; }
+    .wrap { max-width: 1320px; margin: 0 auto; }
+    .glass { background:linear-gradient(145deg, rgba(18,23,42,0.92), rgba(16,19,34,0.92)); border:1px solid var(--line); border-radius:16px; padding:12px; margin-bottom:12px; }
+    .meta,.tips { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .pill { padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#151b31; font-size:12px; }
+    .grid { display:grid; grid-template-columns: 1.5fr 1fr; gap:12px; }
     .subgrid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
     .domains { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:8px; }
-    .domain-card { border:1px solid var(--line); border-radius:14px; padding:10px; background:#10162a; }
-    .kpi { font-size: 1.2rem; font-weight: 700; margin-top: 6px; }
-    pre { margin:0; max-height:300px; overflow:auto; font-size:12px; }
-    @media (max-width: 1100px){ .grid { grid-template-columns: 1fr; } .subgrid{grid-template-columns:1fr;} }
+    .domain-card { border:1px solid var(--line); border-radius:12px; padding:10px; background:#10162a; }
+    .kpi { font-size:1.2rem; font-weight:700; margin-top:6px; }
+    .form-grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+    input,select { width:100%; border-radius:8px; border:1px solid var(--line); padding:8px; background:#0e1426; color:var(--text); }
+    button { border-radius:8px; border:1px solid var(--line); padding:8px 10px; background:#1e2d52; color:var(--text); cursor:pointer; }
+    pre { margin:0; max-height:260px; overflow:auto; font-size:12px; }
+    .hint { font-size:12px; opacity:.85; }
+    @media (max-width: 980px){ .grid,.subgrid,.form-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
 <div class="wrap">
   <section class="glass">
-    <h1>🪟⚒️ The Forge // Windows Immersive Future Console</h1>
+    <h1 id="titleMain" style="margin:0">⚒️ IrsanAI TPM-Agent Forge Runtime (Finance: BTC + COFFEE + dynamic markets)</h1>
     <div class="meta">
       <span class="pill" id="os"></span>
       <span class="pill" id="device"></span>
-      <span class="pill" id="tuple">Design-Tuple: Domain + Future</span>
-      <span class="pill">Desktop UX: Snap-Layout + Wide Charts + Multi-Domain Templates</span>
+      <span class="pill" id="agents">Agents: 0</span>
+      <span class="pill" id="platformPill">Windows + Smartphone first</span>
+      <span class="pill" id="localeCount">Locales: 0</span>
+    </div>
+    <div class="tips">
+      <span class="pill" id="runtimeState">Runtime: unknown</span>
+      <button id="startBtn" onclick="runtimeStart()">Start Runtime</button>
+      <button id="stopBtn" onclick="runtimeStop()">Stop Runtime</button>
+      <select id="localeSelect" onchange="setLocale(this.value)" style="max-width:220px"></select>
+      <a id="localeDoc" class="pill" href="/README.md" target="_blank" rel="noopener">Open language guide</a>
+    </div>
+    <div class="tips">
+      <label class="pill"><input type="checkbox" id="termuxNotify"> termux notify</label>
+      <label class="pill"><input type="checkbox" id="beepEnabled"> beep</label>
+      <label class="pill">vibrate ms <input id="vibrateMs" type="number" min="0" value="800" style="width:90px"></label>
+      <label class="pill"><input type="checkbox" id="telegramEnabled"> telegram</label>
+      <button id="saveAlertsBtn" onclick="saveAlertPrefs()">Save Alerts</button>
+      <button id="testAlertBtn" onclick="sendTestAlert()">Test Alert</button>
+      <span class="pill" id="alertStatus">alerts: n/a</span>
+    </div>
+    <div class="glass" id="runtimeControls" style="margin-top:10px">
+      <div class="hint">Service control with persisted state. You can stop/start from browser.</div>
+      <div style="width:100%;height:12px;background:#0f1729;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:6px">
+        <div id="runtimeBar" style="height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#60a5fa)"></div>
+      </div>
+      <div class="hint" id="runtimeProgress">Progress: 0%</div>
+    </div>
+
+    <div class="tips">
+      <span class="pill">Realtime swarm: active agents + shared frame</span>
+      <span class="pill">Suggestions derive from active + observed TPM markets</span>
     </div>
   </section>
 
   <section class="grid">
     <div class="glass subgrid">
-      <div id="signals" style="height:320px"></div>
-      <div id="entropy" style="height:320px"></div>
+      <div id="signals" style="height:300px"></div>
+      <div id="entropy" style="height:300px"></div>
     </div>
     <div class="glass">
-      <h3 style="margin-top:0">Domain Future Templates</h3>
+      <h3 id="domainsTitle" style="margin-top:0">IrsanAI Domain Pulse</h3>
       <div class="domains" id="domains"></div>
     </div>
   </section>
 
   <section class="glass">
-    <h3 style="margin-top:0">Live Frame</h3>
-    <pre id="json"></pre>
+    <h3 id="liveMarketsTitle" style="margin-top:0">IrsanAI Live Market Cockpit</h3>
+    <div class="hint" id="liveMarketsHint">Tap any market or agent card for immersive drill-down insights.</div>
+    <div id="liveCards" class="domains" style="margin-top:10px"></div>
+  </section>
+
+  <div id="insightModal" style="display:none;position:fixed;inset:0;background:rgba(4,8,18,.82);z-index:50;padding:16px">
+    <div class="glass" style="max-width:1100px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <h3 id="insightTitle" style="margin:0">IrsanAI Market Insight</h3>
+        <button onclick="closeInsightModal()">Close</button>
+      </div>
+      <div id="insightMeta" class="hint" style="margin-top:6px"></div>
+      <div id="insightChart" style="height:360px;margin-top:10px"></div>
+      <pre id="insightJson" style="margin-top:10px;max-height:180px"></pre>
+    </div>
+  </div>
+
+  <section class="grid">
+    <div class="glass">
+      <h3 id="addAgentTitle" style="margin-top:0">Add market agent</h3>
+      <div class="form-grid">
+        <select id="sourceType" onchange="applySourceSuggestion()">
+          <option value="binance">binance (public)</option>
+          <option value="kraken">kraken (public)</option>
+          <option value="alphavantage_commodity">alphavantage_commodity (api key)</option>
+          <option value="open_meteo">open_meteo (public)</option>
+        </select>
+        <select id="marketSelect" onchange="applyMarketSelection()"></select>
+        <input id="name" placeholder="Agent name (e.g. ETH_BINANCE)" />
+        <input id="market" placeholder="Market code (e.g. ETH)" />
+        <input id="domain" placeholder="Domain" value="finance" />
+        <input id="apiKey" placeholder="API key (required for protected sources)" />
+        <input id="url" placeholder="Source URL" style="grid-column:1/-1" />
+      </div>
+      <button id="addAgentBtn" onclick="addAgent()" style="margin-top:8px">Add Agent</button>
+      <p id="addResult" class="hint"></p>
+      <p class="hint">If market is not available from existing sources, provide exact source URL + credentials (API key etc.).</p>
+      <p class="hint" id="sourceHints"></p>
+    </div>
+    <div class="glass">
+      <h3 id="liveFrameTitle" style="margin-top:0">IrsanAI Live Frame</h3>
+      <pre id="json"></pre>
+    </div>
   </section>
 </div>
 
 <script>
-const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
-const ws = new WebSocket(`${wsProto}://${location.host}/ws`);
-ws.onopen = () => ws.send('tick');
-ws.onmessage = (ev) => {
-  const frame = JSON.parse(ev.data);
-  applyTheme(frame);
-  render(frame);
-  ws.send('tick');
+const I18N = {
+  en: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finance: BTC + COFFEE + dynamic markets)',
+    platformPill: 'Windows + Smartphone first',
+    runtimeUnknown: 'Runtime: unknown',
+    startBtn: 'Start Runtime',
+    stopBtn: 'Stop Runtime',
+    localeDoc: 'Open language guide',
+    domainsTitle: 'IrsanAI Domain Pulse',
+    addAgentTitle: 'Add market agent',
+    addAgentBtn: 'Add Agent',
+    liveFrameTitle: 'IrsanAI Live Frame',
+    liveMarketsTitle: 'IrsanAI Live Market Cockpit',
+    liveMarketsHint: 'Tap any market or agent card for immersive drill-down insights.',
+    saveAlerts: 'Save Alerts',
+    testAlert: 'Test Alert',
+    sourceNeedsKey: 'Source requires API key for realtime access.',
+    sourcePublic: 'Public source. API key optional/not required.',
+    fillRequired: 'Please fill name/market/url.',
+    addedOk: 'OK',
+    addError: 'Error',
+    frameError: 'Frame error',
+    waitingTicks: 'Waiting for first successful ticks...',
+    samples: 'samples',
+    runtime: 'Runtime',
+    progress: 'Progress',
+    runtimeStatusError: 'Runtime status error',
+    alertsSaved: 'alerts saved',
+    alertsTermux: 'termux',
+    alertsError: 'alerts error',
+    testAlertSent: 'test alert sent',
+    outlook: 'outlook',
+    glitchDetected: '⚠️ glitch detected',
+    stable: 'stable',
+    market: 'market',
+    value: 'value',
+    reward: 'reward',
+    agents: 'Agents',
+    template: 'Template',
+    agentFitness: 'Agent Fitness',
+    transferEntropy: 'Transfer Entropy'
+  },
+  de: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finanzen: BTC + COFFEE + dynamische Märkte)',
+    platformPill: 'Windows + Smartphone zuerst',
+    runtimeUnknown: 'Laufzeit: unbekannt',
+    startBtn: 'Runtime starten',
+    stopBtn: 'Runtime stoppen',
+    localeDoc: 'Sprach-Guide öffnen',
+    domainsTitle: 'IrsanAI Domain-Puls',
+    addAgentTitle: 'Markt-Agent hinzufügen',
+    addAgentBtn: 'Agent hinzufügen',
+    liveFrameTitle: 'IrsanAI Live-Frame',
+    liveMarketsTitle: 'IrsanAI Live-Markt-Cockpit',
+    liveMarketsHint: 'Tippe auf Markt- oder Agent-Karten für immersive Detail-Einsichten.',
+    saveAlerts: 'Alerts speichern',
+    testAlert: 'Test-Alert',
+    sourceNeedsKey: 'Quelle benötigt API-Key für Echtzeit-Zugriff.',
+    sourcePublic: 'Öffentliche Quelle. API-Key optional/nicht erforderlich.',
+    fillRequired: 'Bitte Name/Markt/URL ausfüllen.',
+    addedOk: 'OK',
+    addError: 'Fehler',
+    frameError: 'Frame-Fehler',
+    waitingTicks: 'Warte auf erste erfolgreiche Ticks...',
+    samples: 'Samples',
+    runtime: 'Laufzeit',
+    progress: 'Fortschritt',
+    runtimeStatusError: 'Laufzeitstatus-Fehler',
+    alertsSaved: 'Alerts gespeichert',
+    alertsTermux: 'termux',
+    alertsError: 'Alert-Fehler',
+    testAlertSent: 'Test-Alert gesendet',
+    outlook: 'Tendenz',
+    glitchDetected: '⚠️ Glitch erkannt',
+    stable: 'stabil',
+    market: 'Markt',
+    value: 'Wert',
+    reward: 'Reward',
+    agents: 'Agenten',
+    template: 'Template',
+    agentFitness: 'Agenten-Fitness',
+    transferEntropy: 'Transfer-Entropie'
+  },
+  es: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finanzas: BTC + COFFEE + mercados dinámicos)',
+    platformPill: 'Windows + smartphone primero',
+    runtimeUnknown: 'Runtime: desconocido',
+    startBtn: 'Iniciar runtime',
+    stopBtn: 'Detener runtime',
+    localeDoc: 'Abrir guía del idioma',
+    domainsTitle: 'Pulso de dominios IrsanAI',
+    addAgentTitle: 'Agregar agente de mercado',
+    addAgentBtn: 'Agregar agente',
+    liveFrameTitle: 'IrsanAI Live Frame',
+    liveMarketsTitle: 'Cabina de mercado en vivo',
+    liveMarketsHint: 'Toca cualquier tarjeta de mercado o agente para ver detalles inmersivos.',
+    saveAlerts: 'Guardar alertas', testAlert: 'Probar alerta',
+    sourceNeedsKey: 'La fuente requiere API key para acceso en tiempo real.', sourcePublic: 'Fuente pública. API key opcional/no requerida.', fillRequired: 'Complete nombre/mercado/url.',
+    addedOk: 'OK', addError: 'Error', frameError: 'Error de frame', waitingTicks: 'Esperando los primeros ticks correctos...', samples: 'muestras', runtime: 'Runtime', progress: 'Progreso', runtimeStatusError: 'Error de estado de runtime', alertsSaved: 'alertas guardadas', alertsTermux: 'termux', alertsError: 'error de alertas', testAlertSent: 'alerta de prueba enviada', outlook: 'tendencia', glitchDetected: '⚠️ glitch detectado', stable: 'estable', market: 'mercado', value: 'valor', reward: 'recompensa', agents: 'Agentes', template: 'Plantilla', agentFitness: 'Aptitud del agente', transferEntropy: 'Entropía de transferencia'
+  },
+  pt: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finanças: BTC + COFFEE + mercados dinâmicos)',
+    platformPill: 'Windows + smartphone primeiro',
+    runtimeUnknown: 'Runtime: desconhecido',
+    startBtn: 'Iniciar runtime',
+    stopBtn: 'Parar runtime',
+    localeDoc: 'Abrir guia do idioma',
+    domainsTitle: 'Pulso de domínios IrsanAI',
+    addAgentTitle: 'Adicionar agente de mercado',
+    addAgentBtn: 'Adicionar agente',
+    liveFrameTitle: 'IrsanAI Live Frame',
+    liveMarketsTitle: 'Cockpit de mercado ao vivo',
+    liveMarketsHint: 'Toque em um mercado ou agente para detalhes imersivos.',
+    saveAlerts: 'Salvar alertas', testAlert: 'Testar alerta', sourceNeedsKey: 'A fonte requer API key para acesso em tempo real.', sourcePublic: 'Fonte pública. API key opcional/não necessária.', fillRequired: 'Preencha nome/mercado/url.',
+    addedOk: 'OK', addError: 'Erro', frameError: 'Erro de frame', waitingTicks: 'Aguardando os primeiros ticks válidos...', samples: 'amostras', runtime: 'Runtime', progress: 'Progresso', runtimeStatusError: 'Erro no status do runtime', alertsSaved: 'alertas salvos', alertsTermux: 'termux', alertsError: 'erro de alertas', testAlertSent: 'alerta de teste enviada', outlook: 'tendência', glitchDetected: '⚠️ glitch detectado', stable: 'estável', market: 'mercado', value: 'valor', reward: 'recompensa', agents: 'Agentes', template: 'Modelo', agentFitness: 'Fitness do agente', transferEntropy: 'Entropia de transferência'
+  },
+  fr: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finance: BTC + COFFEE + marchés dynamiques)',
+    platformPill: 'Windows + smartphone d\'abord', runtimeUnknown: 'Runtime : inconnu', startBtn: 'Démarrer le runtime', stopBtn: 'Arrêter le runtime', localeDoc: 'Ouvrir le guide de langue', domainsTitle: 'Pulse de domaine IrsanAI', addAgentTitle: 'Ajouter un agent de marché', addAgentBtn: 'Ajouter agent', liveFrameTitle: 'IrsanAI Live Frame', liveMarketsTitle: 'Cockpit marché live', liveMarketsHint: 'Touchez une carte marché/agent pour un zoom détaillé.', saveAlerts: 'Enregistrer alertes', testAlert: 'Tester alerte', sourceNeedsKey: 'La source nécessite une clé API en temps réel.', sourcePublic: 'Source publique. Clé API optionnelle.', fillRequired: 'Veuillez remplir nom/marché/url.', addedOk: 'OK', addError: 'Erreur', frameError: 'Erreur frame', waitingTicks: 'En attente des premiers ticks valides...', samples: 'échantillons', runtime: 'Runtime', progress: 'Progression', runtimeStatusError: 'Erreur état runtime', alertsSaved: 'alertes enregistrées', alertsTermux: 'termux', alertsError: 'erreur alertes', testAlertSent: 'alerte test envoyée', outlook: 'tendance', glitchDetected: '⚠️ glitch détecté', stable: 'stable', market: 'marché', value: 'valeur', reward: 'reward', agents: 'Agents', template: 'Modèle', agentFitness: 'Fitness agent', transferEntropy: 'Entropie de transfert'
+  },
+  tr: {
+    titleMain: '⚒️ IrsanAI TPM-Agent Forge Runtime (Finans: BTC + COFFEE + dinamik piyasalar)',
+    platformPill: 'Önce Windows + akıllı telefon', runtimeUnknown: 'Çalışma zamanı: bilinmiyor', startBtn: 'Runtime başlat', stopBtn: 'Runtime durdur', localeDoc: 'Dil kılavuzunu aç', domainsTitle: 'IrsanAI Alan Nabzı', addAgentTitle: 'Piyasa ajanı ekle', addAgentBtn: 'Ajan ekle', liveFrameTitle: 'IrsanAI Canlı Çerçeve', liveMarketsTitle: 'Canlı Piyasa Kokpiti', liveMarketsHint: 'Detaylı görünüm için piyasa/ajan kartına dokunun.', saveAlerts: 'Uyarıları kaydet', testAlert: 'Uyarıyı test et', sourceNeedsKey: 'Kaynak gerçek zaman için API anahtarı ister.', sourcePublic: 'Herkese açık kaynak. API anahtarı opsiyonel.', fillRequired: 'Lütfen ad/piyasa/url doldurun.', addedOk: 'Tamam', addError: 'Hata', frameError: 'Çerçeve hatası', waitingTicks: 'İlk başarılı tikler bekleniyor...', samples: 'örnek', runtime: 'Runtime', progress: 'İlerleme', runtimeStatusError: 'Runtime durum hatası', alertsSaved: 'uyarılar kaydedildi', alertsTermux: 'termux', alertsError: 'uyarı hatası', testAlertSent: 'test uyarısı gönderildi', outlook: 'yön', glitchDetected: '⚠️ glitch tespit edildi', stable: 'stabil', market: 'piyasa', value: 'değer', reward: 'ödül', agents: 'Ajanlar', template: 'Şablon', agentFitness: 'Ajan uyumu', transferEntropy: 'Transfer entropisi'
+  },
+  it: {titleMain:'⚒️ IrsanAI TPM-Agent Forge Runtime (Finanza: BTC + COFFEE + mercati dinamici)',platformPill:'Windows + smartphone prima',runtimeUnknown:'Runtime: sconosciuto',startBtn:'Avvia runtime',stopBtn:'Ferma runtime',localeDoc:'Apri guida lingua',domainsTitle:'Pulse domini IrsanAI',addAgentTitle:'Aggiungi agente mercato',addAgentBtn:'Aggiungi agente',liveFrameTitle:'IrsanAI Live Frame',liveMarketsTitle:'Cockpit mercati live',liveMarketsHint:'Tocca una card mercato/agente per dettagli immersivi.',saveAlerts:'Salva avvisi',testAlert:'Test avviso',sourceNeedsKey:'La fonte richiede API key realtime.',sourcePublic:'Fonte pubblica. API key opzionale.',fillRequired:'Compila nome/mercato/url.',addedOk:'OK',addError:'Errore',frameError:'Errore frame',waitingTicks:'In attesa dei primi tick riusciti...',samples:'campioni',runtime:'Runtime',progress:'Progresso',runtimeStatusError:'Errore stato runtime',alertsSaved:'avvisi salvati',alertsTermux:'termux',alertsError:'errore avvisi',testAlertSent:'avviso test inviato',outlook:'trend',glitchDetected:'⚠️ glitch rilevato',stable:'stabile',market:'mercato',value:'valore',reward:'reward',agents:'Agenti',template:'Template',agentFitness:'Fitness agente',transferEntropy:'Entropia di trasferimento'},
+  ru: {titleMain:'⚒️ IrsanAI TPM-Agent Forge Runtime (Финансы: BTC + COFFEE + динамические рынки)',platformPill:'Сначала Windows + смартфон',runtimeUnknown:'Runtime: неизвестно',startBtn:'Запустить runtime',stopBtn:'Остановить runtime',localeDoc:'Открыть языковой гайд',domainsTitle:'Пульс доменов IrsanAI',addAgentTitle:'Добавить рыночного агента',addAgentBtn:'Добавить агента',liveFrameTitle:'IrsanAI Live Frame',liveMarketsTitle:'Пульт живого рынка',liveMarketsHint:'Нажмите на карточку рынка/агента для детального режима.',saveAlerts:'Сохранить алерты',testAlert:'Тест алерта',sourceNeedsKey:'Источник требует API-ключ для realtime.',sourcePublic:'Публичный источник. API-ключ опционален.',fillRequired:'Заполните name/market/url.',addedOk:'OK',addError:'Ошибка',frameError:'Ошибка frame',waitingTicks:'Ожидание первых успешных тиков...',samples:'образцы',runtime:'Runtime',progress:'Прогресс',runtimeStatusError:'Ошибка статуса runtime',alertsSaved:'алерты сохранены',alertsTermux:'termux',alertsError:'ошибка алертов',testAlertSent:'тест-алерт отправлен',outlook:'прогноз',glitchDetected:'⚠️ обнаружен glitch',stable:'стабильно',market:'рынок',value:'значение',reward:'reward',agents:'Агенты',template:'Шаблон',agentFitness:'Фитнес агента',transferEntropy:'Энтропия переноса'},
+  ja: {titleMain:'⚒️ IrsanAI TPM-Agent Forge Runtime（金融: BTC + COFFEE + 動的マーケット）',platformPill:'Windows + スマホ優先',runtimeUnknown:'Runtime: 不明',startBtn:'Runtime開始',stopBtn:'Runtime停止',localeDoc:'言語ガイドを開く',domainsTitle:'IrsanAI ドメインパルス',addAgentTitle:'市場エージェントを追加',addAgentBtn:'エージェント追加',liveFrameTitle:'IrsanAI ライブフレーム',liveMarketsTitle:'ライブ市場コックピット',liveMarketsHint:'市場またはエージェントカードをタップして詳細表示。',saveAlerts:'アラート保存',testAlert:'テストアラート',sourceNeedsKey:'このソースはリアルタイムにAPIキーが必要です。',sourcePublic:'公開ソース。APIキーは任意。',fillRequired:'name/market/url を入力してください。',addedOk:'OK',addError:'エラー',frameError:'フレームエラー',waitingTicks:'最初の正常ティックを待機中...',samples:'サンプル',runtime:'Runtime',progress:'進捗',runtimeStatusError:'Runtime状態エラー',alertsSaved:'アラート保存済み',alertsTermux:'termux',alertsError:'アラートエラー',testAlertSent:'テストアラート送信',outlook:'見通し',glitchDetected:'⚠️ glitch検出',stable:'安定',market:'市場',value:'値',reward:'報酬',agents:'エージェント',template:'テンプレート',agentFitness:'エージェント適合度',transferEntropy:'転送エントロピー'},
+  'zh-CN': {titleMain:'⚒️ IrsanAI TPM-Agent Forge Runtime（金融：BTC + COFFEE + 动态市场）',platformPill:'Windows + 手机优先',runtimeUnknown:'运行状态：未知',startBtn:'启动 Runtime',stopBtn:'停止 Runtime',localeDoc:'打开语言指南',domainsTitle:'IrsanAI 领域脉冲',addAgentTitle:'添加市场代理',addAgentBtn:'添加代理',liveFrameTitle:'IrsanAI 实时帧',liveMarketsTitle:'实时市场驾驶舱',liveMarketsHint:'点击任意市场或代理卡片查看沉浸式详情。',saveAlerts:'保存提醒',testAlert:'测试提醒',sourceNeedsKey:'该数据源需要 API Key 才能实时访问。',sourcePublic:'公共数据源，API Key 可选。',fillRequired:'请填写 name/market/url。',addedOk:'成功',addError:'错误',frameError:'帧错误',waitingTicks:'等待首个成功 tick...',samples:'样本',runtime:'运行状态',progress:'进度',runtimeStatusError:'运行状态错误',alertsSaved:'提醒已保存',alertsTermux:'termux',alertsError:'提醒错误',testAlertSent:'测试提醒已发送',outlook:'走势',glitchDetected:'⚠️ 检测到 glitch',stable:'稳定',market:'市场',value:'数值',reward:'奖励',agents:'代理',template:'模板',agentFitness:'代理适应度',transferEntropy:'转移熵'},
+  hi: {titleMain:'⚒️ IrsanAI TPM-Agent Forge Runtime (वित्त: BTC + COFFEE + डायनेमिक मार्केट)',platformPill:'Windows + स्मार्टफोन पहले',runtimeUnknown:'रनटाइम: अज्ञात',startBtn:'रनटाइम शुरू करें',stopBtn:'रनटाइम रोकें',localeDoc:'भाषा गाइड खोलें',domainsTitle:'IrsanAI डोमेन पल्स',addAgentTitle:'मार्केट एजेंट जोड़ें',addAgentBtn:'एजेंट जोड़ें',liveFrameTitle:'IrsanAI लाइव फ़्रेम',liveMarketsTitle:'लाइव मार्केट कॉकपिट',liveMarketsHint:'विस्तृत जानकारी के लिए किसी भी मार्केट/एजेंट कार्ड पर टैप करें।',saveAlerts:'अलर्ट सेव करें',testAlert:'अलर्ट टेस्ट',sourceNeedsKey:'रियलटाइम एक्सेस के लिए API key आवश्यक है।',sourcePublic:'पब्लिक स्रोत। API key वैकल्पिक।',fillRequired:'कृपया name/market/url भरें।',addedOk:'ठीक',addError:'त्रुटि',frameError:'फ़्रेम त्रुटि',waitingTicks:'पहले सफल ticks का इंतज़ार...',samples:'नमूने',runtime:'रनटाइम',progress:'प्रगति',runtimeStatusError:'रनटाइम स्टेटस त्रुटि',alertsSaved:'अलर्ट सेव',alertsTermux:'termux',alertsError:'अलर्ट त्रुटि',testAlertSent:'टेस्ट अलर्ट भेजा गया',outlook:'रुझान',glitchDetected:'⚠️ glitch पाया गया',stable:'स्थिर',market:'मार्केट',value:'मान',reward:'रिवार्ड',agents:'एजेंट',template:'टेम्पलेट',agentFitness:'एजेंट फिटनेस',transferEntropy:'ट्रांसफर एंट्रॉपी'},
+  bs: {titleMain:'⚒️ IrsanAI TPM-Agent Forge Runtime (Finansije: BTC + COFFEE + dinamička tržišta)',platformPill:'Windows + smartphone prvo',runtimeUnknown:'Runtime: nepoznato',startBtn:'Pokreni runtime',stopBtn:'Zaustavi runtime',localeDoc:'Otvori jezični vodič',domainsTitle:'IrsanAI puls domena',addAgentTitle:'Dodaj tržišnog agenta',addAgentBtn:'Dodaj agenta',liveFrameTitle:'IrsanAI Live Frame',liveMarketsTitle:'Live market kokpit',liveMarketsHint:'Dodirni karticu tržišta ili agenta za detalje.',saveAlerts:'Sačuvaj alerte',testAlert:'Test alert',sourceNeedsKey:'Izvor traži API ključ za realtime.',sourcePublic:'Javni izvor. API ključ opcionalan.',fillRequired:'Popuni name/market/url.',addedOk:'OK',addError:'Greška',frameError:'Greška frame-a',waitingTicks:'Čekam prve uspješne tickove...',samples:'uzorci',runtime:'Runtime',progress:'Napredak',runtimeStatusError:'Greška statusa runtime-a',alertsSaved:'alerti sačuvani',alertsTermux:'termux',alertsError:'greška alerta',testAlertSent:'test alert poslan',outlook:'trend',glitchDetected:'⚠️ glitch detektovan',stable:'stabilno',market:'tržište',value:'vrijednost',reward:'nagrada',agents:'Agenti',template:'Šablon',agentFitness:'Fitness agenta',transferEntropy:'Transfer entropija'}
 };
+
+I18N['pt-BR'] = I18N.pt;
+
+function tr(key){
+  const lang = I18N[currentLocale] || I18N[(currentLocale || '').split('-')[0]] || I18N.en;
+  return lang[key] ?? I18N.en[key] ?? key;
+}
+
+function normalizeRuntimeAction(action){
+  const lang = I18N[currentLocale] || I18N[(currentLocale || '').split('-')[0]] || I18N.en;
+  if (action === 'starting') return lang.startBtn || I18N.en.startBtn;
+  if (action === 'stopping') return lang.stopBtn || I18N.en.stopBtn;
+  return lang.runtimeUnknown || I18N.en.runtimeUnknown;
+}
+
+let currentLocale = 'en';
+let locales = [];
+
+let suggestions = {suggested_by_source:{}, active_markets:[], observed_markets:[], requires_api_key:[]};
+let liveSnapshot = {markets: [], agents: []};
+
+async function loadLocales(){
+  try {
+    const r = await fetch('/api/locales');
+    const data = await r.json();
+    locales = data.locales || [];
+  } catch (_) {
+    locales = [{code:'en',label:'English',doc_path:'README.md'}];
+  }
+  const select = document.getElementById('localeSelect');
+  select.innerHTML = '';
+  locales.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = item.code;
+    opt.textContent = `${item.label} (${item.code})`;
+    select.appendChild(opt);
+  });
+  const browserLang = (navigator.language || 'en').toLowerCase();
+  const hit = locales.find(l => l.code.toLowerCase() === browserLang)
+    || locales.find(l => l.code.toLowerCase() === browserLang.split('-')[0])
+    || locales.find(l => l.code === 'en')
+    || locales[0];
+  if (hit) {
+    select.value = hit.code;
+    setLocale(hit.code);
+  }
+  document.getElementById('localeCount').textContent = `Locales: ${locales.length}`;
+}
+
+function setLocale(code){
+  currentLocale = code;
+  const lang = I18N[code] || I18N[(code || '').split('-')[0]] || I18N.en;
+  document.getElementById('titleMain').textContent = lang.titleMain;
+  document.getElementById('platformPill').textContent = lang.platformPill;
+  document.getElementById('startBtn').textContent = tr('startBtn');
+  document.getElementById('stopBtn').textContent = tr('stopBtn');
+  document.getElementById('domainsTitle').textContent = lang.domainsTitle;
+  document.getElementById('addAgentTitle').textContent = lang.addAgentTitle;
+  document.getElementById('addAgentBtn').textContent = lang.addAgentBtn;
+  document.getElementById('liveFrameTitle').textContent = lang.liveFrameTitle;
+  document.getElementById('liveMarketsTitle').textContent = lang.liveMarketsTitle;
+  document.getElementById('liveMarketsHint').textContent = tr('liveMarketsHint');
+  document.getElementById('saveAlertsBtn').textContent = tr('saveAlerts');
+  document.getElementById('testAlertBtn').textContent = tr('testAlert');
+  applySourceSuggestion();
+  renderLiveCards();
+  const localeDoc = document.getElementById('localeDoc');
+  const found = locales.find(l => l.code === code);
+  if (found) localeDoc.href = '/' + found.doc_path;
+  localeDoc.textContent = tr('localeDoc');
+  if (document.getElementById('runtimeState').textContent.includes('unknown') || document.getElementById('runtimeState').textContent.includes('unbekannt')) {
+    document.getElementById('runtimeState').textContent = tr('runtimeUnknown');
+  }
+}
+
+async function loadSuggestions(){
+  const r = await fetch('/api/suggestions');
+  suggestions = await r.json();
+  applySourceSuggestion();
+}
+
+function applySourceSuggestion(){
+  const source = document.getElementById('sourceType').value;
+  const list = suggestions.suggested_by_source?.[source] || [];
+  const sel = document.getElementById('marketSelect');
+  sel.innerHTML = '<option value="">Suggested markets...</option>';
+  list.forEach(item => {
+    const opt = document.createElement('option');
+    opt.value = JSON.stringify(item);
+    opt.textContent = `${item.market}`;
+    sel.appendChild(opt);
+  });
+  const apiNeeded = (suggestions.requires_api_key || []).includes(source);
+  document.getElementById('sourceHints').textContent = apiNeeded
+    ? tr('sourceNeedsKey')
+    : tr('sourcePublic');
+}
+
+function applyMarketSelection(){
+  const v = document.getElementById('marketSelect').value;
+  if (!v) return;
+  const item = JSON.parse(v);
+  document.getElementById('market').value = item.market || '';
+  document.getElementById('url').value = item.url || '';
+  const source = document.getElementById('sourceType').value;
+  if (!document.getElementById('name').value) {
+    document.getElementById('name').value = `${item.market}_${source}`.toUpperCase();
+  }
+}
+
+async function loadAlertPrefs(){
+  try {
+    const r = await fetch('/api/alerts/preferences');
+    const p = await r.json();
+    document.getElementById('termuxNotify').checked = !!p.termux_notify_enabled;
+    document.getElementById('beepEnabled').checked = !!p.beep_enabled;
+    document.getElementById('telegramEnabled').checked = !!p.telegram_enabled;
+    document.getElementById('vibrateMs').value = p.vibrate_ms ?? 800;
+    document.getElementById('alertStatus').textContent = `${tr('alertsTermux')}: ${p.termux_available ? 'yes' : 'no'}`;
+  } catch (e) {
+    document.getElementById('alertStatus').textContent = `${tr('alertsError')}: ${e}`;
+  }
+}
+
+async function saveAlertPrefs(){
+  const payload = {
+    termux_notify_enabled: document.getElementById('termuxNotify').checked,
+    beep_enabled: document.getElementById('beepEnabled').checked,
+    telegram_enabled: document.getElementById('telegramEnabled').checked,
+    vibrate_ms: Number(document.getElementById('vibrateMs').value || 0)
+  };
+  const r = await fetch('/api/alerts/preferences', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
+  const out = await r.json();
+  document.getElementById('alertStatus').textContent = `${tr('alertsSaved')}: ${tr('alertsTermux')}=${out.termux_available ? 'yes' : 'no'}`;
+}
+
+async function sendTestAlert(){
+  const r = await fetch('/api/alerts/test', {method:'POST'});
+  const out = await r.json();
+  document.getElementById('alertStatus').textContent = out.message || tr('testAlertSent');
+}
+
+async function loadLiveMarkets(){
+  try {
+    const r = await fetch('/api/markets/live');
+    liveSnapshot = await r.json();
+    renderLiveCards();
+  } catch (e) {
+    document.getElementById('liveMarketsHint').textContent = `Live market feed error: ${e}`;
+  }
+}
+
+function renderLiveCards(){
+  const root = document.getElementById('liveCards');
+  root.innerHTML = '';
+  const markets = liveSnapshot.markets || [];
+  const agents = liveSnapshot.agents || [];
+
+  markets.forEach(item => {
+    const up = (item.delta || 0) >= 0;
+    const latest = item.latest || {};
+    const card = document.createElement('button');
+    card.className = 'domain-card';
+    card.style.textAlign = 'left';
+    card.style.background = up ? '#0d2a1d' : '#32121b';
+    card.innerHTML = `<strong>${item.market}</strong><div class="kpi">${Number(latest.value || 0).toLocaleString()}</div><div>${up ? '▲' : '▼'} ${Number(item.delta_pct || 0).toFixed(2)}%</div><div>fitness: ${Number(latest.fitness || 0).toFixed(3)}</div><div>${tr('outlook')}: ${(item.outlook||{}).direction || 'unknown'} (${Number((item.outlook||{}).confidence||0).toFixed(2)})</div><div>${item.glitch ? tr('glitchDetected') : tr('stable')}</div>`;
+    card.onclick = () => openInsightModal(`Market ${item.market}`, item.points || [], item);
+    root.appendChild(card);
+  });
+
+  agents.slice(0, 8).forEach(item => {
+    const latest = item.latest || {};
+    const card = document.createElement('button');
+    card.className = 'domain-card';
+    card.style.textAlign = 'left';
+    card.style.background = '#121a34';
+    card.innerHTML = `<strong>${item.agent}</strong><div>${tr('market')}: ${item.market}</div><div>${tr('value')}: ${Number(latest.value || 0).toLocaleString()}</div><div>${tr('reward')}: ${Number(latest.reward || 0).toFixed(3)}</div>`;
+    card.onclick = () => openInsightModal(`Agent ${item.agent}`, item.points || [], item);
+    root.appendChild(card);
+  });
+
+  if (markets.length === 0 && agents.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'hint';
+    empty.textContent = tr('waitingTicks');
+    root.appendChild(empty);
+  }
+}
+
+function openInsightModal(title, points, payload){
+  document.getElementById('insightModal').style.display = 'block';
+  document.getElementById('insightTitle').textContent = `IrsanAI Insight • ${title}`;
+  document.getElementById('insightMeta').textContent = `${tr('samples')}: ${points.length}`;
+  document.getElementById('insightJson').textContent = JSON.stringify(payload, null, 2);
+  const xs = points.map(p => new Date((p.ts || 0) * 1000).toLocaleTimeString());
+  const ys = points.map(p => Number(p.value || 0));
+  const fit = points.map(p => Number(p.fitness || 0));
+  Plotly.newPlot('insightChart', [
+    {x: xs, y: ys, mode:'lines+markers', name:'value', line:{color:'#60a5fa'}},
+    {x: xs, y: fit, mode:'lines', name:'fitness', yaxis:'y2', line:{color:'#f472b6'}}
+  ], {
+    paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'},
+    yaxis2:{overlaying:'y', side:'right'}, margin:{l:40,r:40,t:30,b:30}
+  });
+}
+
+function closeInsightModal(){
+  document.getElementById('insightModal').style.display = 'none';
+}
+
+async function pullFrame(){
+  try {
+    const res = await fetch('/api/frame');
+    const frame = await res.json();
+    applyTheme(frame);
+    render(frame);
+  } catch (err) {
+    document.getElementById('addResult').textContent = `${tr('frameError')}: ${err}`;
+  }
+}
+setInterval(pullFrame, 2000);
+setInterval(refreshRuntimeStatus, 1000);
+setInterval(loadLiveMarkets, 2500);
+
+async function addAgent(){
+  const payload = {
+    name: document.getElementById('name').value.trim(),
+    market: document.getElementById('market').value.trim(),
+    domain: document.getElementById('domain').value.trim(),
+    source_type: document.getElementById('sourceType').value.trim(),
+    url: document.getElementById('url').value.trim(),
+    api_key: document.getElementById('apiKey').value.trim() || null,
+    weight: 1.0
+  };
+  const out = document.getElementById('addResult');
+  if (!payload.name || !payload.market || !payload.url) {
+    out.textContent = tr('fillRequired'); return;
+  }
+  const res = await fetch('/api/agents', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload)});
+  const data = await res.json();
+  out.textContent = res.ok ? `${tr('addedOk')} - agent_count=${data.agent_count}` : `${tr('addError')}: ${data.detail || 'unknown'}`;
+  if (res.ok) {
+    document.getElementById('apiKey').value = '';
+    await loadSuggestions();
+  }
+}
 
 function applyTheme(frame){
   const ui = frame.ui_profile || {};
@@ -87,23 +513,23 @@ function applyTheme(frame){
   const domainTheme = themeMap[firstDomain] || {};
   const accent = domainTheme.accent || windows.accent || '#7c5cff';
   document.documentElement.style.setProperty('--accent', accent);
-  document.getElementById('tuple').textContent = `Design-Tuple: ${windows.future_tuple || 'domain+future'}`;
 }
 
 function render(frame){
   document.getElementById('json').textContent = JSON.stringify(frame, null, 2);
   document.getElementById('os').textContent = `OS: ${frame.runtime?.os || 'unknown'}`;
   document.getElementById('device').textContent = `Root: ${frame.runtime?.device_root || 'n/a'}`;
+  document.getElementById('agents').textContent = `${tr('agents')}: ${frame.agent_count || (frame.signals||[]).length}`;
 
-  const labels = (frame.signals || []).map(s => `${s.domain} / ${s.agent}`);
+  const labels = (frame.signals || []).map(s => `${s.market} / ${s.agent}`);
   const fitness = (frame.signals || []).map(s => s.fitness);
   Plotly.newPlot('signals', [{x: labels, y: fitness, type:'bar', marker:{color:'var(--accent)'}}],
-    {title:'Agent Fitness (Desktop Windowed View)', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+    {title:tr('agentFitness'), paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
 
   const edges = Object.keys(frame.transfer_entropy_graph || {});
   const values = Object.values(frame.transfer_entropy_graph || {});
   Plotly.newPlot('entropy', [{x: edges, y: values, mode:'lines+markers', line:{color:'#3ddc97'}}],
-    {title:'Inter-Agent Transfer Entropy', paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
+    {title:tr('transferEntropy'), paper_bgcolor:'rgba(0,0,0,0)', plot_bgcolor:'rgba(0,0,0,0)', font:{color:'#dce6ff'}});
 
   const domains = frame.domain_summary || {};
   const box = document.getElementById('domains');
@@ -111,10 +537,41 @@ function render(frame){
   Object.entries(domains).forEach(([name, item]) => {
     const el = document.createElement('div');
     el.className = 'domain-card';
-    el.innerHTML = `<strong>${name.toUpperCase()}</strong><div class="kpi">${(item.avg_fitness||0).toFixed(3)}</div><div>Agents: ${item.count}</div><div>Template: ${item.template}</div>`;
+    el.innerHTML = `<strong>${name.toUpperCase()}</strong><div class="kpi">${(item.avg_fitness||0).toFixed(3)}</div><div>${tr('agents')}: ${item.count}</div><div>${tr('template')}: ${item.template}</div>`;
     box.appendChild(el);
   });
 }
+
+
+
+async function refreshRuntimeStatus(){
+  try {
+    const r = await fetch('/api/runtime/status');
+    const st = await r.json();
+    document.getElementById('runtimeState').textContent = `${tr('runtime')}: ${st.engine_state} (${normalizeRuntimeAction(st.transition_action)})`;
+    document.getElementById('runtimeBar').style.width = `${st.progress_pct||0}%`;
+    document.getElementById('runtimeProgress').textContent = `${tr('progress')}: ${st.progress_pct||0}%`;
+  } catch (e) {
+    document.getElementById('runtimeProgress').textContent = `${tr('runtimeStatusError')}: ${e}`;
+  }
+}
+
+async function runtimeStart(){
+  await fetch('/api/runtime/start', {method:'POST'});
+  refreshRuntimeStatus();
+}
+
+async function runtimeStop(){
+  await fetch('/api/runtime/stop', {method:'POST'});
+  refreshRuntimeStatus();
+}
+
+loadLocales();
+loadAlertPrefs();
+loadSuggestions();
+loadLiveMarkets();
+pullFrame();
+refreshRuntimeStatus();
 </script>
 </body>
 </html>
