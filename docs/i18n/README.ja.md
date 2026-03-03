@@ -1,21 +1,22 @@
-# IrsanAI TPM Agent Forge
+# IrsanAI TPM エージェント Forge
+[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](../../docs/i18n/README.es.md) | [🇮🇹 Italiano](../../docs/i18n/README.it.md) | [🇧🇦 Bosanski](../../docs/i18n/README.bs.md) | [🇷🇺 Русский](../../docs/i18n/README.ru.md) | [🇨🇳 中文](../../docs/i18n/README.zh-CN.md) | [🇫🇷 Français](../../docs/i18n/README.fr.md) | [🇧🇷 Português (BR)](../../docs/i18n/README.pt-BR.md) | [🇮🇳 हिन्दी](../../docs/i18n/README.hi.md) | [🇹🇷 Türkçe](../../docs/i18n/README.tr.md) | [🇯🇵 日本語](../../docs/i18n/README.ja.md)
 
-[🇬🇧 English](./README.md) | [JA Ja](./docs/i18n/README.ja.md) |
+[🇬🇧 English](../../README.md) | [🇩🇪 Deutsch](../../README.de.md) | [🇪🇸 Español](./README.es.md) | [🇮🇹 Italiano](./README.it.md) | [🇧🇦 Bosanski](./README.bs.md) | [🇷🇺 Русский](./README.ru.md) | [🇨🇳 中文](./README.zh-CN.md) | [🇫🇷 Français](./README.fr.md) | [🇧🇷 Português (BR)](./README.pt-BR.md) | [🇮🇳 हिन्दी](./README.hi.md) | [🇹🇷 Türkçe](./README.tr.md) | [🇯🇵 日本語](./README.ja.md)
 
-A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) with cross-platform runtime options.
+クロスプラットフォームのランタイムオプションを備えた、自律的なマルチエージェントセットアップ（BTC、COFFEE など）向けのクリーンなブートストラップ。
 
-## What's Included
+## 含まれる内容
 
-- `production/preflight_manager.py` – resilient market source probing with Alpha Vantage + fallback chain and local cache fallback.
-- `production/tpm_agent_process.py` – simple per-market agent loop.
-- `production/tpm_live_monitor.py` – live BTC monitor with optional CSV warm-start and Termux notifications.
-- `core/tpm_scientific_validation.py` – backtest + statistical validation pipeline.
-- `scripts/tpm_cli.py` – unified launcher for Termux/Linux/macOS/Windows.
-- `scripts/stress_test_suite.py` – failover/latency stress test.
-- `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – process ops helpers.
-- `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operational core tooling.
+- `production/preflight_manager.py` – Alpha Vantage + フォールバックチェーンおよびローカルキャッシュによる堅牢な市場データソース検査。
+- `production/tpm_agent_process.py` – 市場ごとのシンプルなエージェントループ。
+- `production/tpm_live_monitor.py` – 任意のCSVウォームスタートとTermux通知を備えたライブBTCモニター。
+- `core/tpm_scientific_validation.py` – バックテスト＋統計的検証パイプライン。
+- `scripts/tpm_cli.py` – Termux/Linux/macOS/Windows用の統一ランチャー。
+- `scripts/stress_test_suite.py` – フェイルオーバー／レイテンシストレステスト。
+- `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – プロセス運用ヘルパー。
+- `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – 運用コアツール。
 
-## Universal Quickstart
+## ユニバーサルクイックスタート
 
 ```bash
 python scripts/tpm_cli.py env
@@ -24,9 +25,9 @@ python scripts/tpm_cli.py preflight --market ALL
 python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600
 ```
 
-## Runtime Chain Check (causal/order sanity)
+## ランタイムチェーンチェック（因果／順序の整合性）
 
-The default repo flow is intentionally linear to avoid hidden-state drift and "false confidence" during live runs.
+デフォルトのリポジトリフローは、ライブ実行中の隠れ状態のドリフトや「偽の信頼」を避けるため、意図的に線形に設計されています。
 
 ```mermaid
 flowchart LR
@@ -36,41 +37,41 @@ flowchart LR
   D --> E[5. stress test]
 ```
 
-### Gate logic (what must be true before the next step)
-- **Gate 1 – 環境:** Python/プラットフォームの文脈が正しい（`env`）。
-- **Gate 2 – 科学的妥当性:** ベースラインモデル挙動は再現可能（`validate`）。
-- **Gate 3 – ソース信頼性:** 市場データ + フォールバックチェーンに到達可能（`preflight --market ALL`）。
-- **Gate 4 – ランタイム実行:** 既知の入力履歴で live ループが動作（`live`）。
-- **Gate 5 – 敵対的信頼性:** latency/failover 目標がストレス下でも維持（`stress_test_suite.py`）。
+### ゲートロジック（次のステップ実行前に満たすべき条件）
+- **ゲート 1 – 環境:** Python／プラットフォームのコンテキストが正しいこと（`env`）。
+- **ゲート 2 – 科学的整合性:** ベースラインモデルの挙動が再現可能であること（`validate`）。
+- **ゲート 3 – ソース信頼性:** 市場データ＋フォールバックチェーンにアクセス可能であること（`preflight --market ALL`）。
+- **ゲート 4 – ランタイム実行:** 既知の入力履歴でライブループが動作すること（`live`）。
+- **ゲート 5 – 逆境下の信頼性:** ストレス下でもレイテンシ／フェイルオーバー目標が満たされること（`stress_test_suite.py`）。
 
-✅ Already fixed in code: CLI preflight now supports `--market ALL`, matching quickstart + docker flow.
+✅ すでにコードで修正済み：CLIのpreflightは現在 `--market ALL` をサポートしており、クイックスタートおよびDockerフローと整合。
 
-## Choose Your Mission (role-based CTA)
+## ミッション選択（役割別CTA）
 
-> **You are X? Click your lane. Start in <60 seconds.**
+> **あなたはXですか？自分のレーンを選択してください。<60秒で開始可能です。**
 
-| Persona | What you care about | Click path | First command |
+| ペルソナ | 関心事項 | クリック先 | 最初のコマンド |
 |---|---|---|---|
-| 📈 **Trader** | Fast pulse, actionable runtime | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
-| 💼 **Investor** | Stability, source trust, resilience | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
-| 🔬 **Scientist** | Evidence, tests, statistical signal | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
-| 🧠 **Theoretician** | Causal structure + future architecture | [`core/scout.py`](./core/scout.py) + [`Next Steps`](#next-steps) | `python scripts/tpm_cli.py validate` |
-| 🛡️ **Skeptic (priority)** | Break assumptions before production | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
-| ⚙️ **Operator / DevOps** | Uptime, process health, recoverability | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
+| 📈 **トレーダー** | 高速パルス、実行可能なランタイム | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
+| 💼 **投資家** | 安定性、ソースの信頼性、回復力 | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
+| 🔬 **研究者** | 証拠、テスト、統計的シグナル | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
+| 🧠 **理論家** | 因果構造＋将来のアーキテクチャ | [`core/scout.py`](./core/scout.py) + [`Next Steps`](#next-steps) | `python scripts/tpm_cli.py validate` |
+| 🛡️ **懐疑派（優先）** | 本番前に仮定を破る | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
+| ⚙️ **オペレーター／DevOps** | 稼働時間、プロセスの健康状態、回復力 | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
 
-### Skeptic Challenge (recommended first for new visitors)
-If you do **only one thing**, run this and inspect the report output:
+### 懐疑派チャレンジ（新規訪問者に推奨最初の操作）
+**もし一つだけするなら、以下を実行してレポート出力を確認してください：**
 
 ```bash
 python scripts/tpm_cli.py preflight --market ALL
 python scripts/stress_test_suite.py
 ```
 
-If this lane convinces you, the rest of the repository will likely resonate too.
+このレーンが納得できれば、リポジトリの他部分も共鳴するでしょう。
 
-## Platform Notes
+## プラットフォームノート
 
-- **Android / Termux (Samsung, etc.)**
+- **Android / Termux（Samsung等）**
   ```bash
   bash scripts/termux_bootstrap.sh
   cd ~/TPM-Agent
@@ -78,149 +79,141 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
-  For direct Android (Termux) web UI demo, start Forge runtime locally:
+  直接Android（Termux）Web UIデモを行うには、Forgeランタイムをローカルで起動：
   ```bash
   cd ~/TPM-Agent
   bash scripts/termux_forge.sh start
-  # stop: bash scripts/termux_forge.sh stop
-  # status: bash scripts/termux_forge.sh status
+  # 停止: bash scripts/termux_forge.sh stop
+  # 状態: bash scripts/termux_forge.sh status
   ```
-  The script auto-opens browser (if available) and keeps service running in background.
-  If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
-  `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
-  In the web interface you can control runtime start/stop; a progress bar shows transition status.
-- **iPhone（ベストエフォート）:** iSH / a-Shell などのシェルアプリを使用。Termux 固有の通知フックは利用できません。
-- **Windows / Linux / macOS**: 同じ CLI コマンドを使用し、永続運用には tmux/scheduler/cron 経由で実行します。
+  スクリプトはブラウザ（利用可能なら）を自動起動し、バックグラウンドでサービスを維持します。
+  Android上で `pydantic-core`/Rust または `scipy`/Fortran ビルドエラーが出た場合は、
+  `python -m pip install -r requirements-termux.txt` （Termux安全セット、Rustツールチェーン不要）を使用してください。
+  Webインターフェースでランタイムの開始／停止を制御可能で、進行状況バーが遷移状態を表示します。
+- **iPhone（ベストエフォート）**: iSHやa-Shellなどのシェルアプリを使用してください。Termux固有の通知フックは利用できません。
+- **Windows / Linux / macOS**: 同じCLIコマンドを使用。tmuxやスケジューラ／cronを使って永続化してください。
 
-## Docker (Cross-OS Easiest Path)
+## Docker（クロスOS最も簡単な方法）
 
-Use Docker in this exact order (no guessing):
+以下の順番でDockerを使用してください（推測不要）：
 
-### Step 1: Build the web runtime image
+### ステップ1: Webランタイムイメージをビルド
 
 ```bash
 docker compose build --no-cache tpm-forge-web
 ```
 
-### Step 2: Start the web dashboard service
+### ステップ2: Webダッシュボードサービスを起動
 
 ```bash
 docker compose up tpm-forge-web
 ```
 
-Now open `http://localhost:8787` in your browser (**not** `http://0.0.0.0:8787`). Uvicorn binds to `0.0.0.0` internally, but clients should use `localhost` (or the host LAN IP).
+ブラウザで `http://localhost:8787` を開いてください（**`http://0.0.0.0:8787` ではありません**）。Uvicornは内部的に `0.0.0.0` にバインドしますが、クライアントは `localhost`（またはホストのLAN IP）を使う必要があります。
 
-### Step 3 (optional checks): understand the non-web services
+### ステップ3（オプションチェック）: 非Webサービスの理解
 
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-- `tpm-preflight` = source/connectivity checks (CLI output only).
-- `tpm-live` = terminal live-monitor logs (CLI output only, **no web UI**).
-- `tpm-forge-web` = FastAPI + dashboard UI (the one with layout/progress/runtime control).
+- `tpm-preflight` = ソース／接続チェック（CLI出力のみ）。
+- `tpm-live` = ターミナルライブモニターのログ（CLI出力のみ、**Web UIなし**）。
+- `tpm-forge-web` = FastAPI + ダッシュボードUI（レイアウト／進行状況／ランタイム制御付き）。
 
-If `tpm-preflight` reports `ALPHAVANTAGE_KEY not set`, COFFEE still works via fallbacks.
+`tpm-preflight` で `ALPHAVANTAGE_KEY not set` が報告されても、COFFEEはフォールバック経由で動作します。
 
-If the page looks blank:
-- test API directly: `http://localhost:8787/api/frame`
-- test FastAPI docs: `http://localhost:8787/docs`
-- hard refresh browser (`Ctrl+F5`)
-- if needed, restart only web service: `docker compose restart tpm-forge-web`
+ページが空白に見える場合：
+- APIを直接テスト：`http://localhost:8787/api/frame`
+- FastAPIドキュメント：`http://localhost:8787/docs`
+- ブラウザのハードリフレッシュ（`Ctrl+F5`）
+- 必要ならWebサービスのみ再起動：`docker compose restart tpm-forge-web`
 
-Optional for better COFFEE quality:
+COFFEE品質向上のためのオプション：
 
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
 docker compose run --rm tpm-preflight
 ```
 
-## Glitch predictions & mobile alerts
+## グリッチ予測＆モバイル通知
 
-- Forge live cockpit now exposes per-market short-horizon outlook (`up/down/sideways`) with confidence in `/api/markets/live`.
-- When a market glitch is detected (acceleration spike), runtime can trigger:
-  - Termux toast + vibration
-  - optional notification/beep hook
-  - optional Telegram push (if bot token/chat id configured in `config/config.yaml`).
-- Configure in dashboard via **Save Alerts** / **Test Alert** or API:
+- Forgeライブコックピットは現在、各市場の短期見通し (`up/down/sideways`) と信頼度を `/api/markets/live` で公開。
+- 市場グリッチ（加速度スパイク）を検知すると、ランタイムは以下をトリガー可能：
+  - Termuxのトースト＋バイブレーション
+  - オプションの通知／ビープフック
+  - オプションのTelegramプッシュ（`config/config.yaml` にボットトークン／チャットID設定が必要）
+- ダッシュボードの**Save Alerts**／**Test Alert** またはAPIで設定可能：
   - `GET /api/alerts/preferences`
   - `POST /api/alerts/preferences`
   - `POST /api/alerts/test`
 
-## Validation
+## 検証
 
-科学的バリデーションパイプラインを実行：
+科学的検証パイプラインを実行：
 
 ```bash
 python core/tpm_scientific_validation.py
 ```
 
-Artifacts:
+生成物：
 - `state/TPM_Scientific_Report.md`
 - `state/TPM_test_results.json`
 
-## Sources & Failover
+## ソース＆フォールオーバー
 
-`production/preflight_manager.py` supports:
-- Alpha Vantage first for COFFEE (when `ALPHAVANTAGE_KEY` is set)
-- TradingView + Yahoo fallback chain
-- local cached fallback in `state/latest_prices.json`
+`production/preflight_manager.py` は以下をサポート：
+- COFFEE用にまずAlpha Vantage（`ALPHAVANTAGE_KEY` が設定されている場合）
+- TradingView＋Yahooのフォールバックチェーン
+- ローカルキャッシュフォールバックは `state/latest_prices.json`
 
-Run preflight directly:
+直接preflightを実行：
 
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
 python production/preflight_manager.py --market ALL
 ```
 
-Run outage stress test (target `p95 < 1000ms`):
+障害ストレステストを実行（目標 `p95 < 1000ms`）：
 
 ```bash
 python scripts/stress_test_suite.py
 ```
 
-Output: `state/stress_test_report.json`
+出力：`state/stress_test_report.json`
 
+## ライブステータス：現在のTPMエージェントの機能
 
+**現状：**
+- Production Forgeウェブランタイムが利用可能（`production.forge_runtime:app`）。
+- ファイナンスファーストの初期設定は **BTC + COFFEE** を使用。
+- ライブフレーム、エージェント適合度、転送エントロピー、ドメインサマリーがウェブダッシュボードで閲覧可能。
+- ユーザーはランタイム中に新たな市場エージェントを追加可能（`POST /api/agents`）。
 
+**目標能力（必須項目）：**
+- 明示的な受容閾値（精度／再現率／FPR／ドリフト）による実データベンチマーク。
+- 自動安全モードの厳格なリフレクシブ・ガバナンスルール。
+- バージョン管理されたドメイン別学習パターンの集合記憶ワークフロー。
 
+**次の拡張段階：**
+- すべてのエージェントに跨るレジームベースのポリシーオーケストレーター（トレンド／ショック／サイドウェイズ）。
+- 医療や地震など金融以外のドメインパイロット。
 
+## PRマージコンフリクトヘルパー
 
+- マージチェックリスト（GitHubコンフリクト用）：`docs/MERGE_CONFLICT_CHECKLIST.de.md`
 
-## Live status: what the TPM agent can do today
+### 本日の対象範囲：Windows＋スマホ向けファイナンスTPM
 
-**Current state:**
-- Production Forge web runtime is available (`production.forge_runtime:app`).
-- Finance-first start configuration uses **BTC + COFFEE**.
-- Live frame, agent fitness, transfer entropy, and domain summary are visible in the web dashboard.
-- Users can add new market agents at runtime (`POST /api/agents`).
+- **Windows:** Forgeランタイム＋ウェブインターフェース＋Docker/PowerShell/クリックスタートが稼働中。
+- **スマホ:** Android/Termuxライブモニタリングが稼働中；ウェブUIはモバイルでレスポンシブ。
+- **リアルタイムマルチエージェント:** デフォルトでBTC＋COFFEEがアクティブ；ウェブUIで動的に市場を追加可能。
+- **ソース境界ルール:** 要求された市場が組み込みソースでカバーされていない場合は、明示的なソースURL＋認証情報を提供。
 
-**Target capability (should-have):**
-- Real-data benchmarking with explicit acceptance thresholds (precision/recall/FPR/drift).
-- Strict reflexive governance rules for auto safe-mode.
-- Collective-memory workflow for versioned per-domain learning patterns.
+## Windowsライブテスト（２パスシステム）
 
-**Next expansion stage:**
-- Regime-based policy orchestrator (trend/shock/sideways) across all agents.
-- One non-finance domain pilot (e.g. medical or seismic) with explicit data contracts.
-
-
-## PR merge conflict helper
-
-- Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
-
-
-### Scope today: Windows + smartphone for finance TPM
-
-- **Windows:** Forge runtime + web interface + Docker/PowerShell/click-start are operational.
-- **Smartphone:** Android/Termux live-monitoring is operational; web UI is responsive on mobile.
-- **Realtime multi-agent:** BTC + COFFEE active by default; additional markets can be added dynamically in the web UI.
-- **Source boundary rule:** if requested market is not covered by built-in sources, provide explicit source URL + authorization data.
-
-## Windows live test (two-path system)
-
-### Path A — Developer/power users (PowerShell, CMD, PyCharm, IDE)
+### パスA — 開発者／上級ユーザー（PowerShell, CMD, PyCharm, IDE）
 
 ```powershell
 python -m venv .venv
@@ -229,275 +222,275 @@ pip install -r requirements.txt
 python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
 ```
 
-### Path B — Low-level users (click & start)
+### パスB — 低レベルユーザー（クリック＆スタート）
 
-1. Double-click `scripts/windows_click_start.bat`
-2. Script auto-selects best available path:
-   - Python available -> venv + pip + runtime
-   - otherwise Docker Compose (if available)
+1. `scripts/windows_click_start.bat` をダブルクリック
+2. スクリプトが利用可能な最善パスを自動選択：
+   - Pythonが利用可能なら→venv＋pip＋ランタイム
+   - そうでなければDocker Compose（可能なら）
 
-Technical base: `scripts/windows_bootstrap.ps1`.
+技術的基盤：`scripts/windows_bootstrap.ps1`。
 
-## Forge Production Web Runtime (BTC + COFFEE, extensible)
+## Forge プロダクションウェブランタイム（BTC＋COFFEE、拡張可能）
 
-Yes, this has **already started** in the repo and is now extended:
+はい、この機能は**既にリポジトリで開始済み**で拡張されています：
 
-- Starts by default with one finance TPM agent for **BTC** and one for **COFFEE**.
-- Users can add more markets/agents directly from the web UI (`/api/agents`).
-- Runs as a persistent runtime service with live frame output (`/api/frame`) for immersive insight.
+- デフォルトで1つのBTC向けおよび1つのCOFFEE向けファイナンスTPMエージェントで起動。
+- ユーザーはウェブUI（`/api/agents`）から直接より多くの市場／エージェントを追加可能。
+- 持続的なランタイムサービスとして動作し、ライブフレーム出力（`/api/frame`）による直感的な洞察を提供。
 
-### Start (local)
+### 起動（ローカル）
 
 ```bash
 uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
-# open http://localhost:8787
+# http://localhost:8787 を開く
 ```
 
-### Start (Docker)
+### 起動（Docker）
 
 ```bash
 docker compose up tpm-forge-web
-# open http://localhost:8787
+# http://localhost:8787 を開く
 ```
 
-## TPM Playground (interactive MVP)
+## TPM プレイグラウンド（インタラクティブMVP）
 
-ブラウザで TPM の挙動をインタラクティブに確認できます：
+ブラウザ上でTPMの挙動をインタラクティブに探索可能：
 
 ```bash
 python -m http.server 8765
-# open http://localhost:8765/playground/index.html
+# http://localhost:8765/playground/index.html を開く
 ```
 
-含まれるもの：
-- 単一エージェントの弱信号アノマリービュー
-- ミニスウォーム（BTC/COFFEE/VOL）のコンセンサス圧
-- クロスドメイン転移共鳴（合成：金融/天気/ヘルス）
+含まれる内容：
+- 単一エージェント弱シグナル異常検出ビュー
+- ミニスウォーム（BTC/COFFEE/VOL）コンセンサス圧力
+- クロスドメイン転送共鳴（合成ファイナンス／天気／健康）
 
-See: `playground/README.md`.
-## Next Steps
+詳細は：`playground/README.md` を参照。
 
-- クロスマーケット因果分析のための Transfer Entropy モジュール。
-- 履歴パフォーマンスに基づくポリシー更新付きオプティマイザ。
-- Alert channels (Telegram/Signal) + boot persistence.
+## 次のステップ
 
+- クロスマーケット因果解析のための転送エントロピーモジュール。
+- 歴史的パフォーマンスに基づくポリシーアップデートを行う最適化ツール。
+- アラートチャネル（Telegram／Signal）＋起動時の永続化。
 
 ---
 
-## IrsanAI Deep Dive: How the TPM core "thinks" in complex systems
+## IrsanAI ディープダイブ：TPMコアの複雑系における「思考」方法
 
-### 1) Visionary transformation: from trading agent to universal TPM ecosystem
+### 1) ビジョナリー変換：トレーディングエージェントから普遍的TPMエコシステムへ
 
-### What is unique about the IrsanAI-TPM algorithm? (corrected framing)
+### IrsanAI-TPMアルゴリズムのユニークな点とは？（修正されたフレーミング）
 
-Working hypothesis of the TPM core:
+TPMコアの作業仮説：
 
-- 複雑でカオスな系では、早期警告シグナルはしばしば **micro-residual**（微小偏差・弱い相関・ほぼ空のデータ点）に隠れます。
-- Where classic systems see only `0` or "not enough relevance", TPM searches for **structured anomalies** (glitch patterns) in context flow.
-- TPM は値そのものだけでなく、**時間的関係変化・ソース品質・レジーム・因果近傍**も評価します。
+- 複雑でカオスなシステムでは、早期警告シグナルはしばしば**マイクロ残差**に隠れる：微小な偏差、弱い相関、ほぼ空のデータポイント。
+- 古典的システムが `0` や「関連性不足」しか見ないところを、TPMは文脈の流れから**構造化された異常（グリッチパターン）**を探す。
+- TPMは値そのものだけでなく、**時間を通した関係変化、ソース品質、レジーム、因果的近隣性**も評価する。
 
-重要な正確性メモ：TPM は未来を魔法のように予測**しません**。データ品質と検証ゲートが満たされる場合に、レジーム変化・ブレイクアウト・破綻の**より早い確率的検知**を目指します。
+重要な正確性ノート：TPMは未来を魔法のように予測するのではありません。データ品質と検証ゲートが満たされた場合にのみ、**レジームシフト、ブレイクアウト、混乱を早期に確率的に検知**することを目指しています。
 
-### Think BIG: why this extends beyond finance
+### ビッグに考える：なぜこれが金融を越えて拡張するのか
 
-If TPM can detect weak precursor patterns in financial instruments (index/ticker/ISIN-like identifiers, liquidity, microstructure), the same principle can generalize to many domains:
+もしTPMが金融商品（インデックス／ティッカー／ISIN類似識別子、流動性、マイクロ構造）における弱い前兆パターンを検出できれば、同じ原理は多くの領域に一般化可能：
 
-- **Event/sensor stream + context model + anomaly layer + feedback loop**
-- すべての職種は、ドメイン固有特徴・ノード・相関・異常を持つ"市場"としてモデル化可能
-- 専門 TPM エージェントは、地域の職業ロジックと倫理を保ちながらドメイン横断学習が可能
+- **イベント／センサーストリーム＋コンテキストモデル＋異常レイヤー＋フィードバックループ**
+- すべての職業はドメイン固有の特徴、ノード、相関、異常のある「市場」としてモデリング可能
+- 専門化されたTPMエージェントは、局所的な職業倫理と論理を維持しつつ、ドメイン横断的に学習可能
 
-### TPMターゲット空間としての100職種
+### TPM ターゲット領域としての100職業
 
-| # | 職種 | TPMデータ類推 | 異常/パターン検知ターゲット |
+| # | 職業 | TPM データ類似物 | 異常／パターン検出ターゲット |
 |---|---|---|---|
-| 1 | Police analyst | Incident logs, geotemporal crime maps, networks | Early signals of escalating crime clusters |
-| 2 | Fire service commander | Alarm chains, sensor feeds, weather, building profiles | Predict fire and hazard propagation windows |
-| 3 | Paramedic/EMS | Dispatch reasons, response times, hospital load | Detect capacity stress before breakdown |
-| 4 | Emergency physician | Triage flows, vitals, waiting-time dynamics | Flag critical decompensation earlier |
-| 5 | ICU nurse | Ventilation/lab trends, medication responses | Identify sepsis/shock micro-signals |
-| 6 | Epidemiologist | Case rates, mobility, wastewater/lab data | Outbreak early warning before exponential phase |
-| 7 | Family physician | EHR patterns, prescriptions, follow-up gaps | Detect chronic-risk transitions early |
-| 8 | Clinical psychologist | Session trajectories, language markers, sleep/activity | Detect relapse/crisis indicators sooner |
-| 9 | Pharma researcher | Compound screens, adverse-event profiles, genomics | Reveal hidden efficacy and side-effect clusters |
-| 10 | Biotechnologist | Sequence/process/cell-culture trajectories | Detect drift and contamination risk |
-| 11 | Climate scientist | Atmosphere/ocean time series, satellite fields | Identify tipping-point precursors |
-| 12 | Meteorologist | Pressure/humidity/wind/radar fields | Anticipate local chaotic weather shifts |
-| 13 | Seismologist | Microquakes, stress fields, sensor arrays | Detect precursors to major releases |
-| 14 | Volcanologist | Gas, tremor, deformation time series | Narrow eruption probability windows |
-| 15 | Hydrologist | River gauges, rain, soil moisture | Detect flash-flood and drought phase changes |
-| 16 | Oceanographer | Currents, temperature, salinity, buoy streams | Detect tsunami/ecosystem-relevant anomalies |
-| 17 | Energy trader | Load, spot prices, weather, grid state | Signal probable price/load breakouts early |
-| 18 | Grid operator | Grid frequency, line state, switching events | Detect cascading-failure risk |
-| 19 | Wind farm operator | Turbine telemetry, wind fields, maintenance logs | Predict failures and performance drift |
-| 20 | Solar plant operator | Irradiance, inverter telemetry, thermal load | Detect degradation and yield anomalies |
-| 21 | Water utility manager | Flow, quality sensors, consumption patterns | Detect contamination/shortage early |
-| 22 | Traffic operations manager | Density, collisions, roadworks, events | Predict congestion and crash escalation |
-| 23 | Railway control manager | Timetable adherence, track state, delay chains | Break systemic delay cascades early |
-| 24 | Air traffic controller | Flight tracks, weather, slot saturation | Detect conflict paths and bottlenecks |
-| 25 | Port logistics manager | Berth times, container flow, customs status | Detect supply disruption precursors |
-| 26 | Supply-chain manager | ETA, inventory, demand pulse, risk events | Minimize bullwhip and stockout anomalies |
-| 27 | Manufacturing lead | OEE, process telemetry, scrap, setup times | Detect quality drift and machine anomalies |
-| 28 | Quality engineer | Tolerance distributions, process signals | Detect near-zero defect precursors |
-| 29 | Robotics engineer | Motion trajectories, actuator load, control loops | Predict control instability/failure |
-| 30 | Aviation maintenance engineer | Engine/flight telemetry, maintenance history | Component-level predictive maintenance |
-| 31 | Construction manager | Progress, weather, supply dates, IoT sensors | Quantify schedule/cost anomaly risk |
-| 32 | Structural engineer | Load, vibration, fatigue/aging indicators | Detect structural-critical transitions |
-| 33 | Urban planner | Mobility, demographics, emissions, land use | Detect emerging urban stress patterns |
-| 34 | Architect | Building operations, occupancy, energy curves | Detect design-use mismatch patterns |
-| 35 | Farmer | Soil/weather/crop/market streams | Detect disease/yield anomalies early |
-| 36 | Agronomist | Satellite nutrition/hydration data | Target precise interventions early |
-| 37 | Forestry manager | Moisture, pest patterns, fire indicators | Detect forest damage/fire windows early |
-| 38 | Fisheries manager | Catch records, water quality, migration | Detect overfishing/collapse risks |
-| 39 | Food safety inspector | Lab findings, cold-chain logs, supply links | Interrupt contamination chains early |
-| 40 | Executive chef | Demand pulse, stock health, waste ratios | Minimize spoilage and shortage anomalies |
-| 41 | Retail operator | POS streams, footfall, inventory rotation | Detect demand spikes and shrinkage patterns |
-| 42 | E-commerce manager | Clickstream, cart journeys, returns | Detect fraud/churn precursor patterns |
-| 43 | Marketing analyst | Campaign metrics, segment response curves | Detect micro-trends before mainstream |
-| 44 | Sales lead | Pipeline velocity, touchpoint graph | Detect deal-risk and timing opportunities |
-| 45 | Customer support lead | Ticket flow, topic clusters, SLA drift | Detect escalation/root-cause waves |
-| 46 | Product manager | Feature adoption, retention, feedback | Detect product-market misfit early |
-| 47 | UX researcher | Heatmaps, pathing, drop-off points | Surface hidden interaction friction |
-| 48 | Software engineer | Logs, traces, deploy metrics | Detect fault cascades pre-incident |
-| 49 | Site reliability engineer | Latency, error budgets, saturation | Catch degradation before outage |
-| 50 | Cybersecurity analyst | Network flows, IAM events, SIEM alerts | Detect attack-path and lateral movement |
-| 51 | Fraud analyst | Transaction graphs, device fingerprints | Detect fraud in weak-signal space |
-| 52 | Bank risk manager | Portfolio/macro/liquidity exposures | Detect stress regimes and concentration risk |
-| 53 | Insurance actuary | Claims flow, exposure maps, climate links | Anticipate claims waves and reserve stress |
-| 54 | Tax advisor | Ledger patterns, filing timelines | Detect compliance risk and optimization paths |
-| 55 | Auditor | Control trails, exception patterns | Detect accounting anomalies at scale |
-| 56 | Attorney | Case chronology, precedent graphs, deadlines | Detect litigation risk and outcome patterns |
-| 57 | Judge/court administrator | Caseload mix, cycle times | Detect justice-system bottlenecks |
-| 58 | Corrections manager | Occupancy, incident networks, behavior trends | Detect violence/recidivism clusters |
-| 59 | Customs officer | Trade manifests, declarations, routing patterns | Detect smuggling/evasion signals |
-| 60 | Defense intelligence analyst | ISR feeds, logistics, operational tempo | Detect escalation dynamics early |
-| 61 | Diplomatic analyst | Event chains, communications signals | Detect geopolitical regime shifts |
-| 62 | Teacher | Learning progress, attendance, engagement | Detect dropout-risk and support need |
-| 63 | School principal | Performance clusters, attendance, resources | Detect systemic school stress patterns |
-| 64 | University lecturer | Course activity, withdrawals, feedback | Stabilize student success earlier |
-| 65 | Education researcher | Cohort trajectories, pedagogy variables | Identify robust intervention effects |
-| 66 | Social worker | Case networks, appointments, risk markers | Detect crisis escalation pathways |
-| 67 | NGO coordinator | Field reports, aid flows, need signals | Detect impact gaps and hotspot changes |
-| 68 | Employment advisor | Skill profiles, labor demand, transitions | Detect mismatch and upskilling needs |
-| 69 | HR manager | Hiring/attrition/performance trajectories | Detect burnout and retention risk early |
-| 70 | Recruiter | Funnel rates, skills taxonomy, market pulse | Detect fit risk and hiring opportunity windows |
-| 71 | Org consultant | Decision cadence, KPI drift, network patterns | Detect team dysfunction early |
-| 72 | Project manager | Milestones, dependencies, blocker graph | Anticipate schedule/scope breakdowns |
-| 73 | Journalist | Source reliability graph, event streams | Detect misinformation clusters early |
-| 74 | Investigative reporter | Document networks, money/communication traces | Expose hidden systemic anomalies |
-| 75 | Content moderator | Post/comment streams, semantic shifts | Detect abuse/radicalization waves early |
-| 76 | Artist | Audience response trajectories, style vectors | Detect emerging aesthetics |
-| 77 | Music producer | Listening features, arrangement vectors | Detect breakout/niche potential early |
-| 78 | Game designer | Telemetry, progression, churn curves | Detect frustration and balance anomalies |
-| 79 | Sports coach | Performance/biometric load streams | Detect injury/form-drop precursors |
-| 80 | Athletic trainer | Motion/recovery markers | Detect overload before downtime |
-| 81 | Sports physician | Diagnostics, rehab load, recurrence risk | Optimize return-to-play windows |
-| 82 | Referee analyst | Decision stream, tempo, incident context | Detect consistency/fairness drift |
-| 83 | Event manager | Ticketing, mobility, weather, safety feeds | Detect crowd and safety risk escalation |
-| 84 | Tourism manager | Booking patterns, reputation signals | Detect demand and sentiment shifts |
-| 85 | Hotel manager | Occupancy, service quality, complaints | Detect quality-demand instability early |
-| 86 | Property manager | Rent flow, maintenance, market comps | Detect vacancy/default risk early |
-| 87 | Facility manager | Building IoT, energy, maintenance intervals | Detect failures and inefficiency patterns |
-| 88 | Waste management operator | Waste streams, routing, environmental metrics | Detect illegal dumping and process gaps |
-| 89 | Environmental inspector | Emissions, reports, satellite overlays | Detect compliance violations and tipping risk |
-| 90 | Circular economy analyst | Material passports, recovery rates | Detect leakage and loop-closure opportunities |
-| 91 | Astrophysicist | Telescope streams, spectra, noise models | Detect rare cosmic events |
-| 92 | Space operations engineer | Telemetry, orbit params, system diagnostics | Detect mission-critical anomalies early |
-| 93 | Quantum engineer | Noise profiles, calibration drifts, gate errors | Detect decoherence and control drift |
-| 94 | Data scientist | Feature drift, model quality, data integrity | Detect model collapse and bias shift |
-| 95 | AI ethicist | Decision outcomes, fairness metrics | Detect unfair patterns/governance gaps |
-| 96 | Philosophy of science researcher | Theory-evidence pathways | Detect paradigm mismatch signals |
-| 97 | Mathematician | Residual structures, invariants, error terms | Detect hidden regularities/outlier classes |
-| 98 | Systems theorist | Node-edge dynamics, feedback delays | Detect network tipping dynamics |
-| 99 | Anthropologist | Field observations, language/social networks | Detect cultural-shift conflict precursors |
-| 100 | Foresight strategist | Tech curves, regulation, behavior data | Connect scenarios with early indicators |
+| 1 | 警察アナリスト | 事件ログ、地理時空間犯罪マップ、ネットワーク | 犯罪クラスター拡大の早期シグナル |
+| 2 | 消防隊指揮官 | アラームチェーン、センサーフィード、天候、建物情報 | 火災・危険拡散の予測窓 |
+| 3 | 救急救命士 | 出動理由、対応時間、病院負荷 | 緊急度ストレスの事前検知 |
+| 4 | 救急医 | トリアージ流、バイタル、待機時間動態 | 臨床悪化の早期警告 |
+| 5 | ICU看護師 | 換気／検査傾向、投薬反応 | 敗血症／ショックの微小シグナル同定 |
+| 6 | 疫学者 | 症例数、移動性、廃水／検査データ | 感染爆発前の早期警告 |
+| 7 | 家庭医 | EHRパターン、処方、フォローギャップ | 慢性リスク遷移の早期検出 |
+| 8 | 臨床心理士 | セッション軌跡、言語マーカー、睡眠／活動 | 再発／危機指標の早期検出 |
+| 9 | 製薬研究者 | 化合物スクリーニング、副作用プロファイル、ゲノム | 効能・副作用クラスターの発見 |
+| 10 | バイオテクノロジスト | シーケンス／プロセス／細胞培養軌跡 | ドリフト・汚染リスク検出 |
+| 11 | 気候科学者 | 大気／海洋時系列、衛星データ | 転換点前兆の把握 |
+| 12 | 気象学者 | 気圧／湿度／風／レーダー場 | 局所的なカオス気象変動の予測 |
+| 13 | 地震学者 | マイクロクエイク、応力場、センサー配列 | 大規模地震の前兆検出 |
+| 14 | 火山学者 | ガス、震動、変形時系列 | 噴火確率窓の絞り込み |
+| 15 | 水文学者 | 河川計測、降雨、土壌水分 | 突発洪水や干ばつの位相変化検知 |
+| 16 | 海洋学者 | 海流、温度、塩分、浮標データ | 津波／エコシステム関連異常検出 |
+| 17 | エネルギートレーダー | 負荷、スポット価格、天候、グリッド状態 | 価格／負荷ブレイクアウトの早期警告 |
+| 18 | グリッド運用者 | 周波数、ライン状態、切り替えイベント | 連鎖故障リスク検知 |
+| 19 | 風力発電事業者 | タービンテレメトリ、風場、メンテ記録 | 故障・性能ドリフト予測 |
+| 20 | 太陽光発電事業者 | 日射量、インバータテレメトリ、熱負荷 | 劣化・出力異常検知 |
+| 21 | 水道管理者 | 流量、品質センサー、消費パターン | 汚染・不足の早期検知 |
+| 22 | 交通運用管理者 | 密度、衝突、多目的工事、イベント | 渋滞・事故拡大の予測 |
+| 23 | 鉄道制御管理者 | 時刻表遵守、軌道状態、遅延連鎖 | システム的遅延連鎖の早期阻止 |
+| 24 | 航空管制官 | 飛行経路、天候、スロット飽和 | 進路衝突やボトルネック検出 |
+| 25 | 港湾物流管理者 | 係留時間、コンテナフロー、税関状況 | 供給障害の前兆検知 |
+| 26 | サプライチェーン管理者 | ETA、在庫、需要パルス、リスクイベント | ブルウィップ・在庫切れ異常の最小化 |
+| 27 | 製造リード | OEE、プロセステレメトリ、不良、設定時間 | 品質ドリフト・機械異常検知 |
+| 28 | 品質エンジニア | 許容範囲分布、プロセス信号 | ほぼゼロ欠陥前兆検知 |
+| 29 | ロボティクスエンジニア | 動作軌跡、アクチュエータ負荷、制御ループ | 制御不安定性／故障予測 |
+| 30 | 航空整備士 | エンジン／飛行テレメトリ、メンテ歴 | コンポーネントレベルの予知保全 |
+| 31 | 建設マネージャー | 進捗、天候、納期、IoTセンサー | 予定／コスト異常リスクの定量化 |
+| 32 | 構造エンジニア | 荷重、振動、疲労／老朽指標 | 構造的急変の検出 |
+| 33 | 都市計画者 | 移動性、人口統計、排出、土地利用 | 新興都市ストレスパターン検知 |
+| 34 | 建築家 | 建物運用、占有率、エネルギー曲線 | 設計－使用不整合パターン検出 |
+| 35 | 農家 | 土壌／天候／作物／市場データ | 疾病・収量異常の早期検出 |
+| 36 | 農学者 | 衛星栄養／水分データ | 精密介入の早期ターゲット化 |
+| 37 | 森林管理者 | 水分、害虫パターン、火災指標 | 森林損傷／火災の早期検知 |
+| 38 | 水産管理者 | 漁獲記録、水質、移動 | 過剰漁獲／崩壊リスク検出 |
+| 39 | 食品安全検査官 | 検査所見、コールドチェーンログ、供給経路 | 汚染チェーンの早期遮断 |
+| 40 | エグゼクティブシェフ | 需要パルス、在庫状態、廃棄比率 | 腐敗・不足異常の最小化 |
+| 41 | 小売業者 | POSストリーム、来店数、在庫回転率 | 需要急増・縮小パターン検知 |
+| 42 | ECマネージャー | クリックストリーム、カート利用、返品 | 詐欺・離脱前兆パターン検出 |
+| 43 | マーケティング分析官 | キャンペーン指標、セグメント反応曲線 | マイクロトレンドの早期検出 |
+| 44 | セールスリード | パイプライン速度、タッチポイントグラフ | 取引リスク・タイミング機会の検知 |
+| 45 | カスタマーサポートリード | チケット流、トピッククラスタ、SLAドリフト | エスカレーション・根本原因の波検知 |
+| 46 | プロダクトマネージャー | 機能採用、リテンション、フィードバック | プロダクトマーケットミスマッチ早期検知 |
+| 47 | UXリサーチャー | ヒートマップ、行動経路、離脱点 | 隠れた操作の摩擦を可視化 |
+| 48 | ソフトウェアエンジニア | ログ、トレース、デプロイ指標 | 障害連鎖の事前検知 |
+| 49 | サイト信頼性エンジニア | レイテンシ、エラーバジェット、飽和状況 | 劣化の事前検出 |
+| 50 | サイバーセキュリティ分析官 | ネットワークフロー、IAMイベント、SIEMアラート | 攻撃経路・横展開の検知 |
+| 51 | 不正検出分析官 | 取引グラフ、デバイス指紋 | 弱シグナル領域の不正検知 |
+| 52 | 銀行リスクマネージャー | ポートフォリオ／マクロ／流動性エクスポージャー | ストレスレジームおよび集中リスク検知 |
+| 53 | 保険アクチュアリー | クレームフロー、エクスポージャーマップ、気候リンク | クレーム波及・準備金ストレス予測 |
+| 54 | 税務アドバイザー | 帳簿パターン、申告タイムライン | コンプライアンスリスク・最適化ルート検知 |
+| 55 | 監査人 | 管理履歴、例外パターン | 会計異常の大規模検知 |
+| 56 | 弁護士 | 事件年代記、先例グラフ、期限 | 訴訟リスク・判決パターン検知 |
+| 57 | 裁判官／裁判管理者 | 事件数構成、サイクルタイム | 司法システムのボトルネック検出 |
+| 58 | 矯正施設管理者 | 収容状況、事件ネットワーク、行動トレンド | 暴力・再犯クラスター検出 |
+| 59 | 税関職員 | 貿易マニフェスト、申告、配送パターン | 密輸／脱税シグナル検知 |
+| 60 | 防衛情報分析官 | ISRフィード、ロジスティクス、作戦テンポ | エスカレーション動態の早期検知 |
+| 61 | 外交分析官 | イベントチェーン、通信シグナル | 地政学的レジームシフト検知 |
+| 62 | 教師 | 学習進捗、出席、エンゲージメント | 退学リスクおよび支援ニーズ検出 |
+| 63 | 校長 | パフォーマンスクラスタ、出席、資源 | システム学校ストレスパターン検出 |
+| 64 | 大学講師 | コース活動、撤退、フィードバック | 学生の成功安定化の早期支援 |
+| 65 | 教育研究者 | コホート軌跡、教育変数 | 頑健な介入効果の特定 |
+| 66 | ソーシャルワーカー | ケースネットワーク、予約、リスクマーカー | 危機エスカレーション経路の検知 |
+| 67 | NGOコーディネーター | フィールドレポート、援助フロー、ニーズ信号 | 効果ギャップ・ホットスポット変化の検出 |
+| 68 | 雇用アドバイザー | スキルプロファイル、労働需要、移行 | ミスマッチ・スキルアップニーズ検知 |
+| 69 | HRマネージャー | 採用／離職／パフォーマンス軌跡 | バーンアウト・定着リスクの早期検知 |
+| 70 | リクルーター | ファネル率、スキル分類、市場パルス | 適合リスク・採用機会の検知 |
+| 71 | 組織コンサルタント | 意思決定頻度、KPIドリフト、ネットワークパターン | チーム機能不全の早期検知 |
+| 72 | プロジェクトマネージャー | マイルストーン、依存関係、ブロッカーグラフ | 予定／範囲破綻の予測 |
+| 73 | ジャーナリスト | ソース信頼グラフ、イベントストリーム | ミスインフォメーションクラスタの早期検出 |
+| 74 | 調査報道記者 | 文書ネットワーク、資金／通信痕跡 | 隠れたシステム的異常の暴露 |
+| 75 | コンテンツモデレーター | 投稿／コメントストリーム、意味変化 | 悪用／過激化の波の早期検知 |
+| 76 | アーティスト | オーディエンス反応軌跡、スタイルベクトル | 新興美学の検出 |
+| 77 | 音楽プロデューサー | リスニング特徴、アレンジメントベクトル | ブレイクアウト／ニッチ可能性の早期検知 |
+| 78 | ゲームデザイナー | テレメトリ、進行状況、離脱曲線 | フラストレーション・バランス異常の検出 |
+| 79 | スポーツコーチ | パフォーマンス／生体負荷ストリーム | ケガ・フォーム低下の前兆検知 |
+| 80 | アスレチックトレーナー | 動作／回復マーカー | 過負荷の事前検知 |
+| 81 | スポーツ医師 | 診断、リハビリ負荷、再発リスク | 復帰ウィンドウの最適化 |
+| 82 | 審判分析官 | 決定ストリーム、テンポ、事件文脈 | 一貫性／公正性ドリフト検知 |
+| 83 | イベントマネージャー | チケット、移動、天候、安全フィード | 群衆・安全リスクのエスカレーション検知 |
+| 84 | 観光マネージャー | 予約パターン、評価シグナル | 需要および感情の変化検知 |
+| 85 | ホテルマネージャー | 稼働率、サービス品質、苦情 | 品質・需要の不安定性の早期検知 |
+| 86 | 物件管理者 | 家賃フロー、メンテ、市場比較 | 空室／滞納リスクの早期検知 |
+| 87 | 設備管理者 | 建物IoT、エネルギー、メンテ間隔 | 故障・非効率パターン検知 |
+| 88 | 廃棄物管理業者 | 廃棄物流、ルート、環境指標 | 不法投棄・プロセスギャップ検知 |
+| 89 | 環境検査官 | 排出量、報告、衛星オーバーレイ | 遵守違反・転換点リスク検知 |
+| 90 | 循環経済アナリスト | 材料パスポート、回収率 | 流出・ループ閉鎖機会検知 |
+| 91 | 天体物理学者 | 望遠鏡データ、スペクトル、ノイズモデル | 稀有宇宙イベント検出 |
+| 92 | 宇宙運用エンジニア | テレメトリ、軌道パラメータ、システム診断 | 重要ミッション異常の早期検出 |
+| 93 | 量子エンジニア | ノイズプロファイル、キャリブレーションドリフト、ゲート誤差 | デコヒーレンス・制御ドリフト検出 |
+| 94 | データサイエンティスト | 特徴ドリフト、モデル品質、データ整合性 | モデル崩壊・バイアス変化の検知 |
+| 95 | AI倫理学者 | 意思決定結果、公平性指標 | 不公平パターン・ガバナンスギャップ検知 |
+| 96 | 科学哲学研究者 | 理論－証拠経路 | パラダイム不整合シグナル検知 |
+| 97 | 数学者 | 残差構造、不変量、誤差項 | 隠れた規則性／外れ値クラス検出 |
+| 98 | システム理論家 | ノード－エッジ動態、フィードバック遅延 | ネットワーク転換点動態の検知 |
+| 99 | 人類学者 | フィールド観察、言語／社会ネットワーク | 文化変化・対立前兆検出 |
+| 100 | 予測戦略家 | 技術曲線、規制、行動データ | シナリオと早期指標の接続 |
 
-### 国別適合ノート（法域間の職種等価）
+### 国別適合メモ（職業の管轄間相当）
 
-To keep the list logically correct across regions, TPM role-mapping should be interpreted as **functional equivalents**, not literal job-title translation:
+リストの論理的正確性を保つため、TPMの役割マッピングは**機能的相当物**として解釈すべきで、直訳の職名ではありません：
 
-- **Germany ↔ US/UK:** `Polizei` vs split functions (`Police Department`, `Sheriff`, `State Trooper`) and prosecution differences (`Staatsanwaltschaft` vs `District Attorney/Crown Prosecution`).
-- **Spain / Italy:** civil-law structures with distinct court and policing workflows; data pipelines often split between regional and national systems.
-- **Bosnia and Herzegovina:** multi-entity governance means fragmented data ownership; TPM benefits from federated anomaly fusion.
-- **Russia / China:** role definitions and data-governance constraints differ; TPM must be configured with local compliance boundaries and institutional equivalents.
-- **Additional high-impact regions:** France, Brazil, India, Japan, MENA states, and Sub-Saharan Africa can be onboarded by mapping equivalent functions and available telemetry.
+- **ドイツ ↔ 米国／英国:** `Polizei` と職務分割（`Police Department`、`Sheriff`、`State Trooper`）、検察の違い（`Staatsanwaltschaft` vs `District Attorney/Crown Prosecution`）。
+- **スペイン／イタリア:** 民法制度で裁判・警察のワークフローが異なり、データパイプラインが地域と国家で分離される場合が多い。
+- **ボスニア・ヘルツェゴビナ:** 複数政府体制によりデータ所有が断片化、TPMは連邦的異常融合の恩恵を受ける。
+- **ロシア／中国:** 役割定義とデータガバナンス制約が異なり、TPMは地域のコンプライアンス境界と制度的等価物で設定される必要あり。
+- **その他影響の大きい地域:** フランス、ブラジル、インド、日本、MENA諸国、サブサハラアフリカも相当する機能と利用可能なテレメトリをマッピングして導入可能。
 
-### 哲学・科学的展望
+### 哲学的・科学的展望
 
-- From tool to **epistemic infrastructure**: domains operationalize "weak early knowledge".
-- From isolated systems to **agent federations**: local ethics + shared anomaly grammar.
-- From reactive response to **anticipatory governance**: prevention over late crisis control.
-- From static models to **living theories**: continuous recalibration under real-world shocks.
+- ツールから**認識基盤へ**：ドメインが「弱い早期知識」を実践的に運用。
+- 孤立系から**エージェント連邦へ**：局所倫理＋共有異常文法。
+- 反応的対応から**先見的ガバナンスへ**：危機管理の後追いより予防重視。
+- 静的モデルから**生きた理論へ**：実世界ショックに応じた継続的再調整。
 
-Core idea: a responsibly governed TPM cluster cannot control chaos — but it can help institutions understand it earlier, steer it more robustly, and decide more humanely.
+核となる考え：責任あるTPMクラスタはカオスを制御できないが、早期理解、より堅牢な舵取り、より人道的な意思決定を支援する。
 
-## Multilingual expansion (in progress)
+## 多言語展開（進行中）
 
-To support cross-language resonance, localized strategic overviews are available in:
+言語間の共鳴を支援するため、以下の地域別概要が利用可能：
 
-- Spanish (`docs/i18n/README.es.md`)
-- Italian (`docs/i18n/README.it.md`)
-- Bosnian (`docs/i18n/README.bs.md`)
-- Russian (`docs/i18n/README.ru.md`)
-- Chinese Simplified (`docs/i18n/README.zh-CN.md`)
-- French (`docs/i18n/README.fr.md`)
-- Portuguese Brazil (`docs/i18n/README.pt-BR.md`)
-- Hindi (`docs/i18n/README.hi.md`)
-- Turkish (`docs/i18n/README.tr.md`)
-- Japanese (`docs/i18n/README.ja.md`)
+- スペイン語 (`docs/i18n/README.es.md`)
+- イタリア語 (`docs/i18n/README.it.md`)
+- ボスニア語 (`docs/i18n/README.bs.md`)
+- ロシア語 (`docs/i18n/README.ru.md`)
+- 中国語簡体字 (`docs/i18n/README.zh-CN.md`)
+- フランス語 (`docs/i18n/README.fr.md`)
+- ポルトガル語ブラジル (`docs/i18n/README.pt-BR.md`)
+- ヒンディー語 (`docs/i18n/README.hi.md`)
+- トルコ語 (`docs/i18n/README.tr.md`)
+- 日本語 (`docs/i18n/README.ja.md`)
 
-Each localized file includes region-fit notes and points back to this canonical English section for the full 100-profession matrix.
+それぞれのローカライズファイルには地域適合ノートが含まれ、この英語の正典セクション（100職業マトリックス）へのリンクがあります。
 
-## IrsanAI Quality Meta (SOLL vs IST)
+## IrsanAI クオリティメタ（SOLL vs IST）
 
-Für den aktuellen Reifegrad des Repos, den Qualitätszwischenstand und die kausale Roadmap auf Basis realer Nutzererwartungen siehe:
+リポジトリの現成熟度、品質中間報告および実ユーザー期待に基づく因果ロードマップは以下参照：
 
 - `docs/IRSANAI_QUALITY_META.md`
 
-Dieses Dokument ist ab sofort Referenz für:
-- Anspruchstiefe bei Features (UX/UI + operative Robustheit),
-- Docker/Android-Paritätsanforderungen,
-- sowie Akzeptanz-Qualitätsgates für kommende PRs.
+本ドキュメントは以下のリファレンスです：
+- 機能の要求深度（UX/UI＋運用堅牢性）
+- Docker／Androidパリティ要件
+- 今後のPRの受容品質ゲート
 
-## i18n parity mode (full mirror)
+## i18n パリティモード（フルミラー）
 
-To ensure no language community is content-disadvantaged, i18n files are now maintained in full canonical parity with `README.md`.
+言語コミュニティの不利益を防ぐため、i18nファイルは`README.md`と完全な正典パリティで管理されています。
 
-Sync command:
+同期コマンド：
 
 ```bash
 python scripts/i18n_full_mirror_sync.py
 ```
 
-## Hinweis für Entwickler (LOP – Liste offener Punkte)
+## 開発者向け注意（LOP – 未解決項目リスト）
 
-Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
+私見で未解決の技術的にブロックされていない事項：
 
-| Punkt | Aktueller Stand | Wie man sinnvoll fortsetzt |
+| 項目 | 現状 | 継続方法 |
 |---|---|---|
-| **Transfer-Entropy-Modul für Cross-Market-Kausalität** | **Erledigt ✅** – als `TransferEntropyEngine` implementiert und im Forge-Orchestrator verdrahtet. | Fachliche Kalibrierung ergänzen: domänenspezifische Schwellen und Interpretationsregeln definieren. |
-| **Optimizer/Policy-Update auf Basis Historie** | **Erledigt ✅** – Fitness-Scoring, Reward-Update und Candidate-Culling laufen im Tick-Zyklus. | Betriebsmodi dokumentieren (konservativ/aggressiv) und als Governance-Profile testbar machen. |
-| **Alerting (Telegram/Signal)** | **Teilweise erledigt 🟡** – Infrastruktur ist vorhanden, standardmäßig aber deaktiviert. | Alarmrichtlinie festlegen: welche Events, welche Schweregrade, welcher Kanal, wer reagiert. |
-| **Boot-Persistenz / Dauerbetrieb** | **Teilweise erledigt 🟡** – Start- und Health-Monitoring per tmux existieren, aber kein einheitliches Boot-Runbook für alle Zielplattformen. | Plattformprofile (Termux/Linux/Docker) mit Start-bei-Boot, Restart-Policy und Eskalationspfad schriftlich definieren. |
-| **Koordiniertes Meta-Layer (aus „Nächste Ausbaustufe (promotet)“)** | **Teilweise erledigt 🟡** – Teile sind vorhanden (Orchestrator + Entropie + Reward), aber noch nicht als vollständiger Regime-Policy-Orchestrator beschrieben. | Ein explizites fachliches Steuerungsmodell (Trend/Schock/Sideways) für Agentengewichte ergänzen. |
-| **Collective Memory (versionssicheres Lernmuster-Archiv)** | **Offen 🔴** – in den Vision/Weiterentwicklungsabschnitten genannt, aber noch ohne klaren fachlichen Speicher- und Review-Prozess. | Lernmuster-Format, Versionslogik und Qualitätskriterien (wann Muster „gültig“ wird) definieren. |
-| **Reflexive Governance (automatisch konservativer Modus bei Unsicherheit)** | **Offen 🔴** – als Zielbild benannt, aber noch nicht als fachliche Entscheidungsregel formalisiert. | Unsicherheitsindikatoren und harte Umschaltbedingungen in ein Governance-Regelwerk überführen. |
-| **Domänenausbau über Finance/Weather hinaus** | **Offen 🔴** – weitere Domänen sind als Vision/Templates angelegt, aber fachlich noch nicht in produktive Datenverträge überführt. | Einen nächsten Domänenpiloten (z. B. Medical oder Seismic) mit klaren Metriken und Datenquellen starten. |
-| **Wissenschaftliche Evidenz auf Realdaten erweitern** | **Offen 🔴** – aktuelle Validierung ist robust, jedoch auf synthetischen Regime-Segmenten aufgebaut. | Realdaten-Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift) ergänzen. |
-| **Sprachübergreifende Resonanz / i18n-Ausbau** | **Teilweise erledigt 🟡** – mehrere Sprach-Landingpages existieren; Ausbau ist explizit als „in progress“ markiert. | Synchronisationsprozess definieren (wann Änderungen aus Root-README in alle i18n-READMEs propagiert werden). |
+| **クロスマーケット因果の転送エントロピーモジュール** | **済 ✅** – `TransferEntropyEngine` として実装済み、Forgeオーケストレータに組込済。 | 専門的調整追加：ドメイン別閾値と解釈規則を定義。 |
+| **歴史に基づくOptimizer/Policy Update** | **済 ✅** – フィットネススコアリング、報酬アップデート、候補選択がティックサイクル内で稼働中。 | 動作モード文書化（保守的／攻撃的）とガバナンスプロファイルとしてテスト可能に。 |
+| **アラート機能（Telegram/Signal）** | **一部完了 🟡** – インフラは存在するがデフォルトは無効。 | アラートポリシー設定：対象イベント、重要度、チャネル、応答者。 |
+| **起動永続化／長期運用** | **一部完了 🟡** – tmuxによる起動・ヘルスモニターはあるが、全プラットフォーム共通の起動ランブックは未整備。 | プラットフォームプロファイル（Termux/Linux/Docker）に起動時起動、再起動ポリシー、エスカレーション道筋を文書化。 |
+| **調整型メタレイヤー（「次の拡張段階(promoted)」に基づく）** | **一部完了 🟡** – 一部（オーケストレータ＋エントロピー＋報酬）はあるが、完全なレジームポリシーオーケストレーター記述は未実施。 | エージェント重み付けのための専門的なトレンド／ショック／サイドウェイズ制御モデル追加。 |
+| **集合記憶（バージョン対応学習パターンアーカイブ）** | **未完了 🔴** – ビジョン／次代展開で言及済みだが、明確な保存・レビュー手続き未整備。 | 学習パターンフォーマット、バージョン管理論理、品質基準（パターンの「有効」条件）を定義。 |
+| **リフレクシブ・ガバナンス（不確実性時の自動保守モード）** | **未完了 🔴** – 目標イメージとして掲げられているが、専門的決定ルールとして形式化されていない。 | 不確実性指標と厳格な切替条件をガバナンスルールに落とし込み。 |
+| **ファイナンス／天気以外のドメイン拡張** | **未完了 🔴** – さらなるドメインはビジョン／テンプレートで用意済みだが、実データ契約に未変換。 | 次ドメインパイロット（例：医療、地震）を明確なメトリクス／データソース付きで開始。 |
+| **実データに関する科学的証拠の拡大** | **未完了 🔴** – 現状は合成レジームセグメント上で堅牢だが、実データベンチマークは未実施。 | 実データベンチマークを固定受容条件（精度／再現率／FPR／ドリフト）で追加。 |
+| **多言語共鳴／i18n拡充** | **一部完了 🟡** – 複数言語ランディングページあり。拡充は「進行中」と明示。 | 同期プロセスの定義（ルートREADMEからi18nREADMEへの変更伝播時期）。 |
 
-Kurzfazit: Die früheren „Next Steps“ sind **technisch zu großen Teilen gestartet oder umgesetzt**; der größte Hebel liegt jetzt in **fachlicher Operationalisierung** (Governance, Policies, Domänenlogik, Realdaten-Evidenz) und **konsistentem Doku-/i18n-Betrieb**.
+総括：以前の「次のステップ」は**技術面でほぼ開始または完了しており**、現在の最大の課題は**専門的実装（ガバナンス、ポリシー、ドメインロジック、実データ証拠）と一貫した文書／i18n運用**。
 
-### LOP execution plan
+### LOP 実行計画
 
-For implementation sequencing, done-criteria and evidence gates for each open LOP point, see:
+実装の順序、達成基準、証拠ゲートは以下を参照：
 
 - `docs/LOP_EXECUTION_PLAN.md`
 
-## LOP (Endnote – priorisiert)
+## LOP（終章－優先順位付け）
 
-1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
-2. **P2 Reflexive Governance finalisieren:** harte Auto-Safe-Mode-Regeln bei Unsicherheit definieren.
-3. **P3 Collective Memory standardisieren:** versionssichere Lernmuster inkl. Review-Prozess je Domäne.
-4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
+1. **P1 実データ証拠の強化：** 固定受容条件によるベンチマーク（精度／再現率／FPR／ドリフト）。
+2. **P2 リフレクシブ・ガバナンス最終化：** 不確実性時の厳格自動安全モードルール。
+3. **P3 集合記憶標準化：** バージョン管理された学習パターンとドメイン別レビュープロセス。
+4. **P4 Web没入型展開の継続：** 新しいレスポンシブレイアウトに基づくさらに多くのTPM業種向けロールビュー。
 
-**Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
+**プラットフォーム注意点：** 現時点で主に **Windows＋スマホ** 向け。**LOP完了時点でmacOS、Linux他プラットフォームプロファイルを追加予定。**
