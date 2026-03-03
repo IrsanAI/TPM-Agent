@@ -1,132 +1,248 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>IrsanAI TPM Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090f1d" />
+  <title>IrsanAI TPM Immersive Insight Lab</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; background: #0d1117; color: #e6edf3; }
-    h1 { margin-bottom: 6px; }
-    .row { display: flex; gap: 16px; flex-wrap: wrap; }
-    .card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:14px; flex:1; min-width:280px; }
-    label { display:block; margin-top:8px; font-size: 14px; }
-    input { width:100%; }
-    button { margin-top:10px; padding:8px 12px; border-radius:8px; border:1px solid #30363d; background:#238636; color:white; cursor:pointer; }
-    canvas { width:100%; height:180px; background:#0b1320; border-radius:8px; margin-top:8px; }
-    .muted { color:#8b949e; font-size: 13px; }
-    code { background: #21262d; padding: 2px 5px; border-radius: 4px; }
+    :root {
+      --bg:#090f1d;
+      --panel:#131b2f;
+      --panel-soft:#0f1627;
+      --line:#2b385b;
+      --accent:#6ea8ff;
+      --text:#eaf1ff;
+      --muted:#9fb1d5;
+      --ok:#2fdc95;
+      --warn:#ffb86c;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(circle at 8% -8%, #1f2f66 0, transparent 40%), radial-gradient(circle at 95% 0%, #123445 0, transparent 35%), var(--bg);
+      min-height:100vh;
+      padding:14px;
+    }
+    .shell { max-width:1200px; margin:0 auto; display:grid; gap:12px; }
+    .card {
+      background: linear-gradient(150deg, rgba(19,27,47,.95), rgba(15,22,39,.95));
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: 0 14px 38px rgba(0,0,0,.28);
+    }
+    .topbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { border:1px solid var(--line); border-radius:999px; padding:6px 10px; font-size:12px; color:var(--muted); }
+    .controls { display:grid; grid-template-columns: repeat(4,minmax(120px,1fr)); gap:10px; }
+    .controls label { font-size:12px; color:var(--muted); display:grid; gap:5px; }
+    select,input,button {
+      width:100%; border-radius:10px; border:1px solid var(--line); background:#0d1425; color:var(--text); padding:8px;
+    }
+    button { background: linear-gradient(90deg,#2563eb,#4f46e5); font-weight:600; cursor:pointer; }
+    .grid { display:grid; gap:12px; grid-template-columns:1.6fr 1fr; }
+    .stack { display:grid; gap:12px; }
+    .kpi-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:8px; }
+    .kpi { border:1px solid var(--line); border-radius:12px; padding:10px; background:#0f1729; }
+    .kpi strong { display:block; font-size:18px; }
+    .kpi span { color:var(--muted); font-size:12px; }
+    .timeline { height:200px; border-radius:10px; background:#0a1222; }
+    .domains { display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); }
+    .domain { border:1px solid var(--line); border-radius:12px; padding:9px; background:#111a2e; }
+    .domain .tag { font-size:11px; color:var(--muted); }
+    .lop { margin:0; padding-left:18px; color:var(--muted); }
+    .lop li { margin:4px 0; }
+    canvas { width:100%; height:180px; background:#0a1222; border-radius:10px; border:1px solid #1d2b4a; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; color:#c8d5f8; white-space:pre-wrap; word-break:break-word; margin:0; }
+    .state-ok { color: var(--ok); }
+    .state-warn { color: var(--warn); }
+    @media (max-width: 960px) {
+      .grid { grid-template-columns:1fr; }
+      .controls { grid-template-columns:1fr 1fr; }
+      .kpi-grid { grid-template-columns:1fr 1fr; }
+    }
   </style>
 </head>
 <body>
-  <h1>🧠 IrsanAI TPM Playground (MVP)</h1>
-  <p class="muted">Weak-signal anomaly simulation for single-agent, mini-swarm, and cross-domain transfer resonance.</p>
+  <main class="shell">
+    <section class="card topbar">
+      <div>
+        <h1 id="title" style="margin:0 0 6px;">🧠 TPM Immersive Insight Lab</h1>
+        <p id="subtitle" style="margin:0; color:var(--muted);"></p>
+      </div>
+      <div class="chips">
+        <span class="chip" id="chipPlatform"></span>
+        <span class="chip" id="chipFormfactor"></span>
+        <span class="chip">Finance TPM → Domain Templates</span>
+      </div>
+    </section>
 
-  <div class="row">
-    <div class="card">
-      <h3>Controls</h3>
-      <label>Seed <input id="seed" type="number" value="42"></label>
-      <label>Points <input id="points" type="range" min="80" max="260" value="140"></label>
-      <label>Threshold <input id="threshold" type="range" min="5" max="60" value="18"></label>
-      <button onclick="runAll()">Regenerate</button>
-      <p class="muted">TPM framing: probabilistic early detection (not deterministic prediction).</p>
-    </div>
+    <section class="card controls">
+      <label><span id="lblLang"></span><select id="lang"><option value="de">Deutsch</option><option value="en">English</option></select></label>
+      <label><span id="lblSeed"></span><input id="seed" type="number" value="42" /></label>
+      <label><span id="lblPoints"></span><input id="points" type="range" min="90" max="260" value="150" /></label>
+      <label><span id="lblThreshold"></span><input id="threshold" type="range" min="5" max="55" value="18" /></label>
+      <button onclick="runAll()" id="btnRun" style="grid-column:1/-1"></button>
+    </section>
 
-    <div class="card">
-      <h3>Single Agent (Finance)</h3>
-      <canvas id="single"></canvas>
-      <p id="singleStats"></p>
-    </div>
+    <section class="grid">
+      <div class="stack">
+        <article class="card">
+          <h3 id="sectionLive" style="margin-top:0"></h3>
+          <div class="kpi-grid">
+            <div class="kpi"><strong id="kpiGlitches">0</strong><span id="kpiGlitchesLbl"></span></div>
+            <div class="kpi"><strong id="kpiPressure">0%</strong><span id="kpiPressureLbl"></span></div>
+            <div class="kpi"><strong id="kpiResonance">0</strong><span id="kpiResonanceLbl"></span></div>
+            <div class="kpi"><strong id="kpiReadiness">0%</strong><span id="kpiReadinessLbl"></span></div>
+          </div>
+          <canvas id="timeline" class="timeline"></canvas>
+        </article>
 
-    <div class="card">
-      <h3>Mini Swarm (BTC / COFFEE / VOL)</h3>
-      <canvas id="swarm"></canvas>
-      <p id="swarmStats"></p>
-    </div>
-  </div>
+        <article class="card">
+          <h3 id="sectionStreams" style="margin-top:0"></h3>
+          <canvas id="swarm"></canvas>
+        </article>
+      </div>
 
-  <div class="row" style="margin-top:16px;">
-    <div class="card">
-      <h3>Cross-domain Transfer (Finance → Weather → Health)</h3>
-      <canvas id="xdomain"></canvas>
-      <p id="xStats"></p>
-      <p class="muted">Synthetic demo for concept feel. Real transfer requires governance + domain-safe features.</p>
-    </div>
-  </div>
+      <div class="stack">
+        <article class="card">
+          <h3 id="sectionDomains" style="margin-top:0"></h3>
+          <div id="domains" class="domains"></div>
+        </article>
+        <article class="card">
+          <h3 id="sectionLOP" style="margin-top:0"></h3>
+          <ol class="lop" id="lop"></ol>
+          <p id="lopPlatform" class="state-warn" style="margin:10px 0 0;"></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3 id="sectionFrame" style="margin-top:0"></h3>
+      <pre class="mono" id="frame"></pre>
+    </section>
+  </main>
 
   <script>
-    function rng(seed) {
-      let s = seed >>> 0;
-      return () => ((s = (1664525 * s + 1013904223) >>> 0) / 4294967296);
-    }
-
-    function series(seed, n, noise=0.25) {
-      const rnd = rng(seed);
-      const out = [];
-      for (let i=0;i<n;i++) {
-        const base = Math.sin(i/8)*0.6 + Math.cos(i/19)*0.4;
-        const micro = Math.sin(i/3.7)*0.08;
-        const jitter = (rnd()-0.5) * noise * 0.3;
-        out.push(base + micro + jitter);
+    const I18N = {
+      de: {
+        subtitle: 'Live-Einblick in Arbeitsweise und aktive Informationsverarbeitung eines TPM-Agenten – mobil & desktopfähig.',
+        lang: 'Sprache', seed: 'Seed', points: 'Datenpunkte', threshold: 'Glitch-Schwelle', run: 'Neu berechnen',
+        platform: 'Plattform', formfactor: 'Formfaktor',
+        live: 'Live Insight / Entscheidungsstatus', streams: 'Aktive Stream-Perspektiven (Finance zuerst)',
+        domains: 'Wiederverwendbare Domain-Karten (für weitere TPM-Branchen)',
+        lop: 'Priorisierte LOP (Liste offener Punkte)',
+        frame: 'Aktive Frame-Zusammenfassung',
+        kpiGlitches: 'Frühsignale', kpiPressure: 'Schwarmdruck', kpiResonance: 'Transfer-Resonanz', kpiReadiness: 'Governance-Readiness',
+        finance: 'Finanz', weather: 'Wetter', health: 'Gesundheit', security: 'Sicherheit',
+        lopItems: [
+          'P1: Realdaten-Benchmarking mit klaren Akzeptanzkriterien (Precision/Recall/FPR/Drift).',
+          'P2: Reflexive Governance-Regeln (Auto-Safe-Mode bei Unsicherheit) finalisieren.',
+          'P3: Collective-Memory-Versionierung für domänenübergreifende Lernmuster etablieren.'
+        ],
+        platformTail: 'Primärfokus: Windows + Smartphone. LOP-Erweiterung später: macOS, Linux und weitere Plattformprofile.'
+      },
+      en: {
+        subtitle: 'Live insight into the TPM agent workflow and active information processing – mobile and desktop ready.',
+        lang: 'Language', seed: 'Seed', points: 'Data points', threshold: 'Glitch threshold', run: 'Regenerate',
+        platform: 'Platform', formfactor: 'Form factor',
+        live: 'Live insight / decision status', streams: 'Active stream views (finance first)',
+        domains: 'Reusable domain cards (for additional TPM sectors)',
+        lop: 'Prioritized LOP (list of open points)',
+        frame: 'Active frame summary',
+        kpiGlitches: 'Early signals', kpiPressure: 'Swarm pressure', kpiResonance: 'Transfer resonance', kpiReadiness: 'Governance readiness',
+        finance: 'Finance', weather: 'Weather', health: 'Health', security: 'Security',
+        lopItems: [
+          'P1: Expand real-data benchmarking with explicit acceptance criteria (precision/recall/FPR/drift).',
+          'P2: Finalize reflexive governance rules (auto safe-mode on uncertainty).',
+          'P3: Establish collective-memory versioning for cross-domain learning patterns.'
+        ],
+        platformTail: 'Primary focus: Windows + smartphone. LOP extension later: macOS, Linux, and additional platform profiles.'
       }
-      return out;
+    };
+
+    const state = { lang: (navigator.language || 'de').toLowerCase().startsWith('de') ? 'de' : 'en' };
+
+    function rng(seed){ let s=seed>>>0; return ()=>((s=(1664525*s+1013904223)>>>0)/4294967296); }
+    function series(seed,n,noise=0.25){ const rnd=rng(seed); const out=[]; for(let i=0;i<n;i++){ const base=Math.sin(i/8)*0.6+Math.cos(i/19)*0.4; const micro=Math.sin(i/3.7)*0.08; const jitter=(rnd()-0.5)*noise*0.3; out.push(base+micro+jitter);} return out; }
+    function glitches(arr,threshold){ const g=[]; for(let i=2;i<arr.length;i++){ const accel=arr[i]-(2*arr[i-1]-arr[i-2]); if(Math.abs(accel)>threshold) g.push({i,s:accel}); } return g; }
+
+    function draw(canvas, lines){
+      const c=document.getElementById(canvas), ctx=c.getContext('2d'); c.width=c.clientWidth; c.height=c.clientHeight;
+      ctx.clearRect(0,0,c.width,c.height); const all=lines.flatMap(x=>x.data); const min=Math.min(...all), max=Math.max(...all);
+      const pad=16; const sx=(i,n)=>pad+(i/(n-1))*(c.width-2*pad); const sy=v=>c.height-pad-((v-min)/(max-min||1))*(c.height-2*pad);
+      lines.forEach(line=>{ ctx.strokeStyle=line.color; ctx.lineWidth=1.6; ctx.beginPath(); line.data.forEach((v,i)=>{ const x=sx(i,line.data.length), y=sy(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y); }); ctx.stroke(); });
     }
 
-    function glitches(arr, threshold) {
-      const g=[];
-      for (let i=2;i<arr.length;i++) {
-        const accel = arr[i] - (2*arr[i-1]-arr[i-2]);
-        if (Math.abs(accel) > threshold) g.push({i, s:accel});
-      }
-      return g;
+    function applyText(){
+      const t=I18N[state.lang];
+      document.documentElement.lang=state.lang;
+      document.getElementById('subtitle').textContent=t.subtitle;
+      document.getElementById('lblLang').textContent=t.lang;
+      document.getElementById('lblSeed').textContent=t.seed;
+      document.getElementById('lblPoints').textContent=t.points;
+      document.getElementById('lblThreshold').textContent=t.threshold;
+      document.getElementById('btnRun').textContent=t.run;
+      document.getElementById('sectionLive').textContent=t.live;
+      document.getElementById('sectionStreams').textContent=t.streams;
+      document.getElementById('sectionDomains').textContent=t.domains;
+      document.getElementById('sectionLOP').textContent=t.lop;
+      document.getElementById('sectionFrame').textContent=t.frame;
+      document.getElementById('kpiGlitchesLbl').textContent=t.kpiGlitches;
+      document.getElementById('kpiPressureLbl').textContent=t.kpiPressure;
+      document.getElementById('kpiResonanceLbl').textContent=t.kpiResonance;
+      document.getElementById('kpiReadinessLbl').textContent=t.kpiReadiness;
+      const lop=document.getElementById('lop'); lop.innerHTML=''; t.lopItems.forEach(item=>{ const li=document.createElement('li'); li.textContent=item; lop.appendChild(li); });
+      document.getElementById('lopPlatform').textContent=t.platformTail;
+      const isMobile=window.matchMedia('(max-width: 960px)').matches;
+      document.getElementById('chipPlatform').textContent=`${t.platform}: ${navigator.platform || 'n/a'}`;
+      document.getElementById('chipFormfactor').textContent=`${t.formfactor}: ${isMobile ? 'Mobile' : 'Laptop/Desktop'}`;
     }
 
-    function draw(canvas, lines) {
-      const c = document.getElementById(canvas);
-      const ctx = c.getContext('2d');
-      c.width = c.clientWidth; c.height = c.clientHeight;
-      ctx.clearRect(0,0,c.width,c.height);
-      const all = lines.flatMap(x=>x.data);
-      const min = Math.min(...all), max = Math.max(...all);
-      const pad=16;
-      const sx = (i,n)=> pad + (i/(n-1))*(c.width-2*pad);
-      const sy = v => c.height-pad - ((v-min)/(max-min||1))*(c.height-2*pad);
-      lines.forEach(line=>{
-        ctx.strokeStyle=line.color; ctx.lineWidth=1.5; ctx.beginPath();
-        line.data.forEach((v,i)=>{ const x=sx(i,line.data.length), y=sy(v); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);});
-        ctx.stroke();
-      });
+    function runAll(){
+      const t=I18N[state.lang];
+      const seed=Number(document.getElementById('seed').value||42);
+      const points=Number(document.getElementById('points').value||150);
+      const threshold=Number(document.getElementById('threshold').value||18)/100;
+      const fin=series(seed+1, points, 0.25), coffee=series(seed+7, points, 0.31), vol=series(seed+23, points, 0.21);
+      const weather=series(seed+200, points, 0.26), health=series(seed+300, points, 0.24);
+      const fg=glitches(fin,threshold), cg=glitches(coffee,threshold), vg=glitches(vol,threshold), wg=glitches(weather,threshold), hg=glitches(health,threshold);
+
+      draw('timeline', [{data:fin,color:'#6ea8ff'}]);
+      draw('swarm', [{data:fin,color:'#2ea043'},{data:coffee,color:'#f0883e'},{data:vol,color:'#a371f7'}]);
+
+      const pressure=((fg.length+cg.length+vg.length)/(3*points)*100);
+      const fset=new Set(fg.slice(-25).map(x=>x.i)); let resonance=0; wg.slice(-25).forEach(x=>fset.has(x.i)&&resonance++); hg.slice(-25).forEach(x=>fset.has(x.i)&&resonance++);
+      const readiness=Math.max(0, Math.min(100, (100 - pressure*2) + resonance));
+
+      document.getElementById('kpiGlitches').textContent=fg.length;
+      document.getElementById('kpiPressure').textContent=`${pressure.toFixed(1)}%`;
+      document.getElementById('kpiResonance').textContent=String(resonance);
+      document.getElementById('kpiReadiness').textContent=`${readiness.toFixed(0)}%`;
+
+      const cards=[
+        [t.finance, fg.length, 'live-market template'],
+        [t.weather, wg.length, 'event-risk template'],
+        [t.health, hg.length, 'safety template'],
+        [t.security, vg.length, 'response template']
+      ];
+      const box=document.getElementById('domains'); box.innerHTML='';
+      cards.forEach(([name,count,templ])=>{ const d=document.createElement('div'); d.className='domain'; d.innerHTML=`<strong>${name}</strong><div class='tag'>${templ}</div><div style='margin-top:5px'>Signals: <span class='state-ok'>${count}</span></div>`; box.appendChild(d); });
+
+      document.getElementById('frame').textContent=JSON.stringify({
+        runtime: {platform:navigator.platform, language:state.lang, viewport:`${window.innerWidth}x${window.innerHeight}`},
+        tpm: {focus:'finance', early_signals:fg.length, swarm_pressure:Number(pressure.toFixed(2)), transfer_resonance:resonance, governance_readiness:Number(readiness.toFixed(0))},
+        open_points_priority:['real_data_benchmarking','reflexive_governance_rules','collective_memory_versioning']
+      }, null, 2);
     }
 
-    function runAll() {
-      const seed = Number(document.getElementById('seed').value||42);
-      const points = Number(document.getElementById('points').value||140);
-      const threshold = Number(document.getElementById('threshold').value||18)/100;
-
-      const single = series(seed, points);
-      const sg = glitches(single, threshold);
-      draw('single', [{data:single,color:'#58a6ff'}]);
-      document.getElementById('singleStats').innerHTML = `Glitches: <code>${sg.length}</code> • Threshold: <code>${threshold.toFixed(2)}</code>`;
-
-      const btc = series(seed+1, points, 0.25), coffee = series(seed+7, points, 0.32), vol = series(seed+23, points, 0.21);
-      const bg=glitches(btc,threshold), cg=glitches(coffee,threshold), vg=glitches(vol,threshold);
-      draw('swarm', [
-        {data:btc,color:'#2ea043'},{data:coffee,color:'#f0883e'},{data:vol,color:'#a371f7'}
-      ]);
-      const pressure = ((bg.length+cg.length+vg.length)/(3*points)*100).toFixed(2);
-      document.getElementById('swarmStats').innerHTML = `BTC: <code>${bg.length}</code> • COFFEE: <code>${cg.length}</code> • VOL: <code>${vg.length}</code> • Swarm pressure: <code>${pressure}%</code>`;
-
-      const fin = series(seed+100, points, 0.28), wet = series(seed+200, points, 0.26), heal = series(seed+300, points, 0.24);
-      const fg=glitches(fin,threshold), wg=glitches(wet,threshold), hg=glitches(heal,threshold);
-      draw('xdomain', [
-        {data:fin,color:'#58a6ff'},{data:wet,color:'#d29922'},{data:heal,color:'#ff7b72'}
-      ]);
-      const fset = new Set(fg.slice(-25).map(x=>x.i));
-      let resonance = 0;
-      wg.slice(-25).forEach(x=>{ if(fset.has(x.i)) resonance++;});
-      hg.slice(-25).forEach(x=>{ if(fset.has(x.i)) resonance++;});
-      document.getElementById('xStats').innerHTML = `Finance: <code>${fg.length}</code> • Weather: <code>${wg.length}</code> • Health: <code>${hg.length}</code> • Transfer resonance: <code>${resonance}</code>`;
-    }
-
+    document.getElementById('lang').value=state.lang;
+    document.getElementById('lang').addEventListener('change',(e)=>{ state.lang=e.target.value; applyText(); runAll(); });
+    window.addEventListener('resize', applyText);
+    applyText();
     runAll();
   </script>
 </body>
