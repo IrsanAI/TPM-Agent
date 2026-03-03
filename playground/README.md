@@ -2,8 +2,6 @@
 
 ## 1) Playground (simulation onboarding)
 
-## 1) Playground (simulation onboarding)
-
 Run:
 
 ```bash
@@ -19,7 +17,7 @@ Run:
 
 ```bash
 uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
-# open http://localhost:8787
+# open http://localhost:8787 (not http://0.0.0.0:8787)
 ```
 
 API:

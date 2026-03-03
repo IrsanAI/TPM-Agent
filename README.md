@@ -109,7 +109,7 @@ docker compose build --no-cache tpm-forge-web
 docker compose up tpm-forge-web
 ```
 
-Now open `http://localhost:8787` in your browser.
+Now open `http://localhost:8787` in your browser (**not** `http://0.0.0.0:8787`). Uvicorn binds to `0.0.0.0` internally, but clients should use `localhost` (or the host LAN IP).
 
 ### Step 3 (optional checks): understand the non-web services
 
@@ -123,6 +123,13 @@ docker compose run --rm tpm-live
 - `tpm-forge-web` = FastAPI + dashboard UI (the one with layout/progress/runtime control).
 
 If `tpm-preflight` reports `ALPHAVANTAGE_KEY not set`, COFFEE still works via fallbacks.
+
+If the page looks blank:
+- test API directly: `http://localhost:8787/api/frame`
+- test FastAPI docs: `http://localhost:8787/docs`
+- hard refresh browser (`Ctrl+F5`)
+- if needed, restart only web service: `docker compose restart tpm-forge-web`
+
 Optional for better COFFEE quality:
 
 ```bash
