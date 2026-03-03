@@ -9,7 +9,7 @@ from urllib import request
 
 from core.forge_agents import DynamicAgentFactory
 from core.forge_config import load_config
-from core.forge_entropy import TransferEntropyEngine
+from core.forge_entropy import EntropySignalEngine, TransferEntropyEngine
 from core.forge_optimizer import NeuronalOptimizationEngine
 
 
@@ -26,6 +26,7 @@ class ForgeOrchestrator:
         self.agents = DynamicAgentFactory.build(self.config["agents"])
         engine_cfg = self.config["engine"]
         self.entropy = TransferEntropyEngine(bins=int(engine_cfg["entropy_bins"]), lag=int(engine_cfg["transfer_lag"]))
+        self.signal_entropy = EntropySignalEngine(bins=int(engine_cfg["entropy_bins"]))
         self.optimizer = NeuronalOptimizationEngine(lr=float(engine_cfg["reward_learning_rate"]))
         self.cache_file = self.paths.state_dir / "latest_prices.json"
         self.series = defaultdict(lambda: deque(maxlen=int(engine_cfg["lookback_window"])))
@@ -67,7 +68,26 @@ class ForgeOrchestrator:
                 agent.failures += 1
                 self.fail_state[agent.name] += 1
 
-        graph = self.entropy.correlation_graph({name: list(values) for name, values in self.series.items()})
+        series_payload = {name: list(values) for name, values in self.series.items()}
+        entropy_summary: dict[str, dict] = {}
+        compressed_series: dict[str, list[float]] = {}
+        for name, values in series_payload.items():
+            if not values:
+                continue
+            bh = self.signal_entropy.black_hole_filter(values, window=min(40, max(8, len(values) // 3)), stride=5, out_points=20)
+            compressed = list(bh.get("compressed", []))
+            filtered = list(bh.get("filtered", []))
+            compressed_series[name] = compressed
+            entropy_summary[name] = {
+                "window_entropy": self.signal_entropy.shannon_entropy(values),
+                "black_hole_entropy_threshold": float(bh.get("threshold", 0.0)),
+                "raw_points": len(values),
+                "filtered_points": len(filtered),
+                "compressed_points": len(compressed),
+                "compressed": compressed,
+            }
+
+        graph = self.entropy.correlation_graph(compressed_series if compressed_series else series_payload)
         predictive_power = (sum(graph.values()) / max(1, len(graph))) if graph else 0.0
 
         scored = []
@@ -101,6 +121,12 @@ class ForgeOrchestrator:
             "domain_summary": self._domain_summary(scored),
             "ui_profile": self.config.get("ui", {}),
             "transfer_entropy_graph": graph,
+            "entropy_summary": entropy_summary,
+            "engine_transparency": {
+                "transfer_entropy_formula": "TE(X→Y)=Σ p(y_t+1,y_t,x_t) log2(p(y_t+1|y_t,x_t)/p(y_t+1|y_t))",
+                "black_hole_pipeline": "sliding_entropy -> quantile_gate -> bottleneck_compress(20)",
+                "series_used_for_te": "compressed" if compressed_series else "raw",
+            },
             "cull_candidates": cull,
         }
         self._store_cache(frame)
