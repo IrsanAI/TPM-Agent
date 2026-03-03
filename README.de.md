@@ -1,6 +1,6 @@
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](./README.md) | [🇩🇪 Deutsch](./README.de.md) | [🇪🇸 Español](./docs/i18n/README.es.md) | [🇮🇹 Italiano](./docs/i18n/README.it.md) | [🇧🇦 Bosanski](./docs/i18n/README.bs.md) | [🇷🇺 Русский](./docs/i18n/README.ru.md) | [🇨🇳 中文](./docs/i18n/README.zh-CN.md) | [🇫🇷 Français](./docs/i18n/README.fr.md) | [🇧🇷 Português (BR)](./docs/i18n/README.pt-BR.md) | [🇮🇳 हिन्दी](./docs/i18n/README.hi.md) | [🇯🇵 日本語](./docs/i18n/README.ja.md)
+[🇬🇧 English](./README.md) | [🇩🇪 Deutsch](./README.de.md) | [🇪🇸 Español](./docs/i18n/README.es.md) | [🇮🇹 Italiano](./docs/i18n/README.it.md) | [🇧🇦 Bosanski](./docs/i18n/README.bs.md) | [🇷🇺 Русский](./docs/i18n/README.ru.md) | [🇨🇳 中文](./docs/i18n/README.zh-CN.md) | [🇫🇷 Français](./docs/i18n/README.fr.md) | [🇧🇷 Português (BR)](./docs/i18n/README.pt-BR.md) | [🇮🇳 हिन्दी](./docs/i18n/README.hi.md) | [🇹🇷 Türkçe](./docs/i18n/README.tr.md) | [🇯🇵 日本語](./docs/i18n/README.ja.md)
 
 Ein sauberer Bootstrap für ein autonomes Multi-Agent-Setup (BTC, COFFEE und weitere Märkte) mit plattformübergreifenden Laufoptionen.
 
@@ -72,25 +72,82 @@ Wenn diese Spur überzeugt, resoniert in der Regel auch der Rest des Repos.
 
 - **Android / Termux (Samsung etc.)**
   ```bash
-  pkg install termux-api -y
+  bash scripts/termux_bootstrap.sh
+  cd ~/TPM-Agent
+  python scripts/tpm_cli.py env
+  python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
+  Für Web-UI-Demo direkt auf Android (Termux) kannst du die Forge-Runtime lokal starten:
+  ```bash
+  cd ~/TPM-Agent
+  bash scripts/termux_forge.sh start
+  # stop: bash scripts/termux_forge.sh stop
+  # status: bash scripts/termux_forge.sh status
+  ```
+  Das Script öffnet (wenn verfügbar) den Browser automatisch und hält den Dienst im Hintergrund lauffähig.
+  Falls du auf Android einen `pydantic-core`/Rust- oder `scipy`/Fortran-Build-Fehler gesehen hast, nutze
+  `python -m pip install -r requirements-termux.txt` (Termux-sicheres Paketset, ohne Rust-Toolchain).
+  Im Webinterface kannst du den Runtime-Dienst über Start/Stop kontrollieren; ein Ladebalken zeigt den Übergangsfortschritt.
 - **iPhone (im Rahmen des Möglichen)**: Shell-Apps wie iSH / a-Shell nutzen. Termux-spezifische Notification-Hooks sind dort nicht verfügbar.
 - **Windows / Linux / macOS**: identische CLI-Befehle; für Dauerbetrieb via tmux/Scheduler/cron starten.
 
 ## Docker (einfachster Cross-OS-Weg)
+
+Docker bitte genau in dieser Reihenfolge nutzen (ohne Rätseln):
+
+### Schritt 1: Web-Runtime-Image bauen
+
+```bash
+docker compose build --no-cache tpm-forge-web
+```
+
+### Schritt 2: Web-Dashboard-Service starten
+
+```bash
+docker compose up tpm-forge-web
+```
+
+Danach im Browser öffnen: `http://localhost:8787` (**nicht** `http://0.0.0.0:8787`). Uvicorn bindet intern an `0.0.0.0`, Clients sollten aber `localhost` (oder die LAN-IP des Hosts) nutzen.
+
+### Schritt 3 (optionale Checks): Nicht-Web-Services verstehen
 
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-Optional für bessere COFFEE-Quelle:
+- `tpm-preflight` = Quellen-/Connectivity-Checks (nur CLI-Ausgabe).
+- `tpm-live` = Live-Monitor-Logs im Terminal (nur CLI, **kein Web-UI**).
+- `tpm-forge-web` = FastAPI + Dashboard-UI (mit Layout/Fortschrittsbalken/Runtime-Control).
+
+Wenn `tpm-preflight` `ALPHAVANTAGE_KEY not set` meldet, läuft COFFEE trotzdem über Fallback-Quellen.
+
+
+Wenn die Seite leer wirkt:
+- API direkt testen: `http://localhost:8787/api/frame`
+- FastAPI-Doku testen: `http://localhost:8787/docs`
+- Browser hart neu laden (`Strg+F5`)
+- bei Bedarf nur den Web-Service neu starten: `docker compose restart tpm-forge-web`
+
+Optional für bessere COFFEE-Qualität:
 
 ```bash
 export ALPHAVANTAGE_KEY="<dein_key>"
 docker compose run --rm tpm-preflight
 ```
+
+## Glitch-Prognose & Mobile-Alerts
+
+- Das Forge-Live-Cockpit liefert jetzt pro Markt eine Kurzfrist-Tendenz (`up/down/sideways`) mit Konfidenz über `/api/markets/live`.
+- Bei erkannter Glitch-Situation (Beschleunigungsspitze) kann die Runtime auslösen:
+  - Termux-Toast + Vibration
+  - optional Notification/Beep
+  - optional Telegram-Push (wenn Bot-Token/Chat-ID in `config/config.yaml` gesetzt sind).
+- Konfiguration im Dashboard über **Save Alerts** / **Test Alert** oder via API:
+  - `GET /api/alerts/preferences`
+  - `POST /api/alerts/preferences`
+  - `POST /api/alerts/test`
 
 ## Validierung
 
@@ -128,6 +185,81 @@ Output: `state/stress_test_report.json`
 
 
 
+
+
+
+
+## Live-Status: Was der TPM-Agent aktuell kann
+
+**Aktueller Stand (heute):**
+- Produktive Forge-Web-Runtime ist vorhanden (`production.forge_runtime:app`).
+- Startkonfiguration ist finance-first mit **BTC + COFFEE**.
+- Live-Frame, Agent-Fitness, Transfer-Entropy und Domain-Summary sind im Web-Dashboard sichtbar.
+- User können neue Markt-Agenten zur Laufzeit hinzufügen (`POST /api/agents`).
+
+**Was er können sollte (Sollbild):**
+- Realdaten-Benchmarking mit klaren Akzeptanzgrenzen (Precision/Recall/FPR/Drift).
+- Harte reflexive Governance-Regeln für Auto-Safe-Mode.
+- Collective-Memory-Prozess für versionierte Lernmuster je Domäne.
+
+**Nächste Ausbaustufe:**
+- Regime-basierter Policy-Orchestrator (Trend/Schock/Sideways) über allen Agenten.
+- Domänenpilot außerhalb Finance (z. B. Medical oder Seismic) mit klaren Datenverträgen.
+
+
+## Merge-Hilfe für PR-Konflikte
+
+- Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
+
+
+### Umfang heute: Windows + Smartphone für Finance-TPM
+
+- **Windows:** Forge Runtime + Webinterface + Docker/PowerShell/Klickstart sind einsatzfähig.
+- **Smartphone:** Android/Termux live-monitoring ist einsatzfähig; Web-UI mobil responsiv nutzbar.
+- **Realtime-Multi-Agent:** BTC + COFFEE aktiv; weitere Märkte können im Webinterface dynamisch ergänzt werden.
+- **Quellgrenzen:** wenn ein gewünschter Markt nicht aus den eingebundenen Quellen stammt, müssen URL + API-Daten angegeben werden.
+
+## Windows Live-Test (2-Wege-System)
+
+### Weg A — Developer/Power-User (PowerShell, CMD, PyCharm, IDE)
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
+```
+
+### Weg B — Low-Level User (Klick & Start)
+
+1. Doppelklick auf `scripts/windows_click_start.bat`
+2. Script wählt automatisch den besten Pfad:
+   - Python vorhanden → venv + pip + Runtime-Start
+   - sonst Docker Compose (falls verfügbar)
+
+Technische Basis: `scripts/windows_bootstrap.ps1`.
+
+## Forge Production Web Runtime (BTC + COFFEE, erweiterbar)
+
+Ja, das ist im Repo **bereits begonnen** worden und jetzt weitergeführt:
+
+- Startet standardmäßig mit einem Finanz-TPM-Agenten für **BTC** und einem für **COFFEE**.
+- User können weitere Märkte/Agenten direkt im Web-UI hinzufügen (`/api/agents`).
+- Läuft als persistenter Runtime-Service mit Live-Frame (`/api/frame`) für immersive Einsicht.
+
+### Start (lokal)
+
+```bash
+uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
+# öffne http://localhost:8787
+```
+
+### Start (Docker)
+
+```bash
+docker compose up tpm-forge-web
+# öffne http://localhost:8787
+```
 
 ## TPM Playground (interaktiver MVP)
 
@@ -452,6 +584,27 @@ Zusätzliche Sprach-Landingpages:
 
 Hinweis: Wo Berufe zwischen Ländern nicht 1:1 existieren, wird im TPM-Kontext mit **funktionalen Äquivalenten** gearbeitet (gleicher Kern-Intent, unterschiedliche Bezeichnung/Institution).
 
+## IrsanAI Quality Meta (SOLL vs IST)
+
+Für den aktuellen Reifegrad des Repos, den Qualitätszwischenstand und die kausale Roadmap auf Basis realer Nutzererwartungen siehe:
+
+- `docs/IRSANAI_QUALITY_META.md`
+
+Dieses Dokument ist ab sofort Referenz für:
+- Anspruchstiefe bei Features (UX/UI + operative Robustheit),
+- Docker/Android-Paritätsanforderungen,
+- sowie Akzeptanz-Qualitätsgates für kommende PRs.
+
+## i18n parity mode (full mirror)
+
+To ensure no language community is content-disadvantaged, i18n files are now maintained in full canonical parity with `README.md`.
+
+Sync command:
+
+```bash
+python scripts/i18n_full_mirror_sync.py
+```
+
 ## Hinweis für Entwickler (LOP – Liste offener Punkte)
 
 Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
@@ -470,4 +623,19 @@ Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
 | **Sprachübergreifende Resonanz / i18n-Ausbau** | **Teilweise erledigt 🟡** – mehrere Sprach-Landingpages existieren; Ausbau ist explizit als „in progress“ markiert. | Synchronisationsprozess definieren (wann Änderungen aus Root-README in alle i18n-READMEs propagiert werden). |
 
 Kurzfazit: Die früheren „Nächsten Ausbaustufen“ sind **technisch zu großen Teilen gestartet oder umgesetzt**; der größte Hebel liegt jetzt in **fachlicher Operationalisierung** (Governance, Policies, Domänenlogik, Realdaten-Evidenz) und **konsistentem Doku-/i18n-Betrieb**.
+
+### LOP Umsetzungsplan
+
+Für Umsetzungsreihenfolge, Done-Kriterien und Evidenz-Gates pro offenem LOP-Punkt siehe:
+
+- `docs/LOP_EXECUTION_PLAN.md`
+
+## LOP (Endnote – priorisiert)
+
+1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
+2. **P2 Reflexive Governance finalisieren:** harte Auto-Safe-Mode-Regeln bei Unsicherheit definieren.
+3. **P3 Collective Memory standardisieren:** versionssichere Lernmuster inkl. Review-Prozess je Domäne.
+4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
+
+**Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
 

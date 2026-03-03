@@ -82,7 +82,7 @@ def cmd_forge_dashboard(args: argparse.Namespace) -> int:
         except Exception as exc:
             print(f"[warn] browser auto-open failed: {exc}")
 
-    return run([sys.executable, "-m", "uvicorn", "production.forge_dashboard:app", "--host", "0.0.0.0", "--port", str(args.port)])
+    return run([sys.executable, "-m", "uvicorn", "production.forge_runtime:app", "--host", "0.0.0.0", "--port", str(args.port)])
 
 
 def cmd_init_device_root(_: argparse.Namespace) -> int:
@@ -128,8 +128,8 @@ def build_parser() -> argparse.ArgumentParser:
     fr.add_argument("--ticks", type=int, default=1)
     fr.set_defaults(func=cmd_forge_run)
 
-    fd = sp.add_parser("forge-dashboard", help="launch FastAPI + WebSocket PWA dashboard")
-    fd.add_argument("--port", type=int, default=8765)
+    fd = sp.add_parser("forge-dashboard", help="launch Forge production runtime dashboard")
+    fd.add_argument("--port", type=int, default=8787)
     fd.add_argument("--open-browser", action="store_true", help="Open dashboard automatically (recommended for Windows desktop UX)")
     fd.set_defaults(func=cmd_forge_dashboard)
     return p
