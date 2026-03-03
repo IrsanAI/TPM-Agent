@@ -72,6 +72,11 @@ If this lane convinces you, the rest of the repository will likely resonate too.
 
 - **Android / Termux (Samsung, etc.)**
   ```bash
+<<<<<<< codex/prioritize-and-implement-open-items-list-mx3ibk
+  bash scripts/termux_bootstrap.sh
+  cd ~/TPM-Agent
+  python scripts/tpm_cli.py env
+=======
   pkg update -y && pkg upgrade -y
   pkg install -y git python curl termux-api
   git clone https://github.com/IrsanAI/TPM-Agent.git
@@ -79,6 +84,7 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   python scripts/tpm_cli.py env
   # Termux note: do NOT upgrade pip globally (blocked by Termux policy)
   python -m pip install -r requirements.txt
+>>>>>>> main
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
@@ -90,8 +96,13 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   # status: bash scripts/termux_forge.sh status
   ```
   The script auto-opens browser (if available) and keeps service running in background.
+<<<<<<< codex/prioritize-and-implement-open-items-list-mx3ibk
+  If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
+  `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
+=======
   If you saw a `scipy`/Fortran build error on Android: this repo now treats SciPy as optional,
   so `python -m pip install -r requirements.txt` should complete without compiling Fortran.
+>>>>>>> main
   In the web interface you can control runtime start/stop; a progress bar shows transition status.
 - **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
 - **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.

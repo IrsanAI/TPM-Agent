@@ -203,7 +203,7 @@ class ForgeRuntime:
             return self.runtime_status()
 
     def _validate_spec(self, spec: AgentSpec) -> dict:
-        payload = spec.model_dump()
+        payload = spec.model_dump() if hasattr(spec, "model_dump") else spec.dict()
         source = payload["source_type"]
         if source not in {"kraken", "binance", "open_meteo", "alphavantage_commodity"}:
             raise HTTPException(status_code=400, detail=f"unsupported source_type={source}")

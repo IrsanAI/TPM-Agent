@@ -72,13 +72,9 @@ Wenn diese Spur überzeugt, resoniert in der Regel auch der Rest des Repos.
 
 - **Android / Termux (Samsung etc.)**
   ```bash
-  pkg update -y && pkg upgrade -y
-  pkg install -y git python curl termux-api
-  git clone https://github.com/IrsanAI/TPM-Agent.git
-  cd TPM-Agent
+  bash scripts/termux_bootstrap.sh
+  cd ~/TPM-Agent
   python scripts/tpm_cli.py env
-  # Termux note: do NOT upgrade pip globally (blocked by Termux policy)
-  python -m pip install -r requirements.txt
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
@@ -90,8 +86,8 @@ Wenn diese Spur überzeugt, resoniert in der Regel auch der Rest des Repos.
   # status: bash scripts/termux_forge.sh status
   ```
   Das Script öffnet (wenn verfügbar) den Browser automatisch und hält den Dienst im Hintergrund lauffähig.
-  Falls du auf Android einen `scipy`/Fortran-Build-Fehler gesehen hast: SciPy ist jetzt optional,
-  daher sollte `python -m pip install -r requirements.txt` ohne Fortran-Compiler durchlaufen.
+  Falls du auf Android einen `pydantic-core`/Rust- oder `scipy`/Fortran-Build-Fehler gesehen hast, nutze
+  `python -m pip install -r requirements-termux.txt` (Termux-sicheres Paketset, ohne Rust-Toolchain).
   Im Webinterface kannst du den Runtime-Dienst über Start/Stop kontrollieren; ein Ladebalken zeigt den Übergangsfortschritt.
 - **iPhone (im Rahmen des Möglichen)**: Shell-Apps wie iSH / a-Shell nutzen. Termux-spezifische Notification-Hooks sind dort nicht verfügbar.
 - **Windows / Linux / macOS**: identische CLI-Befehle; für Dauerbetrieb via tmux/Scheduler/cron starten.

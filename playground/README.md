@@ -65,11 +65,9 @@ scripts/windows_click_start.bat
   - open: `http://localhost:8787`
 - **Android (Termux):**
   - full setup + clone:
-    - `pkg update -y && pkg upgrade -y`
-    - `pkg install -y git python curl termux-api`
-    - `git clone https://github.com/IrsanAI/TPM-Agent.git && cd TPM-Agent`
-    - `python -m pip install -r requirements.txt`
-  - if you previously saw scipy/Fortran build errors: SciPy is optional now; retry install command above
+    - `bash scripts/termux_bootstrap.sh`
+    - `cd ~/TPM-Agent`
+  - if you previously saw pydantic-core/Rust or scipy/Fortran build errors: retry install command above
   - start local web runtime:
     - `bash scripts/termux_forge.sh start`
   - stop later:
