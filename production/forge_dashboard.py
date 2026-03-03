@@ -13,7 +13,20 @@ app = FastAPI(title="IrsanAI The Forge Dashboard")
 CONFIG, PATHS = load_config()
 CACHE_FILE = PATHS.state_dir / "latest_prices.json"
 BACKTEST_FILE = PATHS.state_dir / "TPM_test_results.json"
+SOURCE_INDEX_FILE = PATHS.state_dir / "source_index.json"
 HTML_FILE = Path(__file__).resolve().parents[1] / "playground" / "forge_dashboard.html"
+
+
+def _source_index() -> dict[str, Any]:
+    if not SOURCE_INDEX_FILE.exists():
+        return {"generated_at": None, "total_sources": 0, "healthy_sources": 0, "sources": []}
+    try:
+        payload = json.loads(SOURCE_INDEX_FILE.read_text(encoding="utf-8"))
+        if isinstance(payload, dict):
+            return payload
+    except Exception:
+        pass
+    return {"generated_at": None, "total_sources": 0, "healthy_sources": 0, "sources": []}
 
 
 def _backtest_summary() -> dict[str, Any]:
@@ -38,7 +51,7 @@ def _backtest_summary() -> dict[str, Any]:
 
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(HTML_FILE)
+    return FileResponse(HTML_FILE, headers={"Cache-Control": "no-store, max-age=0"})
 
 
 @app.get("/api/frame")
@@ -70,7 +83,7 @@ def api_backtest_summary() -> dict:
 
 @app.get("/api/capabilities")
 def api_capabilities() -> dict:
-    return {"backtest_summary": True, "engine_transparency": True, "source_resilience": True, "version": 2}
+    return {"backtest_summary": True, "engine_transparency": True, "source_resilience": True, "sources_index": True, "version": 3}
 
 
 @app.get("/api/sources/health")
@@ -78,3 +91,8 @@ def api_sources_health() -> dict:
     frame = api_frame()
     payload = frame.get("source_resilience", {}) if isinstance(frame, dict) else {}
     return payload if isinstance(payload, dict) else {"agents": {}, "detected_issues": []}
+
+
+@app.get("/api/sources/index")
+def api_sources_index() -> dict:
+    return _source_index()

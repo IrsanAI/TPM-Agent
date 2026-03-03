@@ -110,6 +110,8 @@
     <div id="backtestSummary" class="hint">Waiting for validation report…</div>
     <h3 style="margin-top:10px;">🛡️ IrsanAI Source Resilience Manager</h3>
     <div id="sourceResilience" class="hint">Waiting for source diagnostics…</div>
+    <h3 style="margin-top:10px;">🧭 Source Indexer</h3>
+    <div id="sourceIndex" class="hint">Waiting for source index…</div>
   </section>
 
   <section class="grid">
@@ -135,7 +137,7 @@
 </div>
 
 <script>
-const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, sourceHealth: {}, pollErrors: 0, caps: null, optionalEndpointDisabled: {} };
+const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, sourceHealth: {}, sourceIndex: {}, pollErrors: 0, caps: null, optionalEndpointDisabled: {} };
 
 function setInfo() {
   document.getElementById('os').textContent = navigator.platform || 'unknown platform';
@@ -159,9 +161,10 @@ async function refreshAll() {
     fetchJSON('/api/runtime/status'),
     fetchJSON('/api/markets/live'),
     state.optionalEndpointDisabled['/api/backtest/summary'] ? Promise.resolve(state.backtest) : fetchJSON('/api/backtest/summary'),
-    state.optionalEndpointDisabled['/api/sources/health'] ? Promise.resolve(state.sourceHealth) : fetchJSON('/api/sources/health')
+    state.optionalEndpointDisabled['/api/sources/health'] ? Promise.resolve(state.sourceHealth) : fetchJSON('/api/sources/health'),
+    state.optionalEndpointDisabled['/api/sources/index'] ? Promise.resolve(state.sourceIndex) : fetchJSON('/api/sources/index')
   ];
-  const [frameRes, runtimeRes, liveRes, backtestRes, sourceRes] = await Promise.allSettled(requests);
+  const [frameRes, runtimeRes, liveRes, backtestRes, sourceRes, indexRes] = await Promise.allSettled(requests);
 
   const frame = frameRes.status === 'fulfilled' ? frameRes.value : state.frame;
   const runtime = runtimeRes.status === 'fulfilled' ? runtimeRes.value : null;
@@ -183,6 +186,15 @@ async function refreshAll() {
     sourceHealth = { agents: {}, detected_issues: [], reason: 'optional endpoint not supported by current runtime image' };
   }
 
+
+  let sourceIndex = state.sourceIndex;
+  if (indexRes.status === 'fulfilled') {
+    sourceIndex = indexRes.value;
+  } else if (String(indexRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/sources/index'] = true;
+    sourceIndex = { generated_at: null, total_sources: 0, healthy_sources: 0, sources: [], reason: 'optional endpoint not supported by current runtime image' };
+  }
+
   const hardErrors = [frameRes, runtimeRes, liveRes].filter(r => r.status === 'rejected');
   if (hardErrors.length) {
     state.pollErrors += 1;
@@ -199,6 +211,7 @@ async function refreshAll() {
   state.markets = live;
   state.backtest = backtest || {};
   state.sourceHealth = sourceHealth || {};
+  state.sourceIndex = sourceIndex || {};
   renderRuntime(runtime || {
     engine_state: (frame.signals || []).length > 0 ? 'running' : 'idle',
     transition_action: 'poll-fallback',
@@ -207,7 +220,7 @@ async function refreshAll() {
   });
   renderFrame(frame);
   renderLive(live);
-  renderEngineTransparency(frame, state.backtest, state.sourceHealth);
+  renderEngineTransparency(frame, state.backtest, state.sourceHealth, state.sourceIndex);
   document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
 }
 
@@ -288,7 +301,7 @@ function renderLive(live) {
 }
 
 
-function renderEngineTransparency(frame, backtest, sourceHealth) {
+function renderEngineTransparency(frame, backtest, sourceHealth, sourceIndex) {
   const root = document.getElementById('engineTransparency');
   const info = frame.engine_transparency || {};
   const entropySummary = frame.entropy_summary || {};
@@ -321,6 +334,14 @@ function renderEngineTransparency(frame, backtest, sourceHealth) {
   const issueLines = issues.slice(0, 5).map(i => `<div class="hint">⚠️ ${i.agent}: ${i.status} fail_ratio=${i.fail_ratio}</div>`).join('');
   const healthyCount = Object.values(agents).filter(a => a.status === 'healthy').length;
   sr.innerHTML = `<div class="hint">agents monitored: ${Object.keys(agents).length} | healthy: ${healthyCount}</div>${issueLines || '<div class="hint">No active source issues detected.</div>'}`;
+
+  const idx = document.getElementById('sourceIndex');
+  if (!sourceIndex || (!sourceIndex.total_sources && !sourceIndex.reason)) {
+    idx.innerHTML = '<div class="hint">No source index yet. Runtime builds it at startup.</div>';
+  } else {
+    const top = (sourceIndex.sources || []).slice(0, 5).map(s => `<div class="hint">${s.market}/${s.source_type}: ${s.status} (${s.latency_ms} ms)</div>`).join('');
+    idx.innerHTML = `<div class="hint">indexed: ${sourceIndex.total_sources || 0} | healthy: ${sourceIndex.healthy_sources || 0}</div>${sourceIndex.reason ? `<div class="hint">${sourceIndex.reason}</div>` : top}`;
+  }
 }
 
 async function runtimeStart() { await fetchJSON('/api/runtime/start', {method:'POST'}); refreshAll(); }
