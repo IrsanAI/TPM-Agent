@@ -64,10 +64,15 @@ scripts/windows_click_start.bat
   - run: `docker compose up --build tpm-forge-web`
   - open: `http://localhost:8787`
 - **Android (Termux):**
-  - run CLI live monitor quickly:
-    - `pkg install python termux-api -y`
-    - `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000`
-  - for web runtime on phone, use a host where Docker/Python runtime is already running and open browser URL.
+  - full setup + clone:
+    - `pkg update -y && pkg upgrade -y`
+    - `pkg install -y git python curl termux-api`
+    - `git clone https://github.com/IrsanAI/TPM-Agent.git && cd TPM-Agent`
+    - `python -m pip install --upgrade pip && python -m pip install -r requirements.txt`
+  - start local web runtime:
+    - `bash scripts/termux_forge.sh start`
+  - stop later:
+    - `bash scripts/termux_forge.sh stop`
 
 ### Dynamic market onboarding behavior
 
