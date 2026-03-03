@@ -140,6 +140,17 @@ export ALPHAVANTAGE_KEY="<your_key>"
 docker compose run --rm tpm-preflight
 ```
 
+
+
+### Docker fix for `uvicorn: executable file not found`
+
+If an older image was built without dependencies, rebuild it:
+
+```bash
+docker compose build --no-cache tpm-forge-web
+docker compose up tpm-forge-web
+```
+
 ## Validation
 
 Run the scientific validation pipeline:
