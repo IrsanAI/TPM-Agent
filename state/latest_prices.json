@@ -1,5 +1,5 @@
 {
-  "ts": 1772551548,
+  "ts": 1772551624,
   "runtime": {
     "os": "Linux",
     "platform": "Linux-6.1.102-x86_64-with-glibc2.35",
@@ -7,20 +7,20 @@
   },
   "signals": [
     {
-      "agent": "COFFEE_ALPHA",
+      "agent": "BTC_BINANCE",
       "domain": "finance",
-      "market": "COFFEE",
-      "value": 363.9104545454545,
-      "fitness": 0.5986322593694016,
-      "reward": 0.538925598944721
+      "market": "BTC",
+      "value": 66783.36,
+      "fitness": 0.5121397757535263,
+      "reward": 0.5043875579093767
     }
   ],
   "domain_summary": {
     "finance": {
       "count": 1,
-      "avg_fitness": 0.5986322593694016,
+      "avg_fitness": 0.5121397757535263,
       "markets": [
-        "COFFEE"
+        "BTC"
       ],
       "template": "finance+future"
     }
@@ -68,7 +68,7 @@
     }
   },
   "transfer_entropy_graph": {
-    "BTC_BINANCE->COFFEE_ALPHA": 1.4428232973175179e-12
+    "BTC_BINANCE->COFFEE_ALPHA": 1.4428232973175177e-12
   },
   "cull_candidates": []
 }
