@@ -1,0 +1,53 @@
+{
+  "generated_at_utc": "2026-03-03T15:26:16.081709",
+  "config": {
+    "n_ticks": 9000,
+    "seed": 42,
+    "window_size": 30,
+    "history_warmup": 50,
+    "percentile": 85.0,
+    "safety_floor": 0.2,
+    "min_alpha_delta": 0.001,
+    "alert_cooldown_ticks": 8,
+    "pre_event_window": 30,
+    "n_permutations": 400
+  },
+  "tests": [
+    {
+      "name": "classification_f1",
+      "metric": 0.0296127562642369,
+      "p_value": 1.0,
+      "passed": false,
+      "notes": "precision=0.191, recall=0.016, chi2_p=0.0034"
+    },
+    {
+      "name": "lead_time_ticks",
+      "metric": 14.5,
+      "p_value": 0.571072319201995,
+      "passed": false,
+      "notes": "lead_events=2"
+    },
+    {
+      "name": "alpha_separation_cohens_d",
+      "metric": 0.7268158560460779,
+      "p_value": 0.0024937655860349127,
+      "passed": false,
+      "notes": "frozen vs normal alpha separation"
+    },
+    {
+      "name": "false_positive_rate",
+      "metric": 0.006715506715506716,
+      "p_value": 0.0,
+      "passed": true,
+      "notes": "fp_rate=0.007"
+    },
+    {
+      "name": "strategy_sharpe",
+      "metric": 2.9285894352549957,
+      "p_value": 0.6932668329177057,
+      "passed": false,
+      "notes": "simple short-on-alert proxy"
+    }
+  ],
+  "pass_count": 1
+}

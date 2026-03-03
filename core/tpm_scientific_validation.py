@@ -26,9 +26,9 @@ class ValidationConfig:
     seed: int = 42
     window_size: int = 30
     history_warmup: int = 50
-    percentile: float = 95.0
-    safety_floor: float = 0.40
-    min_alpha_delta: float = 0.005
+    percentile: float = 85.0
+    safety_floor: float = 0.20
+    min_alpha_delta: float = 0.001
     alert_cooldown_ticks: int = 8
     pre_event_window: int = 30
     n_permutations: int = 400
