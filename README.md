@@ -72,9 +72,15 @@ If this lane convinces you, the rest of the repository will likely resonate too.
 
 - **Android / Termux (Samsung, etc.)**
   ```bash
-  pkg install termux-api -y
+  pkg update -y && pkg upgrade -y
+  pkg install -y git python curl termux-api
+  git clone https://github.com/<your-org-or-user>/TPM-Agent.git
+  cd TPM-Agent
+  python scripts/tpm_cli.py env
+  python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
+  For web UI demo on smartphone, open a running Forge host in browser (for example your Windows/Docker machine on the same network).
 - **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
 - **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
 
@@ -90,6 +96,17 @@ Optional for COFFEE source quality:
 ```bash
 export ALPHAVANTAGE_KEY="<your_key>"
 docker compose run --rm tpm-preflight
+```
+
+
+
+### Docker fix for `uvicorn: executable file not found`
+
+If an older image was built without dependencies, rebuild it:
+
+```bash
+docker compose build --no-cache tpm-forge-web
+docker compose up tpm-forge-web
 ```
 
 ## Validation
@@ -154,7 +171,6 @@ Output: `state/stress_test_report.json`
 
 - Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
 
-<<<<<<< codex/prioritize-and-implement-open-items-list-mmctpm
 
 ### Scope today: Windows + smartphone for finance TPM
 
@@ -163,8 +179,6 @@ Output: `state/stress_test_report.json`
 - **Realtime multi-agent:** BTC + COFFEE active by default; additional markets can be added dynamically in the web UI.
 - **Source boundary rule:** if requested market is not covered by built-in sources, provide explicit source URL + authorization data.
 
-=======
->>>>>>> main
 ## Windows live test (two-path system)
 
 ### Path A — Developer/power users (PowerShell, CMD, PyCharm, IDE)
