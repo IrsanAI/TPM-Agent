@@ -613,6 +613,12 @@ Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
 
 Kurzfazit: Die früheren „Nächsten Ausbaustufen“ sind **technisch zu großen Teilen gestartet oder umgesetzt**; der größte Hebel liegt jetzt in **fachlicher Operationalisierung** (Governance, Policies, Domänenlogik, Realdaten-Evidenz) und **konsistentem Doku-/i18n-Betrieb**.
 
+### LOP Umsetzungsplan
+
+Für Umsetzungsreihenfolge, Done-Kriterien und Evidenz-Gates pro offenem LOP-Punkt siehe:
+
+- `docs/LOP_EXECUTION_PLAN.md`
+
 ## LOP (Endnote – priorisiert)
 
 1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
