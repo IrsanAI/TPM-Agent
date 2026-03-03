@@ -77,18 +77,21 @@ Wenn diese Spur überzeugt, resoniert in der Regel auch der Rest des Repos.
   git clone https://github.com/IrsanAI/TPM-Agent.git
   cd TPM-Agent
   python scripts/tpm_cli.py env
-  python -m pip install --upgrade pip
+  # Termux note: do NOT upgrade pip globally (blocked by Termux policy)
   python -m pip install -r requirements.txt
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
   Für Web-UI-Demo direkt auf Android (Termux) kannst du die Forge-Runtime lokal starten:
   ```bash
+  cd ~/TPM-Agent
   bash scripts/termux_forge.sh start
   # stop: bash scripts/termux_forge.sh stop
   # status: bash scripts/termux_forge.sh status
   ```
   Das Script öffnet (wenn verfügbar) den Browser automatisch und hält den Dienst im Hintergrund lauffähig.
+  Falls du auf Android einen `scipy`/Fortran-Build-Fehler gesehen hast: SciPy ist jetzt optional,
+  daher sollte `python -m pip install -r requirements.txt` ohne Fortran-Compiler durchlaufen.
   Im Webinterface kannst du den Runtime-Dienst über Start/Stop kontrollieren; ein Ladebalken zeigt den Übergangsfortschritt.
 - **iPhone (im Rahmen des Möglichen)**: Shell-Apps wie iSH / a-Shell nutzen. Termux-spezifische Notification-Hooks sind dort nicht verfügbar.
 - **Windows / Linux / macOS**: identische CLI-Befehle; für Dauerbetrieb via tmux/Scheduler/cron starten.

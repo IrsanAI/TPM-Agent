@@ -68,7 +68,8 @@ scripts/windows_click_start.bat
     - `pkg update -y && pkg upgrade -y`
     - `pkg install -y git python curl termux-api`
     - `git clone https://github.com/IrsanAI/TPM-Agent.git && cd TPM-Agent`
-    - `python -m pip install --upgrade pip && python -m pip install -r requirements.txt`
+    - `python -m pip install -r requirements.txt`
+  - if you previously saw scipy/Fortran build errors: SciPy is optional now; retry install command above
   - start local web runtime:
     - `bash scripts/termux_forge.sh start`
   - stop later:
