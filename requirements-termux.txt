@@ -1,0 +1,7 @@
+# Termux-safe dependency profile
+# Uses Pydantic v1 line to avoid Rust/maturin build requirements on some Android setups.
+fastapi>=0.95,<0.100
+pydantic>=1.10,<2
+uvicorn>=0.23,<0.31
+PyYAML>=6.0.1
+numpy>=1.26.0

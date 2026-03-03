@@ -1,4 +1,4 @@
-# TPM-Agent (fr) — Full Canonical Mirror
+# TPM-Agent (tr) — Full Canonical Mirror
 
 > This localized file is maintained in full parity with `README.md` to avoid content gaps across languages.
 > Automatic mirror mode ensures all sections, mermaid diagrams, commands and runbooks are identical in scope.

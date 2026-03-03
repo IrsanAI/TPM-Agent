@@ -56,8 +56,22 @@ SOURCE_POOLS = {
 
 
 def log_price_to_db(market: str, source: str, price: float, latency_ms: float):
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS price_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            market TEXT NOT NULL,
+            source TEXT NOT NULL,
+            price REAL NOT NULL,
+            latency REAL,
+            quality_score REAL DEFAULT 1.0
+        )
+        """
+    )
     cur.execute(
         "INSERT INTO price_history (market, source, price, latency) VALUES (?, ?, ?, ?)",
         (market, source, price, latency_ms),
