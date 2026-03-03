@@ -1,21 +1,21 @@
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](./README.md) | [BS Bs](./docs/i18n/README.bs.md) |
+[🇬🇧 English](./README.md) | [🇩🇪 Deutsch](./README.de.md) | [🇪🇸 Español](./docs/i18n/README.es.md) | [🇮🇹 Italiano](./docs/i18n/README.it.md) | [🇧🇦 Bosanski](./docs/i18n/README.bs.md) | [🇷🇺 Русский](./docs/i18n/README.ru.md) | [🇨🇳 中文](./docs/i18n/README.zh-CN.md) | [🇫🇷 Français](./docs/i18n/README.fr.md) | [🇧🇷 Português (BR)](./docs/i18n/README.pt-BR.md) | [🇮🇳 हिन्दी](./docs/i18n/README.hi.md) | [🇹🇷 Türkçe](./docs/i18n/README.tr.md) | [🇯🇵 日本語](./docs/i18n/README.ja.md)
 
-A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) with cross-platform runtime options.
+Čisto pokretanje za autonomno postavljanje više agenata (BTC, COFFEE i više) s mogućnostima izvršavanja na više platformi.
 
-## What's Included
+## Što je uključeno
 
-- `production/preflight_manager.py` – resilient market source probing with Alpha Vantage + fallback chain and local cache fallback.
-- `production/tpm_agent_process.py` – simple per-market agent loop.
-- `production/tpm_live_monitor.py` – live BTC monitor with optional CSV warm-start and Termux notifications.
-- `core/tpm_scientific_validation.py` – backtest + statistical validation pipeline.
-- `scripts/tpm_cli.py` – unified launcher for Termux/Linux/macOS/Windows.
-- `scripts/stress_test_suite.py` – failover/latency stress test.
-- `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – process ops helpers.
-- `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operational core tooling.
+- `production/preflight_manager.py` – otporno sondiranje tržišnog izvora s Alpha Vantage + rezervnim lancem i lokalnom predmemorijom.
+- `production/tpm_agent_process.py` – jednostavna petlja agenta po tržištu.
+- `production/tpm_live_monitor.py` – live BTC monitor s opcionalnim CSV-om za toplo pokretanje i Termux obavijestima.
+- `core/tpm_scientific_validation.py` – backtest + cjevovod za statističku validaciju.
+- `scripts/tpm_cli.py` – unificirani pokretač za Termux/Linux/macOS/Windows.
+- `scripts/stress_test_suite.py` – test otpornosti na kvarove/latenciju.
+- `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – pomoćnici za operacije procesa.
+- `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operativni osnovni alati.
 
-## Universal Quickstart
+## Univerzalni brzi početak
 
 ```bash
 python scripts/tpm_cli.py env
@@ -24,53 +24,53 @@ python scripts/tpm_cli.py preflight --market ALL
 python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600
 ```
 
-## Runtime Chain Check (causal/order sanity)
+## Provjera lanca izvršavanja (uzročna/redovna ispravnost)
 
-The default repo flow is intentionally linear to avoid hidden-state drift and "false confidence" during live runs.
+Zadani tijek repozitorija namjerno je linearan kako bi se izbjeglo pomicanje skrivenog stanja i "lažna sigurnost" tijekom izvršavanja uživo.
 
 ```mermaid
 flowchart LR
-  A[1. env check] --> B[2. validate]
+  A[1. provjera okruženja] --> B[2. validacija]
   B --> C[3. preflight ALL]
   C --> D[4. live monitor]
-  D --> E[5. stress test]
+  D --> E[5. test opterećenja]
 ```
 
-### Gate logic (what must be true before the next step)
-- **Gate 1 – Environment:** Python/platform context is correct (`env`).
-- **Gate 2 – Scientific sanity:** baseline model behavior is reproducible (`validate`).
-- **Gate 3 – Source reliability:** market data + fallback chain are reachable (`preflight --market ALL`).
-- **Gate 4 – Runtime execution:** live loop runs with known input history (`live`).
-- **Gate 5 – Adversarial confidence:** latency/failover targets hold under stress (`stress_test_suite.py`).
+### Logika vrata (što mora biti istina prije sljedećeg koraka)
+- **Vrata 1 – Okruženje:** Python/platformski kontekst je ispravan (`env`).
+- **Vrata 2 – Znanstvena ispravnost:** ponašanje osnovnog modela je reproducibilno (`validate`).
+- **Vrata 3 – Pouzdanost izvora:** tržišni podaci + rezervni lanac su dohvatljivi (`preflight --market ALL`).
+- **Vrata 4 – Izvršavanje u stvarnom vremenu:** petlja uživo radi s poznatom povijesti unosa (`live`).
+- **Vrata 5 – Protivnička sigurnost:** ciljevi latencije/otpornosti na kvarove drže se pod stresom (`stress_test_suite.py`).
 
-✅ Already fixed in code: CLI preflight now supports `--market ALL`, matching quickstart + docker flow.
+✅ Već popravljeno u kodu: CLI preflight sada podržava `--market ALL`, što odgovara brzom pokretanju + docker tijeku.
 
-## Choose Your Mission (role-based CTA)
+## Odaberite svoju misiju (CTA po ulozi)
 
-> **You are X? Click your lane. Start in <60 seconds.**
+> **Jeste li X? Kliknite svoju traku. Počnite za <60 sekundi.**
 
-| Persona | What you care about | Click path | First command |
+| Persona | Što vas zanima | Put klika | Prva naredba |
 |---|---|---|---|
-| 📈 **Trader** | Fast pulse, actionable runtime | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
-| 💼 **Investor** | Stability, source trust, resilience | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
-| 🔬 **Scientist** | Evidence, tests, statistical signal | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
-| 🧠 **Theoretician** | Causal structure + future architecture | [`core/scout.py`](./core/scout.py) + [`Next Steps`](#next-steps) | `python scripts/tpm_cli.py validate` |
-| 🛡️ **Skeptic (priority)** | Break assumptions before production | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
-| ⚙️ **Operator / DevOps** | Uptime, process health, recoverability | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
+| 📈 **Trgovac** | Brzi puls, djelotvorno izvršavanje | [`tpm_live_monitor.py`](./production/tpm_live_monitor.py) | `python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600` |
+| 💼 **Investitor** | Stabilnost, povjerenje u izvor, otpornost | [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL` |
+| 🔬 **Znanstvenik** | Dokazi, testovi, statistički signal | [`tpm_scientific_validation.py`](./core/tpm_scientific_validation.py) | `python scripts/tpm_cli.py validate` |
+| 🧠 **Teoretičar** | Uzročna struktura + buduća arhitektura | [`core/scout.py`](./core/scout.py) + [`Sljedeći koraci`](#next-steps) | `python scripts/tpm_cli.py validate` |
+| 🛡️ **Skeptik (prioritet)** | Prekinite pretpostavke prije proizvodnje | [`stress_test_suite.py`](./scripts/stress_test_suite.py) + [`preflight_manager.py`](./production/preflight_manager.py) | `python scripts/tpm_cli.py preflight --market ALL && python scripts/stress_test_suite.py` |
+| ⚙️ **Operator / DevOps** | Neprekidan rad, zdravlje procesa, mogućnost oporavka | [`start_agents.sh`](./scripts/start_agents.sh) + [`health_monitor_v3.sh`](./scripts/health_monitor_v3.sh) | `bash scripts/start_agents.sh` |
 
-### Skeptic Challenge (recommended first for new visitors)
-If you do **only one thing**, run this and inspect the report output:
+### Izazov skeptika (preporučeno prvo za nove posjetitelje)
+Ako učinite **samo jednu stvar**, pokrenite ovo i pregledajte izlaz izvješća:
 
 ```bash
 python scripts/tpm_cli.py preflight --market ALL
 python scripts/stress_test_suite.py
 ```
 
-If this lane convinces you, the rest of the repository will likely resonate too.
+Ako vas ova traka uvjeri, ostatak repozitorija će vjerojatno također rezonirati.
 
-## Platform Notes
+## Bilješke o platformi
 
-- **Android / Termux (Samsung, etc.)**
+- **Android / Termux (Samsung, itd.)**
   ```bash
   bash scripts/termux_bootstrap.sh
   cd ~/TPM-Agent
@@ -78,109 +78,109 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
   ```
-  For direct Android (Termux) web UI demo, start Forge runtime locally:
+  Za izravnu Android (Termux) web UI demonstraciju, pokrenite Forge runtime lokalno:
   ```bash
   cd ~/TPM-Agent
   bash scripts/termux_forge.sh start
   # stop: bash scripts/termux_forge.sh stop
   # status: bash scripts/termux_forge.sh status
   ```
-  The script auto-opens browser (if available) and keeps service running in background.
-  If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
-  `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
-  In the web interface you can control runtime start/stop; a progress bar shows transition status.
-- **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
-- **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
+  Skripta automatski otvara preglednik (ako je dostupan) i drži uslugu pokrenutom u pozadini.
+  Ako ste vidjeli grešku `pydantic-core`/Rust ili `scipy`/Fortran builda na Androidu, koristite
+  `python -m pip install -r requirements-termux.txt` (Termux-sigurno postavljanje, nije potreban Rust alat).
+  U web sučelju možete kontrolirati pokretanje/zaustavljanje runtimea; traka napretka prikazuje status prijelaza.
+- **iPhone (najbolji pokušaj)**: koristite shell aplikacije kao što su iSH / a-Shell. Obavijesti specifične za Termux nisu tamo dostupne.
+- **Windows / Linux / macOS**: koristite iste CLI naredbe; pokrenite putem tmux/scheduler/cron za postojanost.
 
-## Docker (Cross-OS Easiest Path)
+## Docker (najlakši put između OS-a)
 
-Use Docker in this exact order (no guessing):
+Koristite Docker ovim točnim redoslijedom (bez nagađanja):
 
-### Step 1: Build the web runtime image
+### Korak 1: Izgradite web runtime sliku
 
 ```bash
 docker compose build --no-cache tpm-forge-web
 ```
 
-### Step 2: Start the web dashboard service
+### Korak 2: Pokrenite web nadzornu ploču
 
 ```bash
 docker compose up tpm-forge-web
 ```
 
-Now open `http://localhost:8787` in your browser (**not** `http://0.0.0.0:8787`). Uvicorn binds to `0.0.0.0` internally, but clients should use `localhost` (or the host LAN IP).
+Sada otvorite `http://localhost:8787` u svom pregledniku (**ne** `http://0.0.0.0:8787`). Uvicorn se interno veže na `0.0.0.0`, ali klijenti bi trebali koristiti `localhost` (ili IP adresu lokalne mreže).
 
-### Step 3 (optional checks): understand the non-web services
+### Korak 3 (opcionalne provjere): razumijevanje ne-web usluga
 
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
 ```
 
-- `tpm-preflight` = source/connectivity checks (CLI output only).
-- `tpm-live` = terminal live-monitor logs (CLI output only, **no web UI**).
-- `tpm-forge-web` = FastAPI + dashboard UI (the one with layout/progress/runtime control).
+- `tpm-preflight` = provjere izvora/povezivosti (samo CLI izlaz).
+- `tpm-live` = dnevnici terminala uživo (samo CLI izlaz, **bez web sučelja**).
+- `tpm-forge-web` = FastAPI + nadzorna ploča (ona s izgledom/napretkom/kontrolom izvršavanja).
 
-If `tpm-preflight` reports `ALPHAVANTAGE_KEY not set`, COFFEE still works via fallbacks.
+Ako `tpm-preflight` prijavi `ALPHAVANTAGE_KEY not set`, COFFEE i dalje radi putem rezervnih opcija.
 
-If the page looks blank:
-- test API directly: `http://localhost:8787/api/frame`
-- test FastAPI docs: `http://localhost:8787/docs`
-- hard refresh browser (`Ctrl+F5`)
-- if needed, restart only web service: `docker compose restart tpm-forge-web`
+Ako stranica izgleda prazno:
+- testirajte API izravno: `http://localhost:8787/api/frame`
+- testirajte FastAPI dokumentaciju: `http://localhost:8787/docs`
+- tvrdo osvježite preglednik (`Ctrl+F5`)
+- ako je potrebno, ponovno pokrenite samo web uslugu: `docker compose restart tpm-forge-web`
 
-Optional for better COFFEE quality:
+Opcionalno za bolju COFFEE kvalitetu:
 
 ```bash
-export ALPHAVANTAGE_KEY="<your_key>"
+export ALPHAVANTAGE_KEY="<vaš_ključ>"
 docker compose run --rm tpm-preflight
 ```
 
-## Glitch predictions & mobile alerts
+## Predviđanja grešaka i mobilna upozorenja
 
-- Forge live cockpit now exposes per-market short-horizon outlook (`up/down/sideways`) with confidence in `/api/markets/live`.
-- When a market glitch is detected (acceleration spike), runtime can trigger:
-  - Termux toast + vibration
-  - optional notification/beep hook
-  - optional Telegram push (if bot token/chat id configured in `config/config.yaml`).
-- Configure in dashboard via **Save Alerts** / **Test Alert** or API:
+- Forge live kokpit sada prikazuje kratkoročne izglede po tržištu (`gore/dolje/bočno`) s pouzdanošću u `/api/markets/live`.
+- Kada se otkrije tržišna greška (naglo ubrzanje), runtime može pokrenuti:
+  - Termux toast + vibraciju
+  - opcionalnu kuku za obavijesti/zvučni signal
+  - opcionalno Telegram push (ako je token bota/ID chata konfiguriran u `config/config.yaml`).
+- Konfigurirajte na nadzornoj ploči putem **Spremi upozorenja** / **Testiraj upozorenje** ili API-ja:
   - `GET /api/alerts/preferences`
   - `POST /api/alerts/preferences`
   - `POST /api/alerts/test`
 
-## Validation
+## Validacija
 
-Run the scientific validation pipeline:
+Pokrenite cjevovod znanstvene validacije:
 
 ```bash
 python core/tpm_scientific_validation.py
 ```
 
-Artifacts:
+Artefakti:
 - `state/TPM_Scientific_Report.md`
 - `state/TPM_test_results.json`
 
-## Sources & Failover
+## Izvori i prebacivanje na rezervni sustav
 
-`production/preflight_manager.py` supports:
-- Alpha Vantage first for COFFEE (when `ALPHAVANTAGE_KEY` is set)
-- TradingView + Yahoo fallback chain
-- local cached fallback in `state/latest_prices.json`
+`production/preflight_manager.py` podržava:
+- Alpha Vantage prvo za COFFEE (kada je `ALPHAVANTAGE_KEY` postavljen)
+- TradingView + Yahoo rezervni lanac
+- lokalna keširana rezervna opcija u `state/latest_prices.json`
 
-Run preflight directly:
+Pokrenite preflight izravno:
 
 ```bash
-export ALPHAVANTAGE_KEY="<your_key>"
+export ALPHAVANTAGE_KEY="<vaš_ključ>"
 python production/preflight_manager.py --market ALL
 ```
 
-Run outage stress test (target `p95 < 1000ms`):
+Pokrenite test opterećenja u slučaju prekida (cilj `p95 < 1000ms`):
 
 ```bash
 python scripts/stress_test_suite.py
 ```
 
-Output: `state/stress_test_report.json`
+Izlaz: `state/stress_test_report.json`
 
 
 
@@ -188,39 +188,39 @@ Output: `state/stress_test_report.json`
 
 
 
-## Live status: what the TPM agent can do today
+## Status uživo: što TPM agent može učiniti danas
 
-**Current state:**
-- Production Forge web runtime is available (`production.forge_runtime:app`).
-- Finance-first start configuration uses **BTC + COFFEE**.
-- Live frame, agent fitness, transfer entropy, and domain summary are visible in the web dashboard.
-- Users can add new market agents at runtime (`POST /api/agents`).
+**Trenutno stanje:**
+- Dostupan je proizvodni Forge web runtime (`production.forge_runtime:app`).
+- Konfiguracija pokretanja s prioritetom na financije koristi **BTC + COFFEE**.
+- Okvir uživo, agent fitness, transfer entropija i sažetak domene vidljivi su na web nadzornoj ploči.
+- Korisnici mogu dodati nove tržišne agente u runtime-u (`POST /api/agents`).
 
-**Target capability (should-have):**
-- Real-data benchmarking with explicit acceptance thresholds (precision/recall/FPR/drift).
-- Strict reflexive governance rules for auto safe-mode.
-- Collective-memory workflow for versioned per-domain learning patterns.
+**Ciljana sposobnost (trebalo bi imati):**
+- Referentna analiza stvarnih podataka s eksplicitnim pragovima prihvaćanja (preciznost/odziv/FPR/drift).
+- Stroga refleksivna pravila upravljanja za automatski sigurni način rada.
+- Radni tijek kolektivnog pamćenja za verzirane obrasce učenja po domeni.
 
-**Next expansion stage:**
-- Regime-based policy orchestrator (trend/shock/sideways) across all agents.
-- One non-finance domain pilot (e.g. medical or seismic) with explicit data contracts.
-
-
-## PR merge conflict helper
-
-- Merge-Checkliste (GitHub Konflikte): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
+**Sljedeća faza proširenja:**
+- Orkestrator politika temeljen na režimu (trend/šok/bočno) za sve agente.
+- Jedan nefinancijski pilot projekt (npr. medicinski ili seizmički) s eksplicitnim ugovorima o podacima.
 
 
-### Scope today: Windows + smartphone for finance TPM
+## Pomoćnik za spajanje PR-a
 
-- **Windows:** Forge runtime + web interface + Docker/PowerShell/click-start are operational.
-- **Smartphone:** Android/Termux live-monitoring is operational; web UI is responsive on mobile.
-- **Realtime multi-agent:** BTC + COFFEE active by default; additional markets can be added dynamically in the web UI.
-- **Source boundary rule:** if requested market is not covered by built-in sources, provide explicit source URL + authorization data.
+- Popis za provjeru spajanja (GitHub konflikti): `docs/MERGE_CONFLICT_CHECKLIST.de.md`
 
-## Windows live test (two-path system)
 
-### Path A — Developer/power users (PowerShell, CMD, PyCharm, IDE)
+### Opseg danas: Windows + pametni telefon za financijski TPM
+
+- **Windows:** Forge runtime + web sučelje + Docker/PowerShell/click-start su operativni.
+- **Pametni telefon:** Android/Termux nadzor uživo je operativan; web UI je responsivan na mobilnim uređajima.
+- **Više agenata u stvarnom vremenu:** BTC + COFFEE aktivni su po zadanim postavkama; dodatna tržišta mogu se dinamički dodati u web sučelju.
+- **Pravilo granice izvora:** ako traženo tržište nije pokriveno ugrađenim izvorima, navedite eksplicitni URL izvora + podatke o autorizaciji.
+
+## Windows test uživo (dvostazni sustav)
+
+### Put A — Programeri/napredni korisnici (PowerShell, CMD, PyCharm, IDE)
 
 ```powershell
 python -m venv .venv
@@ -229,275 +229,63 @@ pip install -r requirements.txt
 python scripts/tpm_cli.py forge-dashboard --open-browser --port 8787
 ```
 
-### Path B — Low-level users (click & start)
+### Put B — Korisnici niske razine (klikni i pokreni)
 
-1. Double-click `scripts/windows_click_start.bat`
-2. Script auto-selects best available path:
-   - Python available -> venv + pip + runtime
-   - otherwise Docker Compose (if available)
+1. Dvostruki klik `scripts/windows_click_start.bat`
+2. Skripta automatski odabire najbolji dostupan put:
+   - Python dostupan -> venv + pip + runtime
+   - inače Docker Compose (ako je dostupan)
 
-Technical base: `scripts/windows_bootstrap.ps1`.
+Tehnička osnova: `scripts/windows_bootstrap.ps1`.
 
-## Forge Production Web Runtime (BTC + COFFEE, extensible)
+## Forge Production Web Runtime (BTC + COFFEE, proširivo)
 
-Yes, this has **already started** in the repo and is now extended:
+Da, ovo je **već započelo** u repozitoriju i sada je prošireno:
 
-- Starts by default with one finance TPM agent for **BTC** and one for **COFFEE**.
-- Users can add more markets/agents directly from the web UI (`/api/agents`).
-- Runs as a persistent runtime service with live frame output (`/api/frame`) for immersive insight.
+- Pokreće se prema zadanim postavkama s jednim financijskim TPM agentom za **BTC** i jednim za **COFFEE**.
+- Korisnici mogu dodati više tržišta/agenata izravno iz web sučelja (`/api/agents`).
+- Radi kao trajna runtime usluga s izlazom okvira uživo (`/api/frame`) za impresivan uvid.
 
-### Start (local)
+### Pokretanje (lokalno)
 
 ```bash
 uvicorn production.forge_runtime:app --host 0.0.0.0 --port 8787
-# open http://localhost:8787
+# otvori http://localhost:8787
 ```
 
-### Start (Docker)
+### Pokretanje (Docker)
 
 ```bash
 docker compose up tpm-forge-web
-# open http://localhost:8787
+# otvori http://localhost:8787
 ```
 
-## TPM Playground (interactive MVP)
+## TPM igralište (interaktivni MVP)
 
-You can now explore TPM behavior interactively in the browser:
+Sada možete istraživati TPM ponašanje interaktivno u pregledniku:
 
 ```bash
 python -m http.server 8765
-# open http://localhost:8765/playground/index.html
+# otvori http://localhost:8765/playground/index.html
 ```
 
-Includes:
-- Single agent weak-signal anomaly view
-- Mini swarm (BTC/COFFEE/VOL) consensus pressure
-- Cross-domain transfer resonance (synthetic finance/weather/health)
+Uključuje:
+- Prikaz anomalija slabog signala jednog agenta
+- Mini roj (BTC/COFFEE/VOL) konsenzusni pritisak
+- Unakrsna domenska transfer rezonancija (sintetičke financije/vrijeme/zdravlje)
 
-See: `playground/README.md`.
-## Next Steps
+Pogledajte: `playground/README.md`.
+## Sljedeći koraci
 
-- Transfer entropy module for cross-market causal analysis.
-- Optimizer with policy updates based on historical performance.
-- Alert channels (Telegram/Signal) + boot persistence.
+- Modul za prijenos entropije za uzročnu analizu između tržišta.
+- Optimizator s ažuriranjem politike na temelju povijesnih performansi.
+- Kanali za upozorenja (Telegram/Signal) + postojanost pri pokretanju.
 
 
 ---
 
-## IrsanAI Deep Dive: How the TPM core "thinks" in complex systems
+## IrsanAI dubinska analiza: Kako TPM jezgra "razmišlja" u složenim sustavima
 
-### 1) Visionary transformation: from trading agent to universal TPM ecosystem
+### 1) Vizionarska transformacija: od trgovinskog agenta do univerzalnog TPM ekosustava
 
-### What is unique about the IrsanAI-TPM algorithm? (corrected framing)
-
-Working hypothesis of the TPM core:
-
-- In complex, chaotic systems, early-warning signal is often hidden in the **micro-residual**: tiny deviations, weak correlations, almost-empty data points.
-- Where classic systems see only `0` or "not enough relevance", TPM searches for **structured anomalies** (glitch patterns) in context flow.
-- TPM evaluates not only a value itself, but the **change of relationships over time, source quality, regime, and causal neighborhood**.
-
-Important correctness note: TPM does **not** magically predict the future. It aims for **earlier probabilistic detection** of regime shifts, breakouts, and disruptions — when data quality and validation gates are satisfied.
-
-### Think BIG: why this extends beyond finance
-
-If TPM can detect weak precursor patterns in financial instruments (index/ticker/ISIN-like identifiers, liquidity, microstructure), the same principle can generalize to many domains:
-
-- **Event/sensor stream + context model + anomaly layer + feedback loop**
-- Every profession can be modeled as a "market" with domain-specific features, nodes, correlations, and anomalies
-- Specialized TPM agents can learn across domains while preserving local professional logic and ethics
-
-### 100 professions as TPM target spaces
-
-| # | Profession | TPM data analog | Anomaly/pattern-detection target |
-|---|---|---|---|
-| 1 | Police analyst | Incident logs, geotemporal crime maps, networks | Early signals of escalating crime clusters |
-| 2 | Fire service commander | Alarm chains, sensor feeds, weather, building profiles | Predict fire and hazard propagation windows |
-| 3 | Paramedic/EMS | Dispatch reasons, response times, hospital load | Detect capacity stress before breakdown |
-| 4 | Emergency physician | Triage flows, vitals, waiting-time dynamics | Flag critical decompensation earlier |
-| 5 | ICU nurse | Ventilation/lab trends, medication responses | Identify sepsis/shock micro-signals |
-| 6 | Epidemiologist | Case rates, mobility, wastewater/lab data | Outbreak early warning before exponential phase |
-| 7 | Family physician | EHR patterns, prescriptions, follow-up gaps | Detect chronic-risk transitions early |
-| 8 | Clinical psychologist | Session trajectories, language markers, sleep/activity | Detect relapse/crisis indicators sooner |
-| 9 | Pharma researcher | Compound screens, adverse-event profiles, genomics | Reveal hidden efficacy and side-effect clusters |
-| 10 | Biotechnologist | Sequence/process/cell-culture trajectories | Detect drift and contamination risk |
-| 11 | Climate scientist | Atmosphere/ocean time series, satellite fields | Identify tipping-point precursors |
-| 12 | Meteorologist | Pressure/humidity/wind/radar fields | Anticipate local chaotic weather shifts |
-| 13 | Seismologist | Microquakes, stress fields, sensor arrays | Detect precursors to major releases |
-| 14 | Volcanologist | Gas, tremor, deformation time series | Narrow eruption probability windows |
-| 15 | Hydrologist | River gauges, rain, soil moisture | Detect flash-flood and drought phase changes |
-| 16 | Oceanographer | Currents, temperature, salinity, buoy streams | Detect tsunami/ecosystem-relevant anomalies |
-| 17 | Energy trader | Load, spot prices, weather, grid state | Signal probable price/load breakouts early |
-| 18 | Grid operator | Grid frequency, line state, switching events | Detect cascading-failure risk |
-| 19 | Wind farm operator | Turbine telemetry, wind fields, maintenance logs | Predict failures and performance drift |
-| 20 | Solar plant operator | Irradiance, inverter telemetry, thermal load | Detect degradation and yield anomalies |
-| 21 | Water utility manager | Flow, quality sensors, consumption patterns | Detect contamination/shortage early |
-| 22 | Traffic operations manager | Density, collisions, roadworks, events | Predict congestion and crash escalation |
-| 23 | Railway control manager | Timetable adherence, track state, delay chains | Break systemic delay cascades early |
-| 24 | Air traffic controller | Flight tracks, weather, slot saturation | Detect conflict paths and bottlenecks |
-| 25 | Port logistics manager | Berth times, container flow, customs status | Detect supply disruption precursors |
-| 26 | Supply-chain manager | ETA, inventory, demand pulse, risk events | Minimize bullwhip and stockout anomalies |
-| 27 | Manufacturing lead | OEE, process telemetry, scrap, setup times | Detect quality drift and machine anomalies |
-| 28 | Quality engineer | Tolerance distributions, process signals | Detect near-zero defect precursors |
-| 29 | Robotics engineer | Motion trajectories, actuator load, control loops | Predict control instability/failure |
-| 30 | Aviation maintenance engineer | Engine/flight telemetry, maintenance history | Component-level predictive maintenance |
-| 31 | Construction manager | Progress, weather, supply dates, IoT sensors | Quantify schedule/cost anomaly risk |
-| 32 | Structural engineer | Load, vibration, fatigue/aging indicators | Detect structural-critical transitions |
-| 33 | Urban planner | Mobility, demographics, emissions, land use | Detect emerging urban stress patterns |
-| 34 | Architect | Building operations, occupancy, energy curves | Detect design-use mismatch patterns |
-| 35 | Farmer | Soil/weather/crop/market streams | Detect disease/yield anomalies early |
-| 36 | Agronomist | Satellite nutrition/hydration data | Target precise interventions early |
-| 37 | Forestry manager | Moisture, pest patterns, fire indicators | Detect forest damage/fire windows early |
-| 38 | Fisheries manager | Catch records, water quality, migration | Detect overfishing/collapse risks |
-| 39 | Food safety inspector | Lab findings, cold-chain logs, supply links | Interrupt contamination chains early |
-| 40 | Executive chef | Demand pulse, stock health, waste ratios | Minimize spoilage and shortage anomalies |
-| 41 | Retail operator | POS streams, footfall, inventory rotation | Detect demand spikes and shrinkage patterns |
-| 42 | E-commerce manager | Clickstream, cart journeys, returns | Detect fraud/churn precursor patterns |
-| 43 | Marketing analyst | Campaign metrics, segment response curves | Detect micro-trends before mainstream |
-| 44 | Sales lead | Pipeline velocity, touchpoint graph | Detect deal-risk and timing opportunities |
-| 45 | Customer support lead | Ticket flow, topic clusters, SLA drift | Detect escalation/root-cause waves |
-| 46 | Product manager | Feature adoption, retention, feedback | Detect product-market misfit early |
-| 47 | UX researcher | Heatmaps, pathing, drop-off points | Surface hidden interaction friction |
-| 48 | Software engineer | Logs, traces, deploy metrics | Detect fault cascades pre-incident |
-| 49 | Site reliability engineer | Latency, error budgets, saturation | Catch degradation before outage |
-| 50 | Cybersecurity analyst | Network flows, IAM events, SIEM alerts | Detect attack-path and lateral movement |
-| 51 | Fraud analyst | Transaction graphs, device fingerprints | Detect fraud in weak-signal space |
-| 52 | Bank risk manager | Portfolio/macro/liquidity exposures | Detect stress regimes and concentration risk |
-| 53 | Insurance actuary | Claims flow, exposure maps, climate links | Anticipate claims waves and reserve stress |
-| 54 | Tax advisor | Ledger patterns, filing timelines | Detect compliance risk and optimization paths |
-| 55 | Auditor | Control trails, exception patterns | Detect accounting anomalies at scale |
-| 56 | Attorney | Case chronology, precedent graphs, deadlines | Detect litigation risk and outcome patterns |
-| 57 | Judge/court administrator | Caseload mix, cycle times | Detect justice-system bottlenecks |
-| 58 | Corrections manager | Occupancy, incident networks, behavior trends | Detect violence/recidivism clusters |
-| 59 | Customs officer | Trade manifests, declarations, routing patterns | Detect smuggling/evasion signals |
-| 60 | Defense intelligence analyst | ISR feeds, logistics, operational tempo | Detect escalation dynamics early |
-| 61 | Diplomatic analyst | Event chains, communications signals | Detect geopolitical regime shifts |
-| 62 | Teacher | Learning progress, attendance, engagement | Detect dropout-risk and support need |
-| 63 | School principal | Performance clusters, attendance, resources | Detect systemic school stress patterns |
-| 64 | University lecturer | Course activity, withdrawals, feedback | Stabilize student success earlier |
-| 65 | Education researcher | Cohort trajectories, pedagogy variables | Identify robust intervention effects |
-| 66 | Social worker | Case networks, appointments, risk markers | Detect crisis escalation pathways |
-| 67 | NGO coordinator | Field reports, aid flows, need signals | Detect impact gaps and hotspot changes |
-| 68 | Employment advisor | Skill profiles, labor demand, transitions | Detect mismatch and upskilling needs |
-| 69 | HR manager | Hiring/attrition/performance trajectories | Detect burnout and retention risk early |
-| 70 | Recruiter | Funnel rates, skills taxonomy, market pulse | Detect fit risk and hiring opportunity windows |
-| 71 | Org consultant | Decision cadence, KPI drift, network patterns | Detect team dysfunction early |
-| 72 | Project manager | Milestones, dependencies, blocker graph | Anticipate schedule/scope breakdowns |
-| 73 | Journalist | Source reliability graph, event streams | Detect misinformation clusters early |
-| 74 | Investigative reporter | Document networks, money/communication traces | Expose hidden systemic anomalies |
-| 75 | Content moderator | Post/comment streams, semantic shifts | Detect abuse/radicalization waves early |
-| 76 | Artist | Audience response trajectories, style vectors | Detect emerging aesthetics |
-| 77 | Music producer | Listening features, arrangement vectors | Detect breakout/niche potential early |
-| 78 | Game designer | Telemetry, progression, churn curves | Detect frustration and balance anomalies |
-| 79 | Sports coach | Performance/biometric load streams | Detect injury/form-drop precursors |
-| 80 | Athletic trainer | Motion/recovery markers | Detect overload before downtime |
-| 81 | Sports physician | Diagnostics, rehab load, recurrence risk | Optimize return-to-play windows |
-| 82 | Referee analyst | Decision stream, tempo, incident context | Detect consistency/fairness drift |
-| 83 | Event manager | Ticketing, mobility, weather, safety feeds | Detect crowd and safety risk escalation |
-| 84 | Tourism manager | Booking patterns, reputation signals | Detect demand and sentiment shifts |
-| 85 | Hotel manager | Occupancy, service quality, complaints | Detect quality-demand instability early |
-| 86 | Property manager | Rent flow, maintenance, market comps | Detect vacancy/default risk early |
-| 87 | Facility manager | Building IoT, energy, maintenance intervals | Detect failures and inefficiency patterns |
-| 88 | Waste management operator | Waste streams, routing, environmental metrics | Detect illegal dumping and process gaps |
-| 89 | Environmental inspector | Emissions, reports, satellite overlays | Detect compliance violations and tipping risk |
-| 90 | Circular economy analyst | Material passports, recovery rates | Detect leakage and loop-closure opportunities |
-| 91 | Astrophysicist | Telescope streams, spectra, noise models | Detect rare cosmic events |
-| 92 | Space operations engineer | Telemetry, orbit params, system diagnostics | Detect mission-critical anomalies early |
-| 93 | Quantum engineer | Noise profiles, calibration drifts, gate errors | Detect decoherence and control drift |
-| 94 | Data scientist | Feature drift, model quality, data integrity | Detect model collapse and bias shift |
-| 95 | AI ethicist | Decision outcomes, fairness metrics | Detect unfair patterns/governance gaps |
-| 96 | Philosophy of science researcher | Theory-evidence pathways | Detect paradigm mismatch signals |
-| 97 | Mathematician | Residual structures, invariants, error terms | Detect hidden regularities/outlier classes |
-| 98 | Systems theorist | Node-edge dynamics, feedback delays | Detect network tipping dynamics |
-| 99 | Anthropologist | Field observations, language/social networks | Detect cultural-shift conflict precursors |
-| 100 | Foresight strategist | Tech curves, regulation, behavior data | Connect scenarios with early indicators |
-
-### Country-fit notes (profession equivalence across jurisdictions)
-
-To keep the list logically correct across regions, TPM role-mapping should be interpreted as **functional equivalents**, not literal job-title translation:
-
-- **Germany ↔ US/UK:** `Polizei` vs split functions (`Police Department`, `Sheriff`, `State Trooper`) and prosecution differences (`Staatsanwaltschaft` vs `District Attorney/Crown Prosecution`).
-- **Spain / Italy:** civil-law structures with distinct court and policing workflows; data pipelines often split between regional and national systems.
-- **Bosnia and Herzegovina:** multi-entity governance means fragmented data ownership; TPM benefits from federated anomaly fusion.
-- **Russia / China:** role definitions and data-governance constraints differ; TPM must be configured with local compliance boundaries and institutional equivalents.
-- **Additional high-impact regions:** France, Brazil, India, Japan, MENA states, and Sub-Saharan Africa can be onboarded by mapping equivalent functions and available telemetry.
-
-### Philosophical-scientific outlook
-
-- From tool to **epistemic infrastructure**: domains operationalize "weak early knowledge".
-- From isolated systems to **agent federations**: local ethics + shared anomaly grammar.
-- From reactive response to **anticipatory governance**: prevention over late crisis control.
-- From static models to **living theories**: continuous recalibration under real-world shocks.
-
-Core idea: a responsibly governed TPM cluster cannot control chaos — but it can help institutions understand it earlier, steer it more robustly, and decide more humanely.
-
-## Multilingual expansion (in progress)
-
-To support cross-language resonance, localized strategic overviews are available in:
-
-- Spanish (`docs/i18n/README.es.md`)
-- Italian (`docs/i18n/README.it.md`)
-- Bosnian (`docs/i18n/README.bs.md`)
-- Russian (`docs/i18n/README.ru.md`)
-- Chinese Simplified (`docs/i18n/README.zh-CN.md`)
-- French (`docs/i18n/README.fr.md`)
-- Portuguese Brazil (`docs/i18n/README.pt-BR.md`)
-- Hindi (`docs/i18n/README.hi.md`)
-- Turkish (`docs/i18n/README.tr.md`)
-- Japanese (`docs/i18n/README.ja.md`)
-
-Each localized file includes region-fit notes and points back to this canonical English section for the full 100-profession matrix.
-
-## IrsanAI Quality Meta (SOLL vs IST)
-
-Für den aktuellen Reifegrad des Repos, den Qualitätszwischenstand und die kausale Roadmap auf Basis realer Nutzererwartungen siehe:
-
-- `docs/IRSANAI_QUALITY_META.md`
-
-Dieses Dokument ist ab sofort Referenz für:
-- Anspruchstiefe bei Features (UX/UI + operative Robustheit),
-- Docker/Android-Paritätsanforderungen,
-- sowie Akzeptanz-Qualitätsgates für kommende PRs.
-
-## i18n parity mode (full mirror)
-
-To ensure no language community is content-disadvantaged, i18n files are now maintained in full canonical parity with `README.md`.
-
-Sync command:
-
-```bash
-python scripts/i18n_full_mirror_sync.py
-```
-
-## Hinweis für Entwickler (LOP – Liste offener Punkte)
-
-Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
-
-| Punkt | Aktueller Stand | Wie man sinnvoll fortsetzt |
-|---|---|---|
-| **Transfer-Entropy-Modul für Cross-Market-Kausalität** | **Erledigt ✅** – als `TransferEntropyEngine` implementiert und im Forge-Orchestrator verdrahtet. | Fachliche Kalibrierung ergänzen: domänenspezifische Schwellen und Interpretationsregeln definieren. |
-| **Optimizer/Policy-Update auf Basis Historie** | **Erledigt ✅** – Fitness-Scoring, Reward-Update und Candidate-Culling laufen im Tick-Zyklus. | Betriebsmodi dokumentieren (konservativ/aggressiv) und als Governance-Profile testbar machen. |
-| **Alerting (Telegram/Signal)** | **Teilweise erledigt 🟡** – Infrastruktur ist vorhanden, standardmäßig aber deaktiviert. | Alarmrichtlinie festlegen: welche Events, welche Schweregrade, welcher Kanal, wer reagiert. |
-| **Boot-Persistenz / Dauerbetrieb** | **Teilweise erledigt 🟡** – Start- und Health-Monitoring per tmux existieren, aber kein einheitliches Boot-Runbook für alle Zielplattformen. | Plattformprofile (Termux/Linux/Docker) mit Start-bei-Boot, Restart-Policy und Eskalationspfad schriftlich definieren. |
-| **Koordiniertes Meta-Layer (aus „Nächste Ausbaustufe (promotet)“)** | **Teilweise erledigt 🟡** – Teile sind vorhanden (Orchestrator + Entropie + Reward), aber noch nicht als vollständiger Regime-Policy-Orchestrator beschrieben. | Ein explizites fachliches Steuerungsmodell (Trend/Schock/Sideways) für Agentengewichte ergänzen. |
-| **Collective Memory (versionssicheres Lernmuster-Archiv)** | **Offen 🔴** – in den Vision/Weiterentwicklungsabschnitten genannt, aber noch ohne klaren fachlichen Speicher- und Review-Prozess. | Lernmuster-Format, Versionslogik und Qualitätskriterien (wann Muster „gültig“ wird) definieren. |
-| **Reflexive Governance (automatisch konservativer Modus bei Unsicherheit)** | **Offen 🔴** – als Zielbild benannt, aber noch nicht als fachliche Entscheidungsregel formalisiert. | Unsicherheitsindikatoren und harte Umschaltbedingungen in ein Governance-Regelwerk überführen. |
-| **Domänenausbau über Finance/Weather hinaus** | **Offen 🔴** – weitere Domänen sind als Vision/Templates angelegt, aber fachlich noch nicht in produktive Datenverträge überführt. | Einen nächsten Domänenpiloten (z. B. Medical oder Seismic) mit klaren Metriken und Datenquellen starten. |
-| **Wissenschaftliche Evidenz auf Realdaten erweitern** | **Offen 🔴** – aktuelle Validierung ist robust, jedoch auf synthetischen Regime-Segmenten aufgebaut. | Realdaten-Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift) ergänzen. |
-| **Sprachübergreifende Resonanz / i18n-Ausbau** | **Teilweise erledigt 🟡** – mehrere Sprach-Landingpages existieren; Ausbau ist explizit als „in progress“ markiert. | Synchronisationsprozess definieren (wann Änderungen aus Root-README in alle i18n-READMEs propagiert werden). |
-
-Kurzfazit: Die früheren „Next Steps“ sind **technisch zu großen Teilen gestartet oder umgesetzt**; der größte Hebel liegt jetzt in **fachlicher Operationalisierung** (Governance, Policies, Domänenlogik, Realdaten-Evidenz) und **konsistentem Doku-/i18n-Betrieb**.
-
-### LOP execution plan
-
-For implementation sequencing, done-criteria and evidence gates for each open LOP point, see:
-
-- `docs/LOP_EXECUTION_PLAN.md`
-
-## LOP (Endnote – priorisiert)
-
-1. **P1 Realdaten-Evidenz ausbauen:** Benchmarking mit festen Akzeptanzkriterien (Precision/Recall/FPR/Drift).
-2. **P2 Reflexive Governance finalisieren:** harte Auto-Safe-Mode-Regeln bei Unsicherheit definieren.
-3. **P3 Collective Memory standardisieren:** versionssichere Lernmuster inkl. Review-Prozess je Domäne.
-4. **P4 Web-Immersion weiter ausrollen:** Rollenansichten für weitere TPM-Branchen auf Basis des neuen responsiven Layouts.
-
-**Plattform-Hinweis:** Aktuell primär auf **Windows + Smartphone** ausgerichtet. **Später am Ende der LOP ergänzen:** macOS, Linux und weitere Plattformprofile.
+### Što je jedinstveno kod IrsanAI-TP
