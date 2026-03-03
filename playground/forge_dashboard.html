@@ -25,6 +25,40 @@
     pre { margin:0; max-height:260px; overflow:auto; font-size:12px; }
     .hint { font-size:12px; opacity:.85; }
     @media (max-width: 980px){ .grid,.subgrid,.form-grid { grid-template-columns:1fr; } }
+  
+    .domain-card { 
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        border: 1px solid rgba(124, 92, 255, 0.2);
+    }
+    .domain-card:hover { 
+        transform: translateY(-4px);
+        border-color: var(--accent);
+        box-shadow: 0 8px 24px rgba(124, 92, 255, 0.15);
+        background: #161d35;
+    }
+    .pill { 
+        transition: background 0.2s;
+    }
+    .pill:hover {
+        background: #1e2642;
+    }
+    button {
+        transition: all 0.2s;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 11px;
+    }
+    button:hover {
+        background: #2a3f72;
+        border-color: var(--accent);
+    }
+    #startBtn { background: #166534; border-color: #22c55e; }
+    #startBtn:hover { background: #15803d; }
+    #stopBtn { background: #991b1b; border-color: #ef4444; }
+    #stopBtn:hover { background: #b91c1c; }
+    
   </style>
 </head>
 <body>
