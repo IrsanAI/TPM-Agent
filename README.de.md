@@ -584,6 +584,17 @@ Zusätzliche Sprach-Landingpages:
 
 Hinweis: Wo Berufe zwischen Ländern nicht 1:1 existieren, wird im TPM-Kontext mit **funktionalen Äquivalenten** gearbeitet (gleicher Kern-Intent, unterschiedliche Bezeichnung/Institution).
 
+## IrsanAI Quality Meta (SOLL vs IST)
+
+Für den aktuellen Reifegrad des Repos, den Qualitätszwischenstand und die kausale Roadmap auf Basis realer Nutzererwartungen siehe:
+
+- `docs/IRSANAI_QUALITY_META.md`
+
+Dieses Dokument ist ab sofort Referenz für:
+- Anspruchstiefe bei Features (UX/UI + operative Robustheit),
+- Docker/Android-Paritätsanforderungen,
+- sowie Akzeptanz-Qualitätsgates für kommende PRs.
+
 ## Hinweis für Entwickler (LOP – Liste offener Punkte)
 
 Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):

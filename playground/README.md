@@ -74,6 +74,17 @@ scripts/windows_click_start.bat
   - stop later:
     - `bash scripts/termux_forge.sh stop`
 
+
+### Live cockpit parity (Docker + Android)
+
+- The same Forge dashboard (`/`) now includes:
+  - live market cockpit cards,
+  - per-agent drilldown insight modal,
+  - locale selector from repo i18n docs.
+- This is available identically for:
+  - Docker users (`docker compose up tpm-forge-web`)
+  - Android/Termux users (`bash scripts/termux_forge.sh start`)
+
 ### Dynamic market onboarding behavior
 
 - UI now proposes suggested markets per available source (binance/kraken/alphavantage).

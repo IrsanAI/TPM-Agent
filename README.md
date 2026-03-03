@@ -447,6 +447,17 @@ To support cross-language resonance, localized strategic overviews are available
 
 Each localized file includes region-fit notes and points back to this canonical English section for the full 100-profession matrix.
 
+## IrsanAI Quality Meta (SOLL vs IST)
+
+Für den aktuellen Reifegrad des Repos, den Qualitätszwischenstand und die kausale Roadmap auf Basis realer Nutzererwartungen siehe:
+
+- `docs/IRSANAI_QUALITY_META.md`
+
+Dieses Dokument ist ab sofort Referenz für:
+- Anspruchstiefe bei Features (UX/UI + operative Robustheit),
+- Docker/Android-Paritätsanforderungen,
+- sowie Akzeptanz-Qualitätsgates für kommende PRs.
+
 ## Hinweis für Entwickler (LOP – Liste offener Punkte)
 
 Was aus meiner Sicht noch offen ist (fachlich, nicht technisch blockiert):
