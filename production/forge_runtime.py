@@ -8,6 +8,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from urllib.error import URLError
 from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
@@ -138,6 +139,8 @@ class ForgeRuntime:
         self._agent_history: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=240))
         self.alert_prefs_file = self.paths.state_dir / "alert_prefs.json"
         self._last_alert_ts: dict[str, float] = {}
+        self.validation_report_file = self.paths.state_dir / "TPM_test_results.json"
+        self.source_index_file = self.paths.state_dir / "source_index.json"
 
     def _load_override_agents(self) -> list[dict]:
         if not self.override_agents_file.exists():
@@ -394,6 +397,111 @@ class ForgeRuntime:
         self._dispatch_alert("TEST", {"direction": "up", "confidence": 0.99}, 1.0)
         return {"ok": True, "message": "test alert dispatched"}
 
+
+    def backtest_summary(self) -> dict[str, Any]:
+        if not self.validation_report_file.exists():
+            return {"available": False, "reason": "validation report not found"}
+        try:
+            payload = json.loads(self.validation_report_file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {"available": False, "reason": f"invalid report: {exc}"}
+
+        tests = payload.get("tests", []) if isinstance(payload, dict) else []
+        compact = []
+        for t in tests:
+            if not isinstance(t, dict):
+                continue
+            compact.append({
+                "name": t.get("name", "unknown"),
+                "metric": t.get("metric"),
+                "passed": bool(t.get("passed")),
+                "p_value": t.get("p_value"),
+            })
+        return {
+            "available": True,
+            "generated_at_utc": payload.get("generated_at_utc"),
+            "tests": compact,
+        }
+
+    def capabilities(self) -> dict[str, Any]:
+        return {
+            "backtest_summary": True,
+            "source_resilience": True,
+            "engine_transparency": True,
+            "sources_index": True,
+            "version": 3,
+        }
+
+    def source_health(self) -> dict[str, Any]:
+        resilience = self.latest_frame.get("source_resilience", {}) if isinstance(self.latest_frame, dict) else {}
+        return resilience if isinstance(resilience, dict) else {"agents": {}, "detected_issues": []}
+
+    def refresh_source_index(self) -> dict[str, Any]:
+        entries: list[dict[str, Any]] = []
+        active_markets = {str(a.get("market", "")).upper() for a in self.list_agents() if a.get("market")}
+
+        for source_type, items in SUGGESTED_MARKETS.items():
+            for item in items:
+                market = str(item.get("market", "")).upper()
+                url = str(item.get("url", ""))
+                score = 2 if market in active_markets else 1
+                status = "unknown"
+                latency_ms = None
+                error = ""
+                price = None
+                t0 = time.time()
+                try:
+                    probe_url = url
+                    if "{API_KEY}" in probe_url:
+                        probe_url = probe_url.replace("{API_KEY}", "demo")
+                    req = urllib.request.Request(probe_url, headers={"User-Agent": "IrsanAI-TPM/SourceIndexer"})
+                    with urllib.request.urlopen(req, timeout=4) as resp:
+                        raw = resp.read().decode("utf-8")
+                        payload = json.loads(raw)
+                    latency_ms = round((time.time() - t0) * 1000.0, 2)
+                    status = "ok"
+                    if source_type == "binance":
+                        price = float(payload.get("price", 0.0)) if payload.get("price") is not None else None
+                    elif source_type == "alphavantage_commodity":
+                        data = payload.get("data", [])
+                        if data:
+                            price = float(data[0].get("value", 0.0))
+                except Exception as exc:
+                    status = "error"
+                    error = str(exc)
+                    latency_ms = round((time.time() - t0) * 1000.0, 2)
+
+                entries.append({
+                    "market": market,
+                    "source_type": source_type,
+                    "url": url,
+                    "priority": score,
+                    "status": status,
+                    "latency_ms": latency_ms,
+                    "sample_value": price,
+                    "error": error,
+                    "checked_at": int(time.time()),
+                })
+
+        entries.sort(key=lambda e: (-int(e.get("priority", 0)), str(e.get("market", "")), str(e.get("source_type", ""))))
+        payload = {
+            "generated_at": int(time.time()),
+            "active_markets": sorted(active_markets),
+            "total_sources": len(entries),
+            "healthy_sources": sum(1 for e in entries if e.get("status") == "ok"),
+            "sources": entries,
+        }
+        self.source_index_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return payload
+
+    def source_index(self) -> dict[str, Any]:
+        if not self.source_index_file.exists():
+            return self.refresh_source_index()
+        try:
+            return json.loads(self.source_index_file.read_text(encoding="utf-8"))
+        except Exception:
+            return self.refresh_source_index()
+
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             try:
@@ -428,6 +536,10 @@ HTML_FILE = Path(__file__).resolve().parents[1] / "playground" / "forge_dashboar
 @app.on_event("startup")
 def _startup() -> None:
     runtime.start()
+    try:
+        runtime.refresh_source_index()
+    except Exception:
+        pass
 
 
 @app.on_event("shutdown")
@@ -437,7 +549,7 @@ def _shutdown() -> None:
 
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(HTML_FILE)
+    return FileResponse(HTML_FILE, headers={"Cache-Control": "no-store, max-age=0"})
 
 
 @app.get("/api/frame")
@@ -488,6 +600,26 @@ def api_alert_test() -> dict:
 @app.get("/api/runtime/status")
 def api_runtime_status() -> dict:
     return _sanitize(runtime.runtime_status())
+
+
+@app.get("/api/capabilities")
+def api_capabilities() -> dict:
+    return _sanitize(runtime.capabilities())
+
+
+@app.get("/api/backtest/summary")
+def api_backtest_summary() -> dict:
+    return _sanitize(runtime.backtest_summary())
+
+
+@app.get("/api/sources/health")
+def api_sources_health() -> dict:
+    return _sanitize(runtime.source_health())
+
+
+@app.get("/api/sources/index")
+def api_sources_index() -> dict:
+    return _sanitize(runtime.source_index())
 
 
 @app.post("/api/runtime/start")
