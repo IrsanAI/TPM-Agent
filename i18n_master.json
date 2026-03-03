@@ -4305,5 +4305,65 @@
     "ja": "",
     "tr": "",
     "bs": ""
+  },
+  "titleMain": {
+    "en": "⚒️ IrsanAI TPM-Agent Forge Runtime",
+    "de": "⚒️ IrsanAI TPM-Agent Forge Runtime"
+  },
+  "startBtn": {
+    "en": "Start Runtime",
+    "de": "Runtime starten"
+  },
+  "stopBtn": {
+    "en": "Stop Runtime",
+    "de": "Runtime stoppen"
+  },
+  "saveAlertsBtn": {
+    "en": "Save Alerts",
+    "de": "Alarme speichern"
+  },
+  "testAlertBtn": {
+    "en": "Test Alert",
+    "de": "Test-Alarm"
+  },
+  "addAgentBtn": {
+    "en": "Add Agent",
+    "de": "Agent hinzufügen"
+  },
+  "addAgentTitle": {
+    "en": "➕ Add Market Agent",
+    "de": "➕ Markt-Agent hinzufügen"
+  },
+  "liveFrameTitle": {
+    "en": "🔴 IrsanAI Live Frame",
+    "de": "🔴 IrsanAI Live Frame"
+  },
+  "domainsTitle": {
+    "en": "🌐 IrsanAI Domain Pulse",
+    "de": "🌐 IrsanAI Domain Pulse"
+  },
+  "liveMarketsTitle": {
+    "en": "📈 IrsanAI Live Market Cockpit",
+    "de": "📈 IrsanAI Live Market Cockpit"
+  },
+  "liveMarketsHint": {
+    "en": "Tap any market or agent card for immersive drill-down insights.",
+    "de": "Tippen Sie auf eine Markt- oder Agentenkarte für detaillierte Einblicke."
+  },
+  "placeholderName": {
+    "en": "Agent name (e.g. ETH_BINANCE)",
+    "de": "Agentenname (z.B. ETH_BINANCE)"
+  },
+  "placeholderMarket": {
+    "en": "Market code (e.g. ETH)",
+    "de": "Marktcode (z.B. ETH)"
+  },
+  "placeholderApiKey": {
+    "en": "API key (required for protected sources)",
+    "de": "API-Schlüssel (für geschützte Quellen)"
+  },
+  "placeholderUrl": {
+    "en": "Source URL",
+    "de": "Quell-URL"
   }
 }
