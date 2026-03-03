@@ -33,9 +33,18 @@ class BaseAgent(ABC):
     def parse_value(self, payload: dict) -> float:
         ...
 
+    def _resolve_url(self) -> str:
+        url = self.spec["url"]
+        auth = self.spec.get("auth", {})
+        if "{API_KEY}" in url and isinstance(auth, dict):
+            key = auth.get("api_key") or ""
+            if key:
+                url = url.replace("{API_KEY}", key)
+        return url
+
     def fetch(self, timeout: float = 6.0) -> AgentSignal:
         t0 = time.time()
-        req = urllib.request.Request(self.spec["url"], headers={"User-Agent": "IrsanAI-TPM/Forge"})
+        req = urllib.request.Request(self._resolve_url(), headers={"User-Agent": "IrsanAI-TPM/Forge"})
         with urllib.request.urlopen(req, timeout=timeout) as response:
             raw = response.read().decode("utf-8")
             payload = json.loads(raw)
@@ -63,6 +72,11 @@ class GenericMarketAgent(BaseAgent):
             return float(payload["price"])
         if stype == "open_meteo":
             return float(payload["current"]["temperature_2m"])
+        if stype == "alphavantage_commodity":
+            data = payload.get("data", [])
+            if not data:
+                raise ValueError("alphavantage_commodity payload has no data")
+            return float(data[0]["value"])
         raise ValueError(f"unsupported source_type={stype}")
 
 
