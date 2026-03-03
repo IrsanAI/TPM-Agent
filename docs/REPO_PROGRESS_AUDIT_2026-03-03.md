@@ -75,3 +75,9 @@ Die Laufkette soll automatisch in einen konservativen Zustand fallen, wenn Quali
   1) schwache Qualitätsmetriken in der Validation,
   2) fehlende harte Schutzschicht zwischen Erkenntnis und Live-Betrieb.
 - Er ist vollständig deckungsgleich mit der priorisierten LOP-Reihenfolge (Risiko zuerst).
+
+## Fortschritts-Update (Operational Follow-up)
+
+- Optionaler Docker Step-3-Pfad (`tpm-preflight`) wurde gegen leere/alte DB-Schemata gehärtet, damit der operative Ablauf nicht mit `no such table: price_history` stoppt.
+- Preflight initialisiert das DB-Schema jetzt explizit im CLI-Pfad und zusätzlich selbstheilend im Runtime-Pfad.
+- Damit bleibt der Glitch-Detektor in Webruntime-Flows (Docker/Android via gemeinsame Runtime-Pfade) durchgehend arbeitsfähig, da Source-Probing + Logging nicht mehr am fehlenden Schema hängen.

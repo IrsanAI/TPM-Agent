@@ -11,6 +11,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEVICE_ROOT = Path.home() / "IrsanAI-TPM"
 ROOT = DEVICE_ROOT if DEVICE_ROOT.exists() else REPO_ROOT
@@ -39,6 +40,12 @@ def cmd_preflight(args: argparse.Namespace) -> int:
     env = os.environ.copy()
     if args.alpha_vantage_key:
         env["ALPHAVANTAGE_KEY"] = args.alpha_vantage_key
+
+    # Ensure schema exists before standalone preflight runs (Docker/Windows step 3).
+    init_rc = run([sys.executable, "core/init_db_v2.py"], cwd=REPO_ROOT)
+    if init_rc != 0:
+        return init_rc
+
     cmd = [sys.executable, "production/preflight_manager.py", "--market", args.market]
     print("$", " ".join(cmd))
     p = subprocess.run(cmd, cwd=str(REPO_ROOT), env=env)
