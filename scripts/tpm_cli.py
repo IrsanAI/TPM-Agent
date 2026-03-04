@@ -74,6 +74,16 @@ def cmd_live(args: argparse.Namespace) -> int:
     return run(cmd)
 
 
+def cmd_update(args: argparse.Namespace) -> int:
+    cmd = [sys.executable, "scripts/update_orchestrator.py", args.action]
+    return run(cmd)
+
+
+def cmd_cockpit(args: argparse.Namespace) -> int:
+    cmd = [sys.executable, "scripts/update_cockpit_server.py", "--port", str(args.port)]
+    return run(cmd)
+
+
 def cmd_env(_: argparse.Namespace) -> int:
     print("Platform:", platform.platform())
     print("Python:", sys.version.split()[0])
@@ -109,6 +119,15 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--notify", action="store_true")
     live.add_argument("--vibrate-ms", type=int, default=1000)
     live.set_defaults(func=cmd_live)
+
+    upd = sp.add_parser("update", help="check/apply orchestrated app updates")
+    upd.add_argument("action", choices=["check", "status", "apply"], default="check")
+    upd.set_defaults(func=cmd_update)
+
+    cockpit = sp.add_parser("update-cockpit", help="start update cockpit web UI")
+    cockpit.add_argument("--port", type=int, default=8787)
+    cockpit.set_defaults(func=cmd_cockpit)
+
     return p
 
 
