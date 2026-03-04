@@ -83,7 +83,7 @@ def api_backtest_summary() -> dict:
 
 @app.get("/api/capabilities")
 def api_capabilities() -> dict:
-    return {"backtest_summary": True, "engine_transparency": True, "source_resilience": True, "sources_index": True, "version": 3}
+    return {"backtest_summary": True, "engine_transparency": True, "source_resilience": True, "sources_index": True, "predictions": True, "version": 4}
 
 
 @app.get("/api/sources/health")
@@ -96,3 +96,20 @@ def api_sources_health() -> dict:
 @app.get("/api/sources/index")
 def api_sources_index() -> dict:
     return _source_index()
+
+
+@app.get("/api/predictions/aggregated")
+def api_predictions_aggregated() -> dict:
+    frame = api_frame()
+    signals = frame.get("signals", []) if isinstance(frame, dict) else []
+    grouped = {}
+    for row in signals:
+        market = str(row.get("market", ""))
+        val = float(row.get("value", 0.0) or 0.0)
+        if market:
+            grouped.setdefault(market, []).append(val)
+    payload = []
+    for market, vals in grouped.items():
+        last = vals[-1]
+        payload.append({"market": market, "last": last, "slope": 0.0, "forecast": [last]*5, "confidence": 0.5})
+    return {"generated_at": int(time.time()), "markets": payload}

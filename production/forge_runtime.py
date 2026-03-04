@@ -18,6 +18,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from core.forge_config import load_config
+from core.metacognitive_resilience import MetacognitiveResilienceOrchestrator
 from production.forge_orchestrator import ForgeOrchestrator
 
 
@@ -141,6 +142,7 @@ class ForgeRuntime:
         self._last_alert_ts: dict[str, float] = {}
         self.validation_report_file = self.paths.state_dir / "TPM_test_results.json"
         self.source_index_file = self.paths.state_dir / "source_index.json"
+        self.mro = MetacognitiveResilienceOrchestrator(self.paths.state_dir / "resilience.db")
 
     def _load_override_agents(self) -> list[dict]:
         if not self.override_agents_file.exists():
@@ -429,68 +431,43 @@ class ForgeRuntime:
             "source_resilience": True,
             "engine_transparency": True,
             "sources_index": True,
-            "version": 3,
+            "version": 4,
         }
 
     def source_health(self) -> dict[str, Any]:
         resilience = self.latest_frame.get("source_resilience", {}) if isinstance(self.latest_frame, dict) else {}
-        return resilience if isinstance(resilience, dict) else {"agents": {}, "detected_issues": []}
+        base = resilience if isinstance(resilience, dict) else {"agents": {}, "detected_issues": []}
+        base["mro"] = self.mro.status()
+        return base
 
     def refresh_source_index(self) -> dict[str, Any]:
-        entries: list[dict[str, Any]] = []
         active_markets = {str(a.get("market", "")).upper() for a in self.list_agents() if a.get("market")}
-
+        candidates: list[dict[str, Any]] = []
         for source_type, items in SUGGESTED_MARKETS.items():
             for item in items:
-                market = str(item.get("market", "")).upper()
-                url = str(item.get("url", ""))
-                score = 2 if market in active_markets else 1
-                status = "unknown"
-                latency_ms = None
-                error = ""
-                price = None
-                t0 = time.time()
-                try:
-                    probe_url = url
-                    if "{API_KEY}" in probe_url:
-                        probe_url = probe_url.replace("{API_KEY}", "demo")
-                    req = urllib.request.Request(probe_url, headers={"User-Agent": "IrsanAI-TPM/SourceIndexer"})
-                    with urllib.request.urlopen(req, timeout=4) as resp:
-                        raw = resp.read().decode("utf-8")
-                        payload = json.loads(raw)
-                    latency_ms = round((time.time() - t0) * 1000.0, 2)
-                    status = "ok"
-                    if source_type == "binance":
-                        price = float(payload.get("price", 0.0)) if payload.get("price") is not None else None
-                    elif source_type == "alphavantage_commodity":
-                        data = payload.get("data", [])
-                        if data:
-                            price = float(data[0].get("value", 0.0))
-                except Exception as exc:
-                    status = "error"
-                    error = str(exc)
-                    latency_ms = round((time.time() - t0) * 1000.0, 2)
-
-                entries.append({
-                    "market": market,
+                candidates.append({
+                    "market": str(item.get("market", "")).upper(),
                     "source_type": source_type,
-                    "url": url,
-                    "priority": score,
-                    "status": status,
-                    "latency_ms": latency_ms,
-                    "sample_value": price,
-                    "error": error,
-                    "checked_at": int(time.time()),
+                    "url": str(item.get("url", "")),
+                    "priority": 2 if str(item.get("market", "")).upper() in active_markets else 1,
                 })
 
-        entries.sort(key=lambda e: (-int(e.get("priority", 0)), str(e.get("market", "")), str(e.get("source_type", ""))))
-        payload = {
-            "generated_at": int(time.time()),
-            "active_markets": sorted(active_markets),
-            "total_sources": len(entries),
-            "healthy_sources": sum(1 for e in entries if e.get("status") == "ok"),
-            "sources": entries,
-        }
+        def _probe(item: dict[str, Any]) -> tuple[bool, float | None, str]:
+            t0 = time.time()
+            try:
+                probe_url = str(item.get("url", ""))
+                if "{API_KEY}" in probe_url:
+                    probe_url = probe_url.replace("{API_KEY}", "demo")
+                req = urllib.request.Request(probe_url, headers={"User-Agent": "IrsanAI-TPM/SourceIndexer"})
+                with urllib.request.urlopen(req, timeout=4):
+                    pass
+                return True, round((time.time() - t0) * 1000.0, 2), ""
+            except Exception as exc:
+                return False, round((time.time() - t0) * 1000.0, 2), str(exc)
+
+        payload = self.mro.startup_index(candidates, _probe)
+        payload["active_markets"] = sorted(active_markets)
+        payload["version"] = 2
         self.source_index_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
 
@@ -501,6 +478,28 @@ class ForgeRuntime:
             return json.loads(self.source_index_file.read_text(encoding="utf-8"))
         except Exception:
             return self.refresh_source_index()
+
+    def aggregated_predictions(self) -> dict[str, Any]:
+        markets: list[dict[str, Any]] = []
+        for market, points in sorted(self._market_history.items()):
+            if len(points) < 3:
+                continue
+            vals = [float(p.get("value", 0.0)) for p in points][-12:]
+            x = list(range(len(vals)))
+            x_mean = sum(x) / len(x)
+            y_mean = sum(vals) / len(vals)
+            denom = sum((xi - x_mean) ** 2 for xi in x) or 1.0
+            slope = sum((xi - x_mean) * (yi - y_mean) for xi, yi in zip(x, vals)) / denom
+            future = [vals[-1] + slope * step for step in range(1, 6)]
+            confidence = max(0.0, min(0.95, 1.0 - abs(slope) / (abs(y_mean) + 1e-9)))
+            markets.append({
+                "market": market,
+                "last": vals[-1],
+                "slope": slope,
+                "forecast": future,
+                "confidence": round(confidence, 3),
+            })
+        return {"generated_at": int(time.time()), "markets": markets}
 
     def _loop(self) -> None:
         while not self._stop_event.is_set():
@@ -540,6 +539,12 @@ def _startup() -> None:
         runtime.refresh_source_index()
     except Exception:
         pass
+    if not runtime.validation_report_file.exists():
+        runtime.validation_report_file.write_text(json.dumps({
+            "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "tests": [],
+            "note": "auto-generated placeholder until scientific validation runs",
+        }, indent=2), encoding="utf-8")
 
 
 @app.on_event("shutdown")
@@ -620,6 +625,11 @@ def api_sources_health() -> dict:
 @app.get("/api/sources/index")
 def api_sources_index() -> dict:
     return _sanitize(runtime.source_index())
+
+
+@app.get("/api/predictions/aggregated")
+def api_predictions_aggregated() -> dict:
+    return _sanitize(runtime.aggregated_predictions())
 
 
 @app.post("/api/runtime/start")
