@@ -1,6 +1,10 @@
 # TPM Playground + Forge Runtime UI
 
-## 1) Playground (simulation onboarding)
+A lightweight browser playground to explore TPM concepts interactively:
+- single-agent weak-signal anomaly detection
+- mini swarm consensus pressure
+- cross-domain transfer resonance (synthetic)
+- prediction oracle panel with countdown, streak and validation hops (live snapshot if `state/prediction_hub_latest.json` exists, otherwise simulated)
 
 ## 1) Playground (simulation onboarding)
 
