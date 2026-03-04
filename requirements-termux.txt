@@ -1,7 +1,7 @@
 # Termux-safe dependency profile
-# Uses Pydantic v1 line to avoid Rust/maturin build requirements on some Android setups.
+# Heavy scientific packages must come from Termux pkg to avoid slow/fragile source builds.
+# Install first: pkg install -y python-numpy
 fastapi>=0.95,<0.100
 pydantic>=1.10,<2
 uvicorn>=0.23,<0.31
 PyYAML>=6.0.1
-numpy>=1.26.0

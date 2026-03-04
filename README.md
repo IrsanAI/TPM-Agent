@@ -71,12 +71,24 @@ If this lane convinces you, the rest of the repository will likely resonate too.
 ## Platform Notes
 
 - **Android / Termux (Samsung, etc.)**
+
+  **One-click command (copy/paste in fresh Termux):**
+  ```bash
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/IrsanAI/TPM-Agent/main/scripts/termux_android_oneclick.sh)"
+  ```
+  This command auto-checks/install required tools, clones/pulls the repo, runs the installer and opens the web install cockpit.
+
+  **Manual path:**
   ```bash
   bash scripts/termux_bootstrap.sh
   cd ~/TPM-Agent
   python scripts/tpm_cli.py env
   python scripts/tpm_cli.py preflight --market ALL
   python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --notify --vibrate-ms 1000
+
+  # Optional install cockpit (mobile-friendly)
+  python scripts/install_dashboard_server.py --port 8788
+  # open http://127.0.0.1:8788
   ```
   For direct Android (Termux) web UI demo, start Forge runtime locally:
   ```bash
@@ -88,6 +100,8 @@ If this lane convinces you, the rest of the repository will likely resonate too.
   The script auto-opens browser (if available) and keeps service running in background.
   If you saw a `pydantic-core`/Rust or `scipy`/Fortran build error on Android, use
   `python -m pip install -r requirements-termux.txt` (Termux-safe set, no Rust toolchain required).
+  If `numpy/cmake/patchelf` builds fail on Android, install NumPy from Termux first and avoid source-build wheel paths:
+  `pkg install -y python-numpy && python -m pip install --no-build-isolation --no-cache-dir -r requirements-termux.txt`.
   In the web interface you can control runtime start/stop; a progress bar shows transition status.
 - **iPhone (best effort)**: use shell apps such as iSH / a-Shell. Termux-specific notification hooks are not available there.
 - **Windows / Linux / macOS**: use the same CLI commands; run via tmux/scheduler/cron for persistence.
