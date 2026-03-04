@@ -71,6 +71,14 @@ If this lane convinces you, the rest of the repository will likely resonate too.
 ## Platform Notes
 
 - **Android / Termux (Samsung, etc.)**
+
+  **One-click command (copy/paste in fresh Termux):**
+  ```bash
+  bash -c "$(curl -fsSL https://raw.githubusercontent.com/IrsanAI/TPM-Agent/main/scripts/termux_android_oneclick.sh)"
+  ```
+  This command auto-checks/install required tools, clones/pulls the repo, runs the installer and opens the web install cockpit.
+
+  **Manual path:**
   ```bash
   bash scripts/termux_bootstrap.sh
   cd ~/TPM-Agent
