@@ -8,6 +8,7 @@ import threading
 import time
 import urllib.parse
 import urllib.request
+from urllib.error import URLError
 from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from core.forge_config import load_config
+from core.metacognitive_resilience import MetacognitiveResilienceOrchestrator
 from production.forge_orchestrator import ForgeOrchestrator
 
 
@@ -138,6 +140,9 @@ class ForgeRuntime:
         self._agent_history: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=240))
         self.alert_prefs_file = self.paths.state_dir / "alert_prefs.json"
         self._last_alert_ts: dict[str, float] = {}
+        self.validation_report_file = self.paths.state_dir / "TPM_test_results.json"
+        self.source_index_file = self.paths.state_dir / "source_index.json"
+        self.mro = MetacognitiveResilienceOrchestrator(self.paths.state_dir / "resilience.db")
 
     def _load_override_agents(self) -> list[dict]:
         if not self.override_agents_file.exists():
@@ -394,6 +399,108 @@ class ForgeRuntime:
         self._dispatch_alert("TEST", {"direction": "up", "confidence": 0.99}, 1.0)
         return {"ok": True, "message": "test alert dispatched"}
 
+
+    def backtest_summary(self) -> dict[str, Any]:
+        if not self.validation_report_file.exists():
+            return {"available": False, "reason": "validation report not found"}
+        try:
+            payload = json.loads(self.validation_report_file.read_text(encoding="utf-8"))
+        except Exception as exc:
+            return {"available": False, "reason": f"invalid report: {exc}"}
+
+        tests = payload.get("tests", []) if isinstance(payload, dict) else []
+        compact = []
+        for t in tests:
+            if not isinstance(t, dict):
+                continue
+            compact.append({
+                "name": t.get("name", "unknown"),
+                "metric": t.get("metric"),
+                "passed": bool(t.get("passed")),
+                "p_value": t.get("p_value"),
+            })
+        return {
+            "available": True,
+            "generated_at_utc": payload.get("generated_at_utc"),
+            "tests": compact,
+        }
+
+    def capabilities(self) -> dict[str, Any]:
+        return {
+            "backtest_summary": True,
+            "source_resilience": True,
+            "engine_transparency": True,
+            "sources_index": True,
+            "version": 4,
+        }
+
+    def source_health(self) -> dict[str, Any]:
+        resilience = self.latest_frame.get("source_resilience", {}) if isinstance(self.latest_frame, dict) else {}
+        base = resilience if isinstance(resilience, dict) else {"agents": {}, "detected_issues": []}
+        base["mro"] = self.mro.status()
+        return base
+
+    def refresh_source_index(self) -> dict[str, Any]:
+        active_markets = {str(a.get("market", "")).upper() for a in self.list_agents() if a.get("market")}
+        candidates: list[dict[str, Any]] = []
+        for source_type, items in SUGGESTED_MARKETS.items():
+            for item in items:
+                candidates.append({
+                    "market": str(item.get("market", "")).upper(),
+                    "source_type": source_type,
+                    "url": str(item.get("url", "")),
+                    "priority": 2 if str(item.get("market", "")).upper() in active_markets else 1,
+                })
+
+        def _probe(item: dict[str, Any]) -> tuple[bool, float | None, str]:
+            t0 = time.time()
+            try:
+                probe_url = str(item.get("url", ""))
+                if "{API_KEY}" in probe_url:
+                    probe_url = probe_url.replace("{API_KEY}", "demo")
+                req = urllib.request.Request(probe_url, headers={"User-Agent": "IrsanAI-TPM/SourceIndexer"})
+                with urllib.request.urlopen(req, timeout=4):
+                    pass
+                return True, round((time.time() - t0) * 1000.0, 2), ""
+            except Exception as exc:
+                return False, round((time.time() - t0) * 1000.0, 2), str(exc)
+
+        payload = self.mro.startup_index(candidates, _probe)
+        payload["active_markets"] = sorted(active_markets)
+        payload["version"] = 2
+        self.source_index_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return payload
+
+    def source_index(self) -> dict[str, Any]:
+        if not self.source_index_file.exists():
+            return self.refresh_source_index()
+        try:
+            return json.loads(self.source_index_file.read_text(encoding="utf-8"))
+        except Exception:
+            return self.refresh_source_index()
+
+    def aggregated_predictions(self) -> dict[str, Any]:
+        markets: list[dict[str, Any]] = []
+        for market, points in sorted(self._market_history.items()):
+            if len(points) < 3:
+                continue
+            vals = [float(p.get("value", 0.0)) for p in points][-12:]
+            x = list(range(len(vals)))
+            x_mean = sum(x) / len(x)
+            y_mean = sum(vals) / len(vals)
+            denom = sum((xi - x_mean) ** 2 for xi in x) or 1.0
+            slope = sum((xi - x_mean) * (yi - y_mean) for xi, yi in zip(x, vals)) / denom
+            future = [vals[-1] + slope * step for step in range(1, 6)]
+            confidence = max(0.0, min(0.95, 1.0 - abs(slope) / (abs(y_mean) + 1e-9)))
+            markets.append({
+                "market": market,
+                "last": vals[-1],
+                "slope": slope,
+                "forecast": future,
+                "confidence": round(confidence, 3),
+            })
+        return {"generated_at": int(time.time()), "markets": markets}
+
     def _loop(self) -> None:
         while not self._stop_event.is_set():
             try:
@@ -428,6 +535,16 @@ HTML_FILE = Path(__file__).resolve().parents[1] / "playground" / "forge_dashboar
 @app.on_event("startup")
 def _startup() -> None:
     runtime.start()
+    try:
+        runtime.refresh_source_index()
+    except Exception:
+        pass
+    if not runtime.validation_report_file.exists():
+        runtime.validation_report_file.write_text(json.dumps({
+            "generated_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "tests": [],
+            "note": "auto-generated placeholder until scientific validation runs",
+        }, indent=2), encoding="utf-8")
 
 
 @app.on_event("shutdown")
@@ -437,7 +554,7 @@ def _shutdown() -> None:
 
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(HTML_FILE)
+    return FileResponse(HTML_FILE, headers={"Cache-Control": "no-store, max-age=0"})
 
 
 @app.get("/api/frame")
@@ -488,6 +605,31 @@ def api_alert_test() -> dict:
 @app.get("/api/runtime/status")
 def api_runtime_status() -> dict:
     return _sanitize(runtime.runtime_status())
+
+
+@app.get("/api/capabilities")
+def api_capabilities() -> dict:
+    return _sanitize(runtime.capabilities())
+
+
+@app.get("/api/backtest/summary")
+def api_backtest_summary() -> dict:
+    return _sanitize(runtime.backtest_summary())
+
+
+@app.get("/api/sources/health")
+def api_sources_health() -> dict:
+    return _sanitize(runtime.source_health())
+
+
+@app.get("/api/sources/index")
+def api_sources_index() -> dict:
+    return _sanitize(runtime.source_index())
+
+
+@app.get("/api/predictions/aggregated")
+def api_predictions_aggregated() -> dict:
+    return _sanitize(runtime.aggregated_predictions())
 
 
 @app.post("/api/runtime/start")
