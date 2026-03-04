@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,14 @@ CACHE_FILE = PATHS.state_dir / "latest_prices.json"
 BACKTEST_FILE = PATHS.state_dir / "TPM_test_results.json"
 SOURCE_INDEX_FILE = PATHS.state_dir / "source_index.json"
 HTML_FILE = Path(__file__).resolve().parents[1] / "playground" / "forge_dashboard.html"
+
+
+def _source_catalog() -> dict[str, Any]:
+    idx = _source_index()
+    sources = idx.get("sources", []) if isinstance(idx, dict) else []
+    free = [s for s in sources if s.get("registration_type") == "free_no_registration"]
+    reg = [s for s in sources if s.get("registration_type") == "registration_required"]
+    return {"generated_at": idx.get("generated_at"), "free_no_registration": free, "registration_required": reg}
 
 
 def _source_index() -> dict[str, Any]:
@@ -83,7 +92,7 @@ def api_backtest_summary() -> dict:
 
 @app.get("/api/capabilities")
 def api_capabilities() -> dict:
-    return {"backtest_summary": True, "engine_transparency": True, "source_resilience": True, "sources_index": True, "predictions": True, "version": 4}
+    return {"backtest_summary": True, "engine_transparency": True, "source_resilience": True, "sources_index": True, "predictions": True, "sources_catalog": True, "version": 5}
 
 
 @app.get("/api/sources/health")
@@ -113,3 +122,8 @@ def api_predictions_aggregated() -> dict:
         last = vals[-1]
         payload.append({"market": market, "last": last, "slope": 0.0, "forecast": [last]*5, "confidence": 0.5})
     return {"generated_at": int(time.time()), "markets": payload}
+
+
+@app.get("/api/sources/catalog")
+def api_sources_catalog() -> dict:
+    return _source_catalog()

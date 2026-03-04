@@ -40,6 +40,17 @@ SUGGESTED_MARKETS: dict[str, list[dict[str, str]]] = {
 
 REQUIRES_API_KEY = {"alphavantage_commodity"}
 
+DISCOVERY_MARKETS: dict[str, list[dict[str, str]]] = {
+    "coingecko": [
+        {"market": "BTC", "url": "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"},
+        {"market": "ETH", "url": "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"},
+        {"market": "SOL", "url": "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"},
+    ],
+    "stooq": [
+        {"market": "BTC", "url": "https://stooq.com/q/l/?s=btcusd&i=d"},
+    ],
+}
+
 LOCALE_LABELS = {
     "en": "English",
     "de": "Deutsch",
@@ -431,7 +442,8 @@ class ForgeRuntime:
             "source_resilience": True,
             "engine_transparency": True,
             "sources_index": True,
-            "version": 4,
+            "sources_catalog": True,
+            "version": 5,
         }
 
     def source_health(self) -> dict[str, Any]:
@@ -440,17 +452,74 @@ class ForgeRuntime:
         base["mro"] = self.mro.status()
         return base
 
+
+    def _registration_type(self, source_type: str) -> str:
+        return "registration_required" if source_type in REQUIRES_API_KEY else "free_no_registration"
+
+    def _source_catalog(self) -> dict[str, Any]:
+        idx = self.source_index()
+        sources = idx.get("sources", []) if isinstance(idx, dict) else []
+        free = [s for s in sources if s.get("registration_type") == "free_no_registration"]
+        reg = [s for s in sources if s.get("registration_type") == "registration_required"]
+        return {
+            "generated_at": idx.get("generated_at") if isinstance(idx, dict) else None,
+            "free_no_registration": free,
+            "registration_required": reg,
+        }
+
     def refresh_source_index(self) -> dict[str, Any]:
         active_markets = {str(a.get("market", "")).upper() for a in self.list_agents() if a.get("market")}
         candidates: list[dict[str, Any]] = []
         for source_type, items in SUGGESTED_MARKETS.items():
             for item in items:
+                market = str(item.get("market", "")).upper()
                 candidates.append({
-                    "market": str(item.get("market", "")).upper(),
+                    "market": market,
                     "source_type": source_type,
                     "url": str(item.get("url", "")),
-                    "priority": 2 if str(item.get("market", "")).upper() in active_markets else 1,
+                    "priority": 2 if market in active_markets else 1,
+                    "registration_type": self._registration_type(source_type),
+                    "discovery_origin": "core_suggested",
                 })
+
+        for source_type, items in DISCOVERY_MARKETS.items():
+            for item in items:
+                market = str(item.get("market", "")).upper()
+                candidates.append({
+                    "market": market,
+                    "source_type": source_type,
+                    "url": str(item.get("url", "")),
+                    "priority": 2 if market in active_markets else 1,
+                    "registration_type": "free_no_registration",
+                    "discovery_origin": "startup_discovery",
+                })
+
+        # keep previously discovered entries for persistent growth across restarts
+        if self.source_index_file.exists():
+            try:
+                old_payload = json.loads(self.source_index_file.read_text(encoding="utf-8"))
+                for item in old_payload.get("sources", []):
+                    if isinstance(item, dict) and item.get("url"):
+                        candidates.append({
+                            "market": str(item.get("market", "")).upper(),
+                            "source_type": str(item.get("source_type", "unknown")),
+                            "url": str(item.get("url", "")),
+                            "priority": int(item.get("priority", 1)),
+                            "registration_type": str(item.get("registration_type", "free_no_registration")),
+                            "discovery_origin": str(item.get("discovery_origin", "previous_index")),
+                        })
+            except Exception:
+                pass
+
+        # deduplicate by url
+        dedup: dict[str, dict[str, Any]] = {}
+        for c in candidates:
+            if not c.get("url"):
+                continue
+            key = str(c["url"])
+            existing = dedup.get(key)
+            if existing is None or int(c.get("priority", 0)) > int(existing.get("priority", 0)):
+                dedup[key] = c
 
         def _probe(item: dict[str, Any]) -> tuple[bool, float | None, str]:
             t0 = time.time()
@@ -465,9 +534,9 @@ class ForgeRuntime:
             except Exception as exc:
                 return False, round((time.time() - t0) * 1000.0, 2), str(exc)
 
-        payload = self.mro.startup_index(candidates, _probe)
+        payload = self.mro.startup_index(list(dedup.values()), _probe)
         payload["active_markets"] = sorted(active_markets)
-        payload["version"] = 2
+        payload["version"] = 3
         self.source_index_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return payload
 
@@ -625,6 +694,11 @@ def api_sources_health() -> dict:
 @app.get("/api/sources/index")
 def api_sources_index() -> dict:
     return _sanitize(runtime.source_index())
+
+
+@app.get("/api/sources/catalog")
+def api_sources_catalog() -> dict:
+    return _sanitize(runtime._source_catalog())
 
 
 @app.get("/api/predictions/aggregated")

@@ -58,6 +58,14 @@
       display:flex; align-items:center; gap:8px; border:1px solid var(--line); padding:8px 12px; border-radius:10px; background:#121a31;
     }
     .alert-option input[type="checkbox"] { width:18px; height:18px; accent-color:var(--accent); }
+    .hidden { display:none; }
+    .status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; }
+    .status-ok { background:#22c55e; }
+    .status-bad { background:#ef4444; }
+    .status-warn { background:#f59e0b; }
+    .source-row { cursor:pointer; border:1px solid #33406a; border-radius:10px; padding:8px; margin:6px 0; }
+    .source-row:hover { border-color:#7c5cff; }
+    #sourceDetails pre { max-height: 180px; }
     @media (max-width:1024px){ .grid,.subgrid,.form-grid{grid-template-columns:1fr;} }
   </style>
 </head>
@@ -75,6 +83,7 @@
     <div class="tips" style="margin-top:10px;">
       <button id="startBtn" onclick="runtimeStart()">Start Runtime</button>
       <button id="stopBtn" onclick="runtimeStop()">Stop Runtime</button>
+      <button onclick="toggleMarketsManager()">Märkte verwalten</button>
       <span class="pill" id="alertStatus">alerts: n/a</span>
     </div>
     <div class="alert-row" style="margin-top:10px;">
@@ -116,6 +125,28 @@
     <div id="predictionHub" class="hint">Waiting for aggregated predictions…</div>
   </section>
 
+
+
+  <section class="glass hidden" id="marketsManagerSection">
+    <h3>🗂️ Märkte verwalten / Kursdaten-Quellen</h3>
+    <div class="hint">Klicke auf eine Quelle für Detailstatus + Copy.</div>
+    <div class="grid" style="grid-template-columns: 1fr 1fr;">
+      <div>
+        <h3 style="font-size:1rem;">✅ Frei ohne Registrierung</h3>
+        <div id="freeSourcesList" class="hint">Wird geladen…</div>
+      </div>
+      <div>
+        <h3 style="font-size:1rem;">🔐 Mit Registrierung/API-Key</h3>
+        <div id="regSourcesList" class="hint">Wird geladen…</div>
+      </div>
+    </div>
+    <div id="sourceDetails" style="margin-top:10px;">
+      <h3 style="font-size:1rem;">Quellen-Details</h3>
+      <pre id="sourceDetailsJson">Tippe auf eine Quelle...</pre>
+      <button onclick="copySourceDetails()">Copy Details</button>
+    </div>
+  </section>
+
   <section class="grid">
     <div class="glass">
       <h3>➕ Add Market Agent</h3>
@@ -139,7 +170,7 @@
 </div>
 
 <script>
-const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, sourceHealth: {}, sourceIndex: {}, predictions: {}, pollErrors: 0, caps: null, optionalEndpointDisabled: {} };
+const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, sourceHealth: {}, sourceIndex: {}, sourceCatalog: {}, selectedSource: null, predictions: {}, pollErrors: 0, caps: null, optionalEndpointDisabled: {} };
 
 function setInfo() {
   document.getElementById('os').textContent = navigator.platform || 'unknown platform';
@@ -165,9 +196,10 @@ async function refreshAll() {
     state.optionalEndpointDisabled['/api/backtest/summary'] ? Promise.resolve(state.backtest) : fetchJSON('/api/backtest/summary'),
     state.optionalEndpointDisabled['/api/sources/health'] ? Promise.resolve(state.sourceHealth) : fetchJSON('/api/sources/health'),
     state.optionalEndpointDisabled['/api/sources/index'] ? Promise.resolve(state.sourceIndex) : fetchJSON('/api/sources/index'),
-    state.optionalEndpointDisabled['/api/predictions/aggregated'] ? Promise.resolve(state.predictions) : fetchJSON('/api/predictions/aggregated')
+    state.optionalEndpointDisabled['/api/predictions/aggregated'] ? Promise.resolve(state.predictions) : fetchJSON('/api/predictions/aggregated'),
+    state.optionalEndpointDisabled['/api/sources/catalog'] ? Promise.resolve(state.sourceCatalog) : fetchJSON('/api/sources/catalog')
   ];
-  const [frameRes, runtimeRes, liveRes, backtestRes, sourceRes, indexRes, predRes] = await Promise.allSettled(requests);
+  const [frameRes, runtimeRes, liveRes, backtestRes, sourceRes, indexRes, predRes, catalogRes] = await Promise.allSettled(requests);
 
   const frame = frameRes.status === 'fulfilled' ? frameRes.value : state.frame;
   const runtime = runtimeRes.status === 'fulfilled' ? runtimeRes.value : (String(runtimeRes.reason?.message || '').includes('404') ? null : null);
@@ -207,6 +239,15 @@ async function refreshAll() {
     predictions = { generated_at: null, markets: [], reason: 'optional endpoint not supported by current runtime image' };
   }
 
+
+  let sourceCatalog = state.sourceCatalog;
+  if (catalogRes.status === 'fulfilled') {
+    sourceCatalog = catalogRes.value;
+  } else if (String(catalogRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/sources/catalog'] = true;
+    sourceCatalog = { free_no_registration: [], registration_required: [], reason: 'optional endpoint not supported by current runtime image' };
+  }
+
   const hardErrors = [frameRes].filter(r => r.status === 'rejected');
   if (hardErrors.length) {
     state.pollErrors += 1;
@@ -225,6 +266,7 @@ async function refreshAll() {
   state.sourceHealth = sourceHealth || {};
   state.sourceIndex = sourceIndex || {};
   state.predictions = predictions || {};
+  state.sourceCatalog = sourceCatalog || {};
   renderRuntime(runtime || {
     engine_state: (frame.signals || []).length > 0 ? 'running' : 'idle',
     transition_action: 'poll-fallback',
@@ -234,6 +276,7 @@ async function refreshAll() {
   renderFrame(frame);
   renderLive(live);
   renderEngineTransparency(frame, state.backtest, state.sourceHealth, state.sourceIndex, state.predictions);
+  renderSourcesManager(state.sourceCatalog);
   document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
 }
 
@@ -362,6 +405,67 @@ function renderEngineTransparency(frame, backtest, sourceHealth, sourceIndex, pr
     return `<div class="hint">${m.market}: now=${Number(m.last || 0).toFixed(2)} → +5 ticks=${f} conf=${m.confidence ?? 'n/a'}</div>`;
   }).join('');
   ph.innerHTML = rows || `<div class="hint">${predictions?.reason || 'No prediction payload yet.'}</div>`;
+}
+
+
+function toggleMarketsManager() {
+  document.getElementById('marketsManagerSection').classList.toggle('hidden');
+}
+
+function sourceStatusClass(status) {
+  if (status === 'ok' || status === 'healthy') return 'status-ok';
+  if (status === 'error' || status === 'critical') return 'status-bad';
+  return 'status-warn';
+}
+
+function renderSourcesManager(catalog) {
+  const freeList = document.getElementById('freeSourcesList');
+  const regList = document.getElementById('regSourcesList');
+  const free = catalog?.free_no_registration || [];
+  const reg = catalog?.registration_required || [];
+
+  function renderRows(container, rows) {
+    container.innerHTML = '';
+    if (!rows.length) {
+      container.innerHTML = '<div class="hint">Keine Einträge.</div>';
+      return;
+    }
+    rows.slice(0, 40).forEach((item) => {
+      const status = item?.health?.status || item?.status || 'unknown';
+      const dot = sourceStatusClass(status);
+      const reason = (item?.health?.last_error || item?.error || '').slice(0, 80);
+      const row = document.createElement('div');
+      row.className = 'source-row';
+      row.innerHTML = `<span class="status-dot ${dot}"></span><strong>${item.market || 'n/a'}</strong> • ${item.source_type || 'unknown'}<div class="hint">${status}${reason ? ` | ${reason}` : ''}</div>`;
+      row.addEventListener('click', () => showSourceDetails(item));
+      container.appendChild(row);
+    });
+  }
+
+  renderRows(freeList, free);
+  renderRows(regList, reg);
+}
+
+function showSourceDetails(item) {
+  state.selectedSource = item;
+  const assumptions = [];
+  const err = item?.health?.last_error || item?.error || '';
+  if (err.includes('403')) assumptions.push('Möglicher Rate-Limit/Provider blockiert IP.');
+  if (err.includes('404')) assumptions.push('Endpoint nicht verfügbar/Legacy URL.');
+  if (err.includes('timeout')) assumptions.push('Quelle zu langsam oder temporär down.');
+  if (!assumptions.length) assumptions.push('Status unauffällig oder noch unklar.');
+  const payload = { ...item, assumptions };
+  document.getElementById('sourceDetailsJson').textContent = JSON.stringify(payload, null, 2);
+}
+
+async function copySourceDetails() {
+  const txt = document.getElementById('sourceDetailsJson').textContent || '';
+  try {
+    await navigator.clipboard.writeText(txt);
+    document.getElementById('alertStatus').textContent = 'alerts: source details copied';
+  } catch (_) {
+    document.getElementById('alertStatus').textContent = 'alerts: copy failed';
+  }
 }
 
 async function runtimeStart() { await fetchJSON('/api/runtime/start', {method:'POST'}); refreshAll(); }
