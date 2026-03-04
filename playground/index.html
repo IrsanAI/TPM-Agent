@@ -15,6 +15,12 @@
     canvas { width:100%; height:180px; background:#0b1320; border-radius:8px; margin-top:8px; }
     .muted { color:#8b949e; font-size: 13px; }
     code { background: #21262d; padding: 2px 5px; border-radius: 4px; }
+    .oracle-pill { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; margin-right:6px; }
+    .good { background:#1f6f43; color:#d2ffe8; }
+    .bad { background:#8b1e2d; color:#ffd8de; }
+    .warn { background:#9a6700; color:#fff3cd; }
+    .countdown { font-size: 22px; font-weight: bold; color:#ff7b72; margin-top:8px; }
+    .hops { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   </style>
 </head>
 <body>
@@ -52,6 +58,19 @@
       <p class="muted">Synthetic demo for concept feel. Real transfer requires governance + domain-safe features.</p>
     </div>
   </div>
+
+  
+  <div class="row" style="margin-top:16px;">
+    <div class="card">
+      <h3>🔮 Prediction Oracle (Live/Sim)</h3>
+      <p id="oracleMeta" class="muted">Awaiting snapshot…</p>
+      <div id="oracleCountdown" class="countdown">Bro, du hast nur noch -- Sekunden.</div>
+      <div id="oraclePills"></div>
+      <div id="oracleHops" class="hops"></div>
+      <p id="oracleInfo" class="muted"></p>
+    </div>
+  </div>
+
 
   <script>
     function rng(seed) {
@@ -125,9 +144,89 @@
       wg.slice(-25).forEach(x=>{ if(fset.has(x.i)) resonance++;});
       hg.slice(-25).forEach(x=>{ if(fset.has(x.i)) resonance++;});
       document.getElementById('xStats').innerHTML = `Finance: <code>${fg.length}</code> • Weather: <code>${wg.length}</code> • Health: <code>${hg.length}</code> • Transfer resonance: <code>${resonance}</code>`;
+      refreshOracle(seed, points);
     }
 
+
+    function fmtDelta(sec) {
+      if (sec < 60) return `${sec}s`;
+      if (sec < 3600) return `${Math.floor(sec/60)}m ${sec%60}s`;
+      return `${Math.floor(sec/3600)}h ${Math.floor((sec%3600)/60)}m`;
+    }
+
+    function renderOracle(snap) {
+      const now = Date.now();
+      const targetMs = new Date(snap.target_ts).getTime();
+      const left = Math.max(0, Math.floor((targetMs - now) / 1000));
+      document.getElementById('oracleMeta').innerHTML =
+        `Erkenntnis: <code>${snap.created_ts}</code> @ <code>${snap.created_price.toFixed(2)}</code> → Ziel <code>${snap.target_price.toFixed(2)}</code>`;
+      document.getElementById('oracleCountdown').textContent =
+        `Bro, du hast nur noch ${fmtDelta(left)} bis Ereignis.`;
+
+      const pills = [
+        `<span class="oracle-pill ${snap.status === 'completed' ? 'good' : (snap.status === 'expired' ? 'bad' : 'warn')}">Status: ${snap.status}</span>`,
+        `<span class="oracle-pill good">Streak: ${snap.confirmations_in_row}x</span>`,
+        `<span class="oracle-pill warn">Rounds: ${snap.validation_rounds}</span>`,
+      ];
+      document.getElementById('oraclePills').innerHTML = pills.join('');
+
+      const hopsHtml = (snap.hops || []).slice(-8).map((h, idx) => {
+        const cls = h.status === 'confirmed' ? 'good' : 'bad';
+        return `<span class="oracle-pill ${cls}">Vorhersage ${idx+1}: ${h.confidence_pct.toFixed(1)}%</span>`;
+      }).join('');
+      document.getElementById('oracleHops').innerHTML = hopsHtml || '<span class="muted">Noch keine Validierungsrunden.</span>';
+      document.getElementById('oracleInfo').innerHTML =
+        `Direction: <code>${snap.direction}</code> • Toleranz: <code>${snap.tolerance_pct.toFixed(2)}%</code> • ETA: <code>${snap.target_ts}</code>`;
+    }
+
+    function simulatedOracle(seed, points) {
+      const now = new Date();
+      const price = 70000 + (seed % 1000);
+      const target = price * (1 + ((seed % 5) - 2) / 1000);
+      const validations = Math.max(2, Math.min(8, Math.floor(points / 30)));
+      const hops = [];
+      let streak = 0;
+      for (let i = 0; i < validations; i++) {
+        const conf = Math.max(25, Math.min(100, 65 + Math.sin(i + seed) * 30));
+        const status = conf >= 60 ? 'confirmed' : 'missed';
+        if (status === 'confirmed') streak += 1;
+        else streak = 0;
+        hops.push({ confidence_pct: conf, status });
+      }
+      return {
+        created_ts: now.toISOString(),
+        created_price: price,
+        target_price: target,
+        target_ts: new Date(now.getTime() + 1000 * (40 + (seed % 180))).toISOString(),
+        status: 'pending',
+        confirmations_in_row: streak,
+        validation_rounds: hops.length,
+        direction: target >= price ? 'UP' : 'DOWN',
+        tolerance_pct: 0.8,
+        hops,
+      };
+    }
+
+    async function refreshOracle(seed, points) {
+      try {
+        const res = await fetch('/state/prediction_hub_latest.json', { cache: 'no-store' });
+        if (res.ok) {
+          const live = await res.json();
+          renderOracle(live);
+          return;
+        }
+      } catch (e) {}
+      renderOracle(simulatedOracle(seed, points));
+    }
+
+
     runAll();
+    setInterval(() => {
+      const seed = Number(document.getElementById('seed').value||42);
+      const points = Number(document.getElementById('points').value||140);
+      refreshOracle(seed, points);
+    }, 1000);
+    refreshOracle(42, 140);
   </script>
 </body>
 </html>
