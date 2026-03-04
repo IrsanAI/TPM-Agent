@@ -862,6 +862,20 @@
     "tr": "",
     "bs": ""
   },
+  "python scripts/install_dashboard_server.py --port 8788": {
+    "en": "python scripts/install_dashboard_server.py --port 8788",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
   "For direct Android (Termux) web UI demo, start Forge runtime locally:": {
     "en": "For direct Android (Termux) web UI demo, start Forge runtime locally:",
     "de": "",
@@ -920,6 +934,34 @@
   },
   "python -m pip install -r requirements-termux.txt (Termux-safe set, no Rust toolchain required).": {
     "en": "python -m pip install -r requirements-termux.txt (Termux-safe set, no Rust toolchain required).",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
+  "If numpy/cmake/patchelf builds fail on Android, install NumPy from Termux first and avoid source-build wheel paths:": {
+    "en": "If numpy/cmake/patchelf builds fail on Android, install NumPy from Termux first and avoid source-build wheel paths:",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
+  "pkg install -y python-numpy && python -m pip install --no-build-isolation --no-cache-dir -r requirements-termux.txt.": {
+    "en": "pkg install -y python-numpy && python -m pip install --no-build-isolation --no-cache-dir -r requirements-termux.txt.",
     "de": "",
     "es": "",
     "it": "",
