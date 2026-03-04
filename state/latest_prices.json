@@ -1,0 +1,74 @@
+{
+  "ts": 1772551624,
+  "runtime": {
+    "os": "Linux",
+    "platform": "Linux-6.1.102-x86_64-with-glibc2.35",
+    "device_root": "/home/ubuntu/TPM-Agent"
+  },
+  "signals": [
+    {
+      "agent": "BTC_BINANCE",
+      "domain": "finance",
+      "market": "BTC",
+      "value": 66783.36,
+      "fitness": 0.5121397757535263,
+      "reward": 0.5043875579093767
+    }
+  ],
+  "domain_summary": {
+    "finance": {
+      "count": 1,
+      "avg_fitness": 0.5121397757535263,
+      "markets": [
+        "BTC"
+      ],
+      "template": "finance+future"
+    }
+  },
+  "ui_profile": {
+    "windows_profile": {
+      "layout": "immersive-desktop",
+      "accent": "#7c5cff",
+      "glass": true,
+      "future_tuple": "domain+future"
+    },
+    "domain_themes": {
+      "finance": {
+        "accent": "#00d4ff",
+        "gradient": [
+          "#0a0f1f",
+          "#11213a"
+        ],
+        "icon": "\ud83d\udcc8"
+      },
+      "weather": {
+        "accent": "#3ddc97",
+        "gradient": [
+          "#071a1e",
+          "#13343c"
+        ],
+        "icon": "\ud83c\udf26\ufe0f"
+      },
+      "medical": {
+        "accent": "#ff5f8a",
+        "gradient": [
+          "#220c16",
+          "#3c1326"
+        ],
+        "icon": "\ud83e\uddec"
+      },
+      "seismic": {
+        "accent": "#ffb347",
+        "gradient": [
+          "#2a1604",
+          "#4e2a0a"
+        ],
+        "icon": "\ud83c\udf0b"
+      }
+    }
+  },
+  "transfer_entropy_graph": {
+    "BTC_BINANCE->COFFEE_ALPHA": 1.4428232973175177e-12
+  },
+  "cull_candidates": []
+}
