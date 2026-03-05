@@ -29,16 +29,18 @@ python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 360
 
 ```bash
 python scripts/tpm_cli.py update check
-python scripts/tpm_cli.py update-cockpit --port 8787
+python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 # open http://localhost:8787 and click update
 ```
 
 The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
+The web hub now also exposes health probes: `GET /api/health` and `GET /api/ready` for ops/runtime checks.
+After successful update, the cockpit can hand over directly to the main Web Hub port ("IrsanAI - TPM Agenten starten").
 
 Update cockpit (same feature scope in Docker + Termux):
 
 ```bash
-python scripts/tpm_cli.py update-cockpit --port 8787
+python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 # open http://localhost:8787
 ```
 
@@ -48,6 +50,10 @@ Docker equivalent:
 docker compose up -d tpm-cockpit
 # open http://localhost:8787
 ```
+
+
+Platform expansion roadmap (Linux/macOS/iPhone + parity tracking): `docs/roadmap/platform_parity.md`.
+Execution master plan (step-by-step release/sprint plan): `docs/roadmap/execution_master_plan.md`.
 
 
 ## Runtime Chain Check (causal/order sanity)
