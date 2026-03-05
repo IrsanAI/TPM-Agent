@@ -470,6 +470,48 @@
     "tr": "",
     "bs": ""
   },
+  "python scripts/tpm_cli.py update check": {
+    "en": "python scripts/tpm_cli.py update check",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
+  "python scripts/tpm_cli.py update-cockpit --port 8787": {
+    "en": "python scripts/tpm_cli.py update-cockpit --port 8787",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
+  "The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.": {
+    "en": "The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
   "The default repo flow is intentionally linear to avoid hidden-state drift and \"false confidence\" during live runs.": {
     "en": "The default repo flow is intentionally linear to avoid hidden-state drift and \"false confidence\" during live runs.",
     "de": "",
