@@ -540,6 +540,20 @@
     "tr": "",
     "bs": ""
   },
+  "Replay APIs are available via GET /api/replay/recent?limit=... and GET /api/replay?prediction_id=....": {
+    "en": "Replay APIs are available via GET /api/replay/recent?limit=... and GET /api/replay?prediction_id=....",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
   "After successful update, the cockpit can hand over directly to the main Web Hub port (\"IrsanAI - TPM Agenten starten\").": {
     "en": "After successful update, the cockpit can hand over directly to the main Web Hub port (\"IrsanAI - TPM Agenten starten\").",
     "de": "",
@@ -598,6 +612,20 @@
   },
   "Platform expansion roadmap (Linux/macOS/iPhone + parity tracking): docs/roadmap/platform_parity.md.": {
     "en": "Platform expansion roadmap (Linux/macOS/iPhone + parity tracking): docs/roadmap/platform_parity.md.",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
+  "Platform execution pack templates (Linux systemd / macOS launchd / iPhone PWA): deployment/README.md.": {
+    "en": "Platform execution pack templates (Linux systemd / macOS launchd / iPhone PWA): deployment/README.md.",
     "de": "",
     "es": "",
     "it": "",

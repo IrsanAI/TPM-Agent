@@ -36,6 +36,7 @@ python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
 The web hub now also exposes health probes: `GET /api/health` and `GET /api/ready` for ops/runtime checks.
 `/api/ready` performs writable-state and snapshot-freshness checks (configurable via `WEB_HUB_SNAPSHOT_MAX_AGE_SEC`).
+Replay APIs are available via `GET /api/replay/recent?limit=...` and `GET /api/replay?prediction_id=...`.
 After successful update, the cockpit can hand over directly to the main Web Hub port ("IrsanAI - TPM Agenten starten").
 
 Update cockpit (same feature scope in Docker + Termux):
@@ -55,6 +56,7 @@ docker compose up -d tpm-cockpit
 
 Platform expansion roadmap (Linux/macOS/iPhone + parity tracking): `docs/roadmap/platform_parity.md`.
 Execution master plan (step-by-step release/sprint plan): `docs/roadmap/execution_master_plan.md`.
+Platform execution pack templates (Linux systemd / macOS launchd / iPhone PWA): `deployment/README.md`.
 
 
 ## Runtime Chain Check (causal/order sanity)
