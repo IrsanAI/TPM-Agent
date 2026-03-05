@@ -31,7 +31,7 @@
   <div id="updateBanner" class="update-banner">
     <strong>NEW IrsanAI - Update verfügbar</strong>
     <button onclick="openUpdateCockpit()">Update öffnen</button>
-    <span id="updateHead" class="muted"></span>
+    <span id="updateHead" class="muted"></span><div id="capabilitiesInfo" class="muted"></div>
   </div>
 
     <section class="card controls">
@@ -79,6 +79,18 @@
       <pre class="mono" id="frame"></pre>
     </section>
   </main>
+
+  
+  <div class="row" style="margin-top:16px;">
+    <div class="card">
+      <h3>🔮 Prediction Oracle (Live/Sim)</h3>
+      <p id="oracleMeta" class="muted">Awaiting snapshot…</p>
+      <div id="oracleCountdown" class="countdown">Bro, du hast nur noch -- Sekunden.</div>
+      <div id="oraclePills"></div>
+      <div id="oracleHops" class="hops"></div>
+      <p id="oracleInfo" class="muted"></p>
+    </div>
+  </div>
 
   
   <div class="row" style="margin-top:16px;">
@@ -239,11 +251,13 @@
 
     async function refreshOracle(seed, points) {
       try {
-        const res = await fetch('/state/prediction_hub_latest.json', { cache: 'no-store' });
+        const res = await fetch('/api/oracle', { cache: 'no-store' });
         if (res.ok) {
           const live = await res.json();
-          renderOracle(live);
-          return;
+          if (live.available) {
+            renderOracle(live);
+            return;
+          }
         }
       } catch (e) {}
       renderOracle(simulatedOracle(seed, points));
@@ -251,9 +265,19 @@
 
 
 
+    async function checkCapabilities() {
+      try {
+        const r = await fetch('/api/capabilities', { cache: 'no-store' });
+        if (!r.ok) return;
+        const c = await r.json();
+        const label = `Platform: ${c.docker ? 'Docker' : (c.termux ? 'Termux' : 'Generic')} • Update actions: ${c.update_actions ? 'yes' : 'no'}`;
+        document.getElementById('capabilitiesInfo').textContent = label;
+      } catch (e) {}
+    }
+
     async function checkUpdateBanner() {
       try {
-        const r = await fetch('/state/update_status.json', { cache: 'no-store' });
+        const r = await fetch('/api/update/status', { cache: 'no-store' });
         if (!r.ok) return;
         const st = await r.json();
         if (st.update_available) {
@@ -267,13 +291,6 @@
     function openUpdateCockpit() {
       const host = window.location.hostname || '127.0.0.1';
       window.open(`http://${host}:8787`, '_blank');
-    }
-
-
-    function fmtDelta(sec) {
-      if (sec < 60) return `${sec}s`;
-      if (sec < 3600) return `${Math.floor(sec/60)}m ${sec%60}s`;
-      return `${Math.floor(sec/3600)}h ${Math.floor((sec%3600)/60)}m`;
     }
 
     function renderOracle(snap) {
@@ -344,7 +361,9 @@
 
     runAll();
     setInterval(checkUpdateBanner, 10000);
+    setInterval(checkCapabilities, 10000);
     checkUpdateBanner();
+    checkCapabilities();
     setInterval(() => {
       const seed = Number(document.getElementById('seed').value||42);
       const points = Number(document.getElementById('points').value||140);
