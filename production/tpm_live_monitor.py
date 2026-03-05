@@ -138,6 +138,20 @@ def infer_target(price: float, alpha: float, last_returns: List[float], horizon_
     return target, direction, base_conf
 
 
+
+
+def confidence_components(alpha: float, trigger: bool, tick_count: int) -> tuple[float, float, float]:
+    signal = max(20.0, min(98.0, 100.0 - alpha * 100.0))
+    regime = 78.0 if trigger else 64.0
+    data_quality = 55.0 if tick_count < 10 else 84.0
+    return signal, regime, data_quality
+
+
+def adaptive_tolerance(alpha: float, misses: int, rounds: int) -> float:
+    miss_pressure = (misses / max(1, rounds)) * 1.2
+    raw = max(0.2, (1.0 - alpha) * 0.9 + miss_pressure)
+    return max(0.2, min(3.5, raw))
+
 def save_oracle_snapshot(path: Path, snapshot: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(snapshot)
@@ -216,14 +230,20 @@ def main() -> None:
                 horizon_seconds=args.oracle_horizon_seconds,
                 poll_seconds=args.poll_seconds,
             )
+            latest_before = oracle.latest_snapshot(args.oracle_market) or {}
+            signal_c, regime_c, quality_c = confidence_components(alpha, trigger, tick_count)
+            tol = adaptive_tolerance(alpha, int(latest_before.get("misses", 0)), int(latest_before.get("validation_rounds", 0)))
             pred = oracle.create_prediction(
                 market=args.oracle_market,
                 current_price=price,
                 target_price=target_price,
                 horizon_seconds=args.oracle_horizon_seconds,
                 base_confidence_pct=base_conf,
-                tolerance_pct=max(0.2, (1.0 - alpha) * 0.9),
+                tolerance_pct=tol,
                 direction=direction,
+                signal_confidence_pct=signal_c,
+                regime_confidence_pct=regime_c,
+                data_quality_confidence_pct=quality_c,
             )
             print(
                 f"[ORACLE] id={pred.prediction_id[:8]} market={pred.market} now=${pred.created_price:,.2f} "
