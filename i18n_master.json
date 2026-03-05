@@ -568,8 +568,22 @@
     "tr": "",
     "bs": ""
   },
-  "<<<<<<< codex/implement-update-orchestration-for-irsanai-alu09r": {
-    "en": "<<<<<<< codex/implement-update-orchestration-for-irsanai-alu09r",
+  "TPM-Bro coop APIs are available via GET /api/bro/sessions, GET /api/bro/session, GET /api/bro/discover, GET /api/bro/leaderboard, POST /api/bro/create, POST /api/bro/join, POST /api/bro/signal, POST /api/bro/close, POST /api/bro/knowledge/import.": {
+    "en": "TPM-Bro coop APIs are available via GET /api/bro/sessions, GET /api/bro/session, GET /api/bro/discover, GET /api/bro/leaderboard, POST /api/bro/create, POST /api/bro/join, POST /api/bro/signal, POST /api/bro/close, POST /api/bro/knowledge/import.",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
+  "If a session was created with a secret, /api/bro/session and /api/bro/signal require the same secret (MVP local auth guard).": {
+    "en": "If a session was created with a secret, /api/bro/session and /api/bro/signal require the same secret (MVP local auth guard).",
     "de": "",
     "es": "",
     "it": "",
@@ -584,34 +598,6 @@
   },
   "TPM-Bro coop APIs are available via GET /api/bro/sessions, POST /api/bro/create, POST /api/bro/join, POST /api/bro/signal, POST /api/bro/close.": {
     "en": "TPM-Bro coop APIs are available via GET /api/bro/sessions, POST /api/bro/create, POST /api/bro/join, POST /api/bro/signal, POST /api/bro/close.",
-    "de": "",
-    "es": "",
-    "it": "",
-    "fr": "",
-    "pt-BR": "",
-    "ru": "",
-    "zh-CN": "",
-    "hi": "",
-    "ja": "",
-    "tr": "",
-    "bs": ""
-  },
-  "=======": {
-    "en": "=======",
-    "de": "",
-    "es": "",
-    "it": "",
-    "fr": "",
-    "pt-BR": "",
-    "ru": "",
-    "zh-CN": "",
-    "hi": "",
-    "ja": "",
-    "tr": "",
-    "bs": ""
-  },
-  ">>>>>>> main": {
-    "en": ">>>>>>> main",
     "de": "",
     "es": "",
     "it": "",
