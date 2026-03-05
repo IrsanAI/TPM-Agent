@@ -45,6 +45,21 @@
     <ul id="replayList"><li class="meta">Lade Replay…</li></ul>
   </div>
 
+
+  <div class="card">
+    <h3>🤝 TPM-Bro Koop (MVP)</h3>
+    <div>
+      <input id="broClan" placeholder="Clan Name" value="TPM-Bro Squad" />
+      <input id="broAlias" placeholder="Dein Alias" value="Irsan" />
+      <button onclick="createBroSession()">Session erstellen</button>
+      <button onclick="joinBroSession()">Session joinen</button>
+      <button onclick="publishBroSignal()">Signal posten</button>
+      <button onclick="closeBroSession()">Session schließen</button>
+    </div>
+    <p class="meta">Session ID: <code id="broSessionId">-</code></p>
+    <ul id="broSessions"><li class="meta">Keine aktiven Sessions.</li></ul>
+  </div>
+
   <div class="card">
     <h3>Platform</h3>
     <pre id="platformJson"></pre>
@@ -158,8 +173,65 @@ async function refreshCapabilities(){
   }catch(e){}
 }
 
+
+async function refreshBroSessions(){
+  try {
+    const r=await fetch('/api/bro/sessions',{cache:'no-store'});
+    if(!r.ok) return;
+    const d=await r.json();
+    const items=d.items||[];
+    document.getElementById('broSessions').innerHTML = items.length
+      ? items.slice(0,8).map(x=>`<li><code>${x.session_id.slice(0,8)}</code> ${x.clan_name} · members=${x.members} · signals=${x.signals} · ${x.status}</li>`).join('')
+      : '<li class="meta">Keine aktiven Sessions.</li>';
+  } catch(e){}
+}
+
+async function createBroSession(){
+  const clan_name=document.getElementById('broClan').value||'TPM-Bro Clan';
+  const admin_alias=document.getElementById('broAlias').value||'Admin';
+  const r=await fetch('/api/bro/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clan_name,admin_alias,ttl_minutes:120})});
+  if(!r.ok) return;
+  const d=await r.json();
+  if(d.session_id) document.getElementById('broSessionId').textContent=d.session_id;
+  refreshBroSessions();
+}
+
+async function joinBroSession(){
+  const session_id=prompt('Session ID eingeben');
+  if(!session_id) return;
+  const alias=document.getElementById('broAlias').value||'Guest';
+  await fetch('/api/bro/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id,alias})});
+  document.getElementById('broSessionId').textContent=session_id;
+  refreshBroSessions();
+}
+
+async function publishBroSignal(){
+  const session_id=document.getElementById('broSessionId').textContent.trim();
+  if(!session_id || session_id==='-') return;
+  const alias=document.getElementById('broAlias').value||'Guest';
+  const r=await fetch('/api/oracle',{cache:'no-store'});
+  const snap=r.ok?await r.json():{};
+  await fetch('/api/bro/signal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    session_id, alias,
+    market:snap.market||'BTC',
+    prediction_id:snap.prediction_id||'simulated',
+    confidence_pct:snap.base_confidence_pct||0,
+    reason_code:snap.reason_code||'PENDING',
+    drift_status:snap.drift_status||'low'
+  })});
+  refreshBroSessions();
+}
+
+async function closeBroSession(){
+  const session_id=document.getElementById('broSessionId').textContent.trim();
+  if(!session_id || session_id==='-') return;
+  await fetch('/api/bro/close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id})});
+  refreshBroSessions();
+}
+
 refreshOracle(); refreshReplay(); refreshCapabilities(); refreshUpdate();
 setInterval(refreshOracle,1000); setInterval(refreshReplay,5000); setInterval(refreshCapabilities,10000); setInterval(refreshUpdate,10000);
+setInterval(refreshBroSessions,7000); refreshBroSessions();
 </script>
 </body>
 </html>

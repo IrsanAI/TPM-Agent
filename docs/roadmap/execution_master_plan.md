@@ -202,3 +202,12 @@ Ein Ticket gilt nur als „Done“, wenn:
 4. einheitliche Fehlercodes im Hub.
 
 Das bringt die größte Stabilitätsrendite für alle User – unabhängig von Plattform.
+
+
+## 7) Cooperative TPM-Bro Track (MVP -> Secure Mesh)
+
+1. MVP (done now): local session orchestration, admin/member roles, signal sharing, session close knowledge bundle.
+2. Next: LAN discovery (mDNS) + optional BLE discovery path for mobile peers.
+3. Next: end-to-end encrypted payload channel for bro-sessions (Noise/WireGuard-style).
+4. Next: per-user local knowledge import on session-close with conflict-safe merge.
+5. Next: clan leaderboard + top-10 validated prediction timeline in UI.
