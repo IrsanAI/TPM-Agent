@@ -35,6 +35,20 @@ python scripts/tpm_cli.py update-cockpit --port 8787
 
 The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
 
+Update cockpit (same feature scope in Docker + Termux):
+
+```bash
+python scripts/tpm_cli.py update-cockpit --port 8787
+# open http://localhost:8787
+```
+
+Docker equivalent:
+
+```bash
+docker compose up -d tpm-cockpit
+# open http://localhost:8787
+```
+
 
 ## Runtime Chain Check (causal/order sanity)
 
@@ -141,6 +155,8 @@ Now open `http://localhost:8787` in your browser (**not** `http://0.0.0.0:8787`)
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
+docker compose up -d tpm-web
+# open http://localhost:8765
 ```
 
 - `tpm-preflight` = source/connectivity checks (CLI output only).
