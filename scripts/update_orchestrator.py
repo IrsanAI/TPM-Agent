@@ -5,13 +5,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sqlite3
 import subprocess
 import tarfile
-import threading
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -20,6 +17,9 @@ STATE = ROOT / "state"
 STATUS_FILE = STATE / "update_status.json"
 MAINT_FILE = STATE / "maintenance_mode.json"
 BACKUP_ROOT = ROOT / "backups"
+
+
+MIN_FREE_MB = 512
 
 
 def now_iso() -> str:
@@ -104,6 +104,53 @@ def set_maintenance(enabled: bool, reason: str = "") -> None:
             MAINT_FILE.unlink()
 
 
+def free_disk_mb(path: Path) -> int:
+    usage = shutil.disk_usage(path)
+    return int(usage.free / (1024 * 1024))
+
+
+def db_lock_check() -> tuple[bool, str]:
+    db = ROOT / "data" / "irsanai_production.db"
+    if not db.exists():
+        return True, "database file not present (skipped)"
+    try:
+        conn = sqlite3.connect(str(db), timeout=1)
+        conn.execute("BEGIN IMMEDIATE;")
+        conn.execute("ROLLBACK;")
+        conn.close()
+        return True, "database lock check passed"
+    except Exception as exc:
+        return False, f"database lock check failed: {exc}"
+
+
+def remote_connectivity_check() -> tuple[bool, str]:
+    r = run(["git", "ls-remote", "origin", "HEAD"])
+    if r.returncode == 0 and r.stdout.strip():
+        return True, "remote connectivity ok"
+    detail = (r.stderr or r.stdout or "remote connectivity failed").strip()[:240]
+    return False, detail
+
+
+def preflight_guards() -> tuple[bool, list[str]]:
+    issues: list[str] = []
+    free_mb = free_disk_mb(ROOT)
+    if free_mb < MIN_FREE_MB:
+        issues.append(f"insufficient disk space: {free_mb}MB available (< {MIN_FREE_MB}MB)")
+
+    ok_db, db_msg = db_lock_check()
+    append_step("preflight_db", "done" if ok_db else "error", db_msg)
+    if not ok_db:
+        issues.append(db_msg)
+
+    ok_remote, remote_msg = remote_connectivity_check()
+    append_step("preflight_network", "done" if ok_remote else "error", remote_msg)
+    if not ok_remote:
+        issues.append(remote_msg)
+
+    append_step("preflight_disk", "done" if free_mb >= MIN_FREE_MB else "error", f"free disk: {free_mb}MB")
+    return (len(issues) == 0, issues)
+
+
 def graceful_shutdown() -> None:
     append_step("shutdown", "start", "stopping tmux agent sessions and monitor loops")
     for session in ["irsanai_BTC", "irsanai_COFFEE"]:
@@ -121,7 +168,6 @@ def backup_all() -> Path:
 
     append_step("backup", "start", f"creating backup under {out_dir}")
 
-    # data/state/config + sqlite checkpoint if possible
     db = ROOT / "data" / "irsanai_production.db"
     if db.exists():
         try:
@@ -140,7 +186,6 @@ def backup_all() -> Path:
             else:
                 shutil.copy2(src, dst)
 
-    # separate user profile / knowhow vault placeholder directories
     user_bundle = out_dir / "user_knowledge_bundle.tar.gz"
     with tarfile.open(user_bundle, "w:gz") as tf:
         for rel in ["state", "data", "config/reserve_pool.json"]:
@@ -157,7 +202,17 @@ def apply_update() -> dict:
     set_maintenance(True, "update in progress")
 
     try:
-        write_status(progress_pct=10, message="checking upstream")
+        write_status(progress_pct=8, message="running preflight guards")
+        ok_preflight, issues = preflight_guards()
+        if not ok_preflight:
+            msg = "; ".join(issues)
+            append_step("preflight", "error", msg)
+            set_maintenance(False)
+            write_status(phase="error", progress_pct=100, message=f"preflight failed: {msg}")
+            return read_status()
+        append_step("preflight", "done", "all preflight checks passed")
+
+        write_status(progress_pct=18, message="checking upstream")
         st = check_update()
         if not st.get("update_available", False):
             append_step("check", "done", "no update available")
@@ -165,13 +220,13 @@ def apply_update() -> dict:
             write_status(phase="done", progress_pct=100, message="already up to date")
             return read_status()
 
-        write_status(progress_pct=20, message="graceful shutdown")
+        write_status(progress_pct=30, message="graceful shutdown")
         graceful_shutdown()
 
-        write_status(progress_pct=45, message="backup in progress")
+        write_status(progress_pct=50, message="backup in progress")
         backup_dir = backup_all()
 
-        write_status(progress_pct=65, message="pulling update")
+        write_status(progress_pct=70, message="pulling update")
         append_step("git_pull", "start", "git fetch + pull --ff-only")
         branch = git_branch()
         run(["git", "fetch", "origin"])
@@ -181,8 +236,7 @@ def apply_update() -> dict:
             raise RuntimeError("git pull failed")
         append_step("git_pull", "done", "repository updated")
 
-        write_status(progress_pct=82, message="restoring user bundle")
-        # Because backup copied working files before pull, only ensure critical dirs still exist.
+        write_status(progress_pct=85, message="restoring user bundle")
         for rel in ["data", "state", "config"]:
             (ROOT / rel).mkdir(parents=True, exist_ok=True)
         append_step("restore", "done", "user data paths ensured")
@@ -208,6 +262,7 @@ def apply_update() -> dict:
         return read_status()
     except Exception as exc:
         append_step("fatal", "error", str(exc))
+        set_maintenance(False)
         write_status(phase="error", progress_pct=100, message=f"update failed: {exc}")
         return read_status()
 
