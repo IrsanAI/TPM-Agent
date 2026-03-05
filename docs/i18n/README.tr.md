@@ -1,6 +1,6 @@
 # IrsanAI TPM Agent Forge
 
-[🇬🇧 English](./README.md) | [DE De](./README.de.md) |
+[🇬🇧 English](./README.md) | [TR Tr](./docs/i18n/README.tr.md) |
 
 A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) with cross-platform runtime options.
 

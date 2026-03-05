@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080b14" />
+  <title>The Forge | TPM Runtime Console</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --accent: #7c5cff;
+      --bg: #080b14;
+      --bg-light: #11182b;
+      --line: #2f3a5b;
+      --text: #dce6ff;
+      --muted: #9fb0d4;
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(circle at 10% -10%, #1d2860 0, transparent 40%), linear-gradient(135deg, #080b14, #0b1020);
+      padding: 14px;
+    }
+    .wrap { max-width: 1400px; margin: 0 auto; }
+    .glass {
+      background: linear-gradient(145deg, rgba(18,23,42,.95), rgba(14,18,34,.95));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .meta, .tips { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .pill { border:1px solid var(--line); border-radius:999px; padding:7px 12px; background: rgba(25,31,56,.85); font-size:12px; }
+    .pill.ok { border-color:#1f7f47; color:#96f7b9; }
+    .pill.bad { border-color:#9d3030; color:#fecaca; }
+    .pill.warn { border-color:#926a1e; color:#fde68a; }
+    .grid { display:grid; grid-template-columns:1.5fr 1fr; gap:14px; }
+    .subgrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .domains { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+    .card { border:1px solid #3a4670; border-radius:12px; padding:12px; background: rgba(17,23,44,.9); }
+    .kpi { font-weight:700; font-size:1.2rem; margin-top:5px; }
+    .hint { color:var(--muted); font-size:12px; margin:6px 0; }
+    button, select, input {
+      border-radius:8px; border:1px solid var(--line); background:#11172a; color:var(--text); padding:10px 12px;
+    }
+    button { cursor:pointer; font-weight:700; text-transform:uppercase; font-size:11px; }
+    #startBtn { background:#15542f; border-color:#22c55e; }
+    #stopBtn { background:#7f1d1d; border-color:#ef4444; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    pre { margin:0; max-height:280px; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:10px; background:#090d1a; }
+    .alert-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .alert-option {
+      display:flex; align-items:center; gap:8px; border:1px solid var(--line); padding:8px 12px; border-radius:10px; background:#121a31;
+    }
+    .alert-option input[type="checkbox"] { width:18px; height:18px; accent-color:var(--accent); }
+    .hidden { display:none; }
+    .status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; }
+    .status-ok { background:#22c55e; }
+    .status-bad { background:#ef4444; }
+    .status-warn { background:#f59e0b; }
+    .source-row { cursor:pointer; border:1px solid #33406a; border-radius:10px; padding:8px; margin:6px 0; }
+    .source-row:hover { border-color:#7c5cff; }
+    #sourceDetails pre { max-height: 180px; }
+    @media (max-width:1024px){ .grid,.subgrid,.form-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="glass">
+    <h1 id="titleMain">⚒️ IrsanAI TPM-Agent Forge Runtime</h1>
+    <div class="meta">
+      <span class="pill" id="runtimeState">Runtime: unknown</span>
+      <span class="pill" id="agents">Agents: 0</span>
+      <span class="pill" id="os"></span>
+      <span class="pill" id="device"></span>
+      <span class="pill" id="lastUpdate">Last update: n/a</span>
+    </div>
+    <div class="tips" style="margin-top:10px;">
+      <button id="startBtn" onclick="runtimeStart()">Start Runtime</button>
+      <button id="stopBtn" onclick="runtimeStop()">Stop Runtime</button>
+      <button onclick="toggleMarketsManager()">Märkte verwalten</button>
+      <span class="pill" id="alertStatus">alerts: n/a</span>
+    </div>
+    <div class="alert-row" style="margin-top:10px;">
+      <label class="alert-option"><input type="checkbox" id="termuxNotify"> 📱 Termux</label>
+      <label class="alert-option"><input type="checkbox" id="beepEnabled"> 🔔 Beep</label>
+      <label class="alert-option"><input type="checkbox" id="telegramEnabled"> 💬 Telegram</label>
+      <label class="alert-option">📳 Vibrate <input id="vibrateMs" type="number" min="0" value="800" style="width:80px;"></label>
+      <button onclick="saveAlertPrefs()">Save Alerts</button>
+      <button onclick="sendTestAlert()">Test Alert</button>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="glass subgrid">
+      <div id="signals" style="height:320px;"></div>
+      <div id="entropy" style="height:320px;"></div>
+    </div>
+    <div class="glass">
+      <h3>🌐 Domain Pulse</h3>
+      <div class="domains" id="domains"></div>
+    </div>
+  </section>
+
+  <section class="glass">
+    <h3>📈 Live Market Cockpit</h3>
+    <div class="domains" id="liveCards"></div>
+  </section>
+
+  <section class="glass">
+    <h3>🧠 Engine Transparency</h3>
+    <div id="engineTransparency" class="hint">Waiting for runtime details…</div>
+    <h3 style="margin-top:10px;">📉 Validation / Backtest Snapshot</h3>
+    <div id="backtestSummary" class="hint">Waiting for validation report…</div>
+    <h3 style="margin-top:10px;">🛡️ IrsanAI Source Resilience Manager</h3>
+    <div id="sourceResilience" class="hint">Waiting for source diagnostics…</div>
+    <h3 style="margin-top:10px;">🧭 Source Indexer</h3>
+    <div id="sourceIndex" class="hint">Waiting for source index…</div>
+    <h3 style="margin-top:10px;">📐 Prediction Hub</h3>
+    <div id="predictionHub" class="hint">Waiting for aggregated predictions…</div>
+  </section>
+
+
+
+  <section class="glass hidden" id="marketsManagerSection">
+    <h3>🗂️ Märkte verwalten / Kursdaten-Quellen</h3>
+    <div class="hint">Klicke auf eine Quelle für Detailstatus + Copy.</div>
+    <div class="grid" style="grid-template-columns: 1fr 1fr;">
+      <div>
+        <h3 style="font-size:1rem;">✅ Frei ohne Registrierung</h3>
+        <div id="freeSourcesList" class="hint">Wird geladen…</div>
+      </div>
+      <div>
+        <h3 style="font-size:1rem;">🔐 Mit Registrierung/API-Key</h3>
+        <div id="regSourcesList" class="hint">Wird geladen…</div>
+      </div>
+    </div>
+    <div id="sourceDetails" style="margin-top:10px;">
+      <h3 style="font-size:1rem;">Quellen-Details</h3>
+      <pre id="sourceDetailsJson">Tippe auf eine Quelle...</pre>
+      <button onclick="copySourceDetails()">Copy Details</button>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="glass">
+      <h3>➕ Add Market Agent</h3>
+      <div class="form-grid">
+        <select id="sourceType"></select>
+        <select id="marketSelect"></select>
+        <input id="name" placeholder="Agent name (e.g. ETH_BINANCE)"/>
+        <input id="market" placeholder="Market code (e.g. ETH)"/>
+        <input id="domain" placeholder="Domain" value="finance"/>
+        <input id="apiKey" placeholder="API key"/>
+        <input id="url" placeholder="Source URL" style="grid-column: 1 / -1;"/>
+      </div>
+      <button onclick="addAgent()" style="margin-top:10px; width:100%;">Add Agent</button>
+      <p id="addResult" class="hint"></p>
+    </div>
+    <div class="glass">
+      <h3>🔴 Live Frame</h3>
+      <pre id="json"></pre>
+    </div>
+  </section>
+</div>
+
+<script>
+const state = { frame: { signals: [] }, suggestions: {}, markets: { markets: [], agents: [] }, backtest: {}, sourceHealth: {}, sourceIndex: {}, sourceCatalog: {}, selectedSource: null, predictions: {}, pollErrors: 0, caps: null, optionalEndpointDisabled: {} };
+
+function setInfo() {
+  document.getElementById('os').textContent = navigator.platform || 'unknown platform';
+  const mobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+  document.getElementById('device').textContent = mobile ? 'Device: Mobile' : 'Device: Desktop';
+}
+
+async function fetchJSON(url, opts={}) {
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!res.ok) throw new Error(`${url} failed: ${res.status}`);
+  return res.json();
+}
+
+async function refreshAll() {
+  if (!state.caps) {
+    try { state.caps = await fetchJSON('/api/capabilities'); } catch (_) { state.caps = {}; }
+  }
+
+  const requests = [
+    fetchJSON('/api/frame'),
+    fetchJSON('/api/runtime/status'),
+    fetchJSON('/api/markets/live'),
+    state.optionalEndpointDisabled['/api/backtest/summary'] ? Promise.resolve(state.backtest) : fetchJSON('/api/backtest/summary'),
+    state.optionalEndpointDisabled['/api/sources/health'] ? Promise.resolve(state.sourceHealth) : fetchJSON('/api/sources/health'),
+    state.optionalEndpointDisabled['/api/sources/index'] ? Promise.resolve(state.sourceIndex) : fetchJSON('/api/sources/index'),
+    state.optionalEndpointDisabled['/api/predictions/aggregated'] ? Promise.resolve(state.predictions) : fetchJSON('/api/predictions/aggregated'),
+    state.optionalEndpointDisabled['/api/sources/catalog'] ? Promise.resolve(state.sourceCatalog) : fetchJSON('/api/sources/catalog')
+  ];
+  const [frameRes, runtimeRes, liveRes, backtestRes, sourceRes, indexRes, predRes, catalogRes] = await Promise.allSettled(requests);
+
+  const frame = frameRes.status === 'fulfilled' ? frameRes.value : state.frame;
+  const runtime = runtimeRes.status === 'fulfilled' ? runtimeRes.value : (String(runtimeRes.reason?.message || '').includes('404') ? null : null);
+  const live = liveRes.status === 'fulfilled' ? liveRes.value : (String(liveRes.reason?.message || '').includes('404') ? state.markets : state.markets);
+
+  let backtest = state.backtest;
+  if (backtestRes.status === 'fulfilled') {
+    backtest = backtestRes.value;
+  } else if (String(backtestRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/backtest/summary'] = true;
+    backtest = { available: false, reason: 'optional endpoint not supported by current runtime image' };
+  }
+
+  let sourceHealth = state.sourceHealth;
+  if (sourceRes.status === 'fulfilled') {
+    sourceHealth = sourceRes.value;
+  } else if (String(sourceRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/sources/health'] = true;
+    sourceHealth = { agents: {}, detected_issues: [], reason: 'optional endpoint not supported by current runtime image' };
+  }
+
+
+  let sourceIndex = state.sourceIndex;
+  if (indexRes.status === 'fulfilled') {
+    sourceIndex = indexRes.value;
+  } else if (String(indexRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/sources/index'] = true;
+    sourceIndex = { generated_at: null, total_sources: 0, healthy_sources: 0, sources: [], reason: 'optional endpoint not supported by current runtime image' };
+  }
+
+
+  let predictions = state.predictions;
+  if (predRes.status === 'fulfilled') {
+    predictions = predRes.value;
+  } else if (String(predRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/predictions/aggregated'] = true;
+    predictions = { generated_at: null, markets: [], reason: 'optional endpoint not supported by current runtime image' };
+  }
+
+
+  let sourceCatalog = state.sourceCatalog;
+  if (catalogRes.status === 'fulfilled') {
+    sourceCatalog = catalogRes.value;
+  } else if (String(catalogRes.reason?.message || '').includes('404')) {
+    state.optionalEndpointDisabled['/api/sources/catalog'] = true;
+    sourceCatalog = { free_no_registration: [], registration_required: [], reason: 'optional endpoint not supported by current runtime image' };
+  }
+
+  const hardErrors = [frameRes].filter(r => r.status === 'rejected');
+  if (hardErrors.length) {
+    state.pollErrors += 1;
+    const problems = hardErrors.map(r => r.reason?.message || 'unknown error').join(' | ');
+    document.getElementById('alertStatus').textContent = `live warning (${state.pollErrors}): ${problems}`;
+  } else {
+    state.pollErrors = 0;
+    if (!document.getElementById('alertStatus').textContent.startsWith('alerts:')) {
+      document.getElementById('alertStatus').textContent = 'alerts: connected';
+    }
+  }
+
+  state.frame = frame;
+  state.markets = live;
+  state.backtest = backtest || {};
+  state.sourceHealth = sourceHealth || {};
+  state.sourceIndex = sourceIndex || {};
+  state.predictions = predictions || {};
+  state.sourceCatalog = sourceCatalog || {};
+  renderRuntime(runtime || {
+    engine_state: (frame.signals || []).length > 0 ? 'running' : 'idle',
+    transition_action: 'poll-fallback',
+    progress_pct: 100,
+    agent_count: (frame.signals || []).length
+  });
+  renderFrame(frame);
+  renderLive(live);
+  renderEngineTransparency(frame, state.backtest, state.sourceHealth, state.sourceIndex, state.predictions);
+  renderSourcesManager(state.sourceCatalog);
+  document.getElementById('lastUpdate').textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+}
+
+function renderRuntime(runtime) {
+  const el = document.getElementById('runtimeState');
+  el.textContent = `Runtime: ${runtime.engine_state} (${runtime.transition_action}, ${runtime.progress_pct}%)`;
+  el.className = `pill ${runtime.engine_state === 'running' ? 'ok' : 'warn'}`;
+  document.getElementById('agents').textContent = `Agents: ${runtime.agent_count || 0}`;
+}
+
+
+function renderMiniBars(elId, labels, values, color) {
+  const root = document.getElementById(elId);
+  if (!labels.length) {
+    root.innerHTML = '<div class="hint">No data yet – waiting for next runtime ticks.</div>';
+    return;
+  }
+  const maxVal = Math.max(...values.map(v => Math.abs(v)), 1e-9);
+  root.innerHTML = `<div class="hint">Chart fallback (Plotly unavailable)</div>` + labels.map((l, i) => {
+    const width = Math.max(2, Math.round((Math.abs(values[i]) / maxVal) * 100));
+    return `<div style="display:flex;align-items:center;gap:6px;margin:6px 0;"><span style="min-width:95px;font-size:11px;color:#9fb0d4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l}</span><div style="height:8px;border-radius:8px;background:${color};width:${width}%;"></div></div>`;
+  }).join('');
+}
+
+function renderFrame(frame) {
+  document.getElementById('json').textContent = JSON.stringify(frame, null, 2);
+  const signals = frame.signals || [];
+  const x = signals.map(s => s.agent);
+  const y = signals.map(s => Number(s.value || 0));
+  if (window.Plotly && typeof window.Plotly.react === 'function') {
+    Plotly.react('signals', [{ x, y, type:'bar', marker:{color:'#7c5cff'} }], { title:'Signal Values' }, {displayModeBar:false});
+  } else {
+    renderMiniBars('signals', x, y, '#7c5cff');
+  }
+
+  const graph = frame.transfer_entropy_graph || {};
+  const edges = Object.keys(graph);
+  const scores = edges.map(k => Number(graph[k] || 0));
+  if (window.Plotly && typeof window.Plotly.react === 'function') {
+    Plotly.react('entropy', [{ x:edges, y:scores, type:'bar', marker:{color:'#60a5fa'} }], { title:'Transfer Entropy Graph' }, {displayModeBar:false});
+  } else {
+    renderMiniBars('entropy', edges, scores, '#60a5fa');
+  }
+
+  const domains = frame.domain_summary || {};
+  const domEl = document.getElementById('domains');
+  domEl.innerHTML = '';
+  const entries = Object.entries(domains);
+  if (!entries.length) {
+    domEl.innerHTML = '<div class="hint">No domain aggregates yet. Runtime will fill this after successful ticks.</div>';
+  }
+  entries.forEach(([name, d]) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<div>${name}</div><div class="kpi">${(d.avg_fitness || 0).toFixed(2)}</div><div class="hint">markets: ${(d.markets || []).join(', ')}</div>`;
+    domEl.appendChild(card);
+  });
+}
+
+function renderLive(live) {
+  const wrap = document.getElementById('liveCards');
+  wrap.innerHTML = '';
+  const markets = live.markets || [];
+  if (!markets.length) {
+    wrap.innerHTML = '<div class="hint">No live markets yet. Check source connectivity or wait for initial tick.</div>';
+    return;
+  }
+  markets.forEach(m => {
+    const trend = m.delta_pct > 0 ? 'ok' : (m.delta_pct < 0 ? 'bad' : 'warn');
+    const card = document.createElement('div');
+    card.className = `card`;
+    card.innerHTML = `<div><strong>${m.market}</strong> <span class="pill ${trend}">${(m.delta_pct || 0).toFixed(3)}%</span></div>
+      <div class="kpi">${Number(m.latest?.value || 0).toFixed(4)}</div>
+      <div class="hint">outlook: ${m.outlook?.direction || 'unknown'} | conf ${(m.outlook?.confidence || 0)}</div>
+      <div class="hint">glitch: ${m.glitch ? 'YES' : 'no'}</div>`;
+    wrap.appendChild(card);
+  });
+}
+
+
+function renderEngineTransparency(frame, backtest, sourceHealth, sourceIndex, predictions) {
+  const root = document.getElementById('engineTransparency');
+  const info = frame.engine_transparency || {};
+  const entropySummary = frame.entropy_summary || {};
+  const first = Object.entries(entropySummary)[0];
+  if (!Object.keys(info).length) {
+    root.innerHTML = '<div class="hint">No engine metadata yet. Wait for first processed tick.</div>';
+  } else {
+    const line = first ? `${first[0]} raw=${first[1].raw_points} filtered=${first[1].filtered_points} compressed=${first[1].compressed_points}` : 'no series yet';
+    root.innerHTML = `<div class="pill">${info.transfer_entropy_formula || ''}</div><div class="pill" style="margin-top:6px;">${info.black_hole_pipeline || ''}</div><div class="hint" style="margin-top:8px;">Series mode: ${info.series_used_for_te || 'n/a'} | ${line}</div>`;
+  }
+
+  const bt = document.getElementById('backtestSummary');
+  if (!backtest || !backtest.available) {
+    bt.innerHTML = `<div class="hint">${backtest?.reason || 'No backtest report found at state/TPM_test_results.json yet.'}</div>`;
+  } else {
+    const rows = (backtest.tests || []).slice(0, 5).map(t => {
+      const mark = t.passed ? '✅' : '❌';
+      return `<div class="hint">${mark} ${t.name}: metric=${Number(t.metric || 0).toFixed(4)} p=${t.p_value}</div>`;
+    }).join('');
+    bt.innerHTML = `<div class="hint">Report: ${backtest.generated_at_utc || 'n/a'}</div>${rows}`;
+  }
+
+  const sr = document.getElementById('sourceResilience');
+  const issues = sourceHealth?.detected_issues || frame?.source_resilience?.detected_issues || [];
+  const agents = sourceHealth?.agents || frame?.source_resilience?.agents || {};
+  if (!Object.keys(agents).length && !issues.length) {
+    sr.innerHTML = `<div class="hint">${sourceHealth?.reason || 'No source diagnostics yet.'}</div>`;
+    return;
+  }
+  const issueLines = issues.slice(0, 5).map(i => `<div class="hint">⚠️ ${i.agent}: ${i.status} fail_ratio=${i.fail_ratio}</div>`).join('');
+  const healthyCount = Object.values(agents).filter(a => a.status === 'healthy').length;
+  sr.innerHTML = `<div class="hint">agents monitored: ${Object.keys(agents).length} | healthy: ${healthyCount}</div>${issueLines || '<div class="hint">No active source issues detected.</div>'}`;
+
+  const idx = document.getElementById('sourceIndex');
+  if (!sourceIndex || (!sourceIndex.total_sources && !sourceIndex.reason)) {
+    idx.innerHTML = '<div class="hint">No source index yet. Runtime builds it at startup.</div>';
+  } else {
+    const top = (sourceIndex.sources || []).slice(0, 5).map(s => `<div class="hint">${s.market}/${s.source_type}: ${s.status} (${s.latency_ms} ms)</div>`).join('');
+    idx.innerHTML = `<div class="hint">indexed: ${sourceIndex.total_sources || 0} | healthy: ${sourceIndex.healthy_sources || 0}</div>${sourceIndex.reason ? `<div class="hint">${sourceIndex.reason}</div>` : top}`;
+  }
+
+  const ph = document.getElementById('predictionHub');
+  const rows = (predictions?.markets || []).slice(0, 5).map(m => {
+    const f = Array.isArray(m.forecast) && m.forecast.length ? Number(m.forecast[m.forecast.length - 1]).toFixed(2) : 'n/a';
+    return `<div class="hint">${m.market}: now=${Number(m.last || 0).toFixed(2)} → +5 ticks=${f} conf=${m.confidence ?? 'n/a'}</div>`;
+  }).join('');
+  ph.innerHTML = rows || `<div class="hint">${predictions?.reason || 'No prediction payload yet.'}</div>`;
+}
+
+
+function toggleMarketsManager() {
+  document.getElementById('marketsManagerSection').classList.toggle('hidden');
+}
+
+function sourceStatusClass(status) {
+  if (status === 'ok' || status === 'healthy') return 'status-ok';
+  if (status === 'error' || status === 'critical') return 'status-bad';
+  return 'status-warn';
+}
+
+function renderSourcesManager(catalog) {
+  const freeList = document.getElementById('freeSourcesList');
+  const regList = document.getElementById('regSourcesList');
+  const free = catalog?.free_no_registration || [];
+  const reg = catalog?.registration_required || [];
+
+  function renderRows(container, rows) {
+    container.innerHTML = '';
+    if (!rows.length) {
+      container.innerHTML = '<div class="hint">Keine Einträge.</div>';
+      return;
+    }
+    rows.slice(0, 40).forEach((item) => {
+      const status = item?.health?.status || item?.status || 'unknown';
+      const dot = sourceStatusClass(status);
+      const reason = (item?.health?.last_error || item?.error || '').slice(0, 80);
+      const row = document.createElement('div');
+      row.className = 'source-row';
+      row.innerHTML = `<span class="status-dot ${dot}"></span><strong>${item.market || 'n/a'}</strong> • ${item.source_type || 'unknown'}<div class="hint">${status}${reason ? ` | ${reason}` : ''}</div>`;
+      row.addEventListener('click', () => showSourceDetails(item));
+      container.appendChild(row);
+    });
+  }
+
+  renderRows(freeList, free);
+  renderRows(regList, reg);
+}
+
+function showSourceDetails(item) {
+  state.selectedSource = item;
+  const assumptions = [];
+  const err = item?.health?.last_error || item?.error || '';
+  if (err.includes('403')) assumptions.push('Möglicher Rate-Limit/Provider blockiert IP.');
+  if (err.includes('404')) assumptions.push('Endpoint nicht verfügbar/Legacy URL.');
+  if (err.includes('timeout')) assumptions.push('Quelle zu langsam oder temporär down.');
+  if (!assumptions.length) assumptions.push('Status unauffällig oder noch unklar.');
+  const payload = { ...item, assumptions };
+  document.getElementById('sourceDetailsJson').textContent = JSON.stringify(payload, null, 2);
+}
+
+async function copySourceDetails() {
+  const txt = document.getElementById('sourceDetailsJson').textContent || '';
+  try {
+    await navigator.clipboard.writeText(txt);
+    document.getElementById('alertStatus').textContent = 'alerts: source details copied';
+  } catch (_) {
+    document.getElementById('alertStatus').textContent = 'alerts: copy failed';
+  }
+}
+
+async function runtimeStart() { await fetchJSON('/api/runtime/start', {method:'POST'}); refreshAll(); }
+async function runtimeStop() { await fetchJSON('/api/runtime/stop', {method:'POST'}); refreshAll(); }
+
+async function loadAlertPrefs() {
+  const prefs = await fetchJSON('/api/alerts/preferences');
+  document.getElementById('termuxNotify').checked = !!prefs.termux_notify_enabled;
+  document.getElementById('beepEnabled').checked = !!prefs.beep_enabled;
+  document.getElementById('telegramEnabled').checked = !!prefs.telegram_enabled;
+  document.getElementById('vibrateMs').value = prefs.vibrate_ms ?? 800;
+  document.getElementById('alertStatus').textContent = `alerts: loaded (${prefs.termux_available ? 'termux yes' : 'termux no'})`;
+}
+
+async function saveAlertPrefs() {
+  const body = {
+    termux_notify_enabled: document.getElementById('termuxNotify').checked,
+    beep_enabled: document.getElementById('beepEnabled').checked,
+    telegram_enabled: document.getElementById('telegramEnabled').checked,
+    vibrate_ms: Number(document.getElementById('vibrateMs').value || 0)
+  };
+  await fetchJSON('/api/alerts/preferences', { method:'POST', body: JSON.stringify(body) });
+  document.getElementById('alertStatus').textContent = 'alerts: saved';
+}
+
+async function sendTestAlert() {
+  try {
+    if (document.getElementById('beepEnabled').checked) {
+      const audio = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audio.createOscillator();
+      osc.connect(audio.destination); osc.type = 'sine'; osc.frequency.value = 880; osc.start();
+      setTimeout(() => { osc.stop(); audio.close(); }, 150);
+    }
+    const vibrateMs = Number(document.getElementById('vibrateMs').value || 0);
+    if (navigator.vibrate && vibrateMs > 0) navigator.vibrate(vibrateMs);
+    await fetchJSON('/api/alerts/test', { method:'POST' });
+    document.getElementById('alertStatus').textContent = 'alerts: test sent';
+  } catch (err) {
+    document.getElementById('alertStatus').textContent = `alerts: test failed (${err.message})`;
+  }
+}
+
+async function loadSuggestions() {
+  state.suggestions = await fetchJSON('/api/suggestions');
+  const src = document.getElementById('sourceType');
+  src.innerHTML = '';
+  Object.keys(state.suggestions.suggested_by_source || {}).forEach(name => {
+    const op = document.createElement('option'); op.value = name; op.textContent = name; src.appendChild(op);
+  });
+  src.onchange = applySourceSuggestion;
+  applySourceSuggestion();
+}
+
+function applySourceSuggestion() {
+  const source = document.getElementById('sourceType').value;
+  const list = (state.suggestions.suggested_by_source || {})[source] || [];
+  const sel = document.getElementById('marketSelect');
+  sel.innerHTML = '';
+  list.forEach(item => {
+    const op = document.createElement('option'); op.value = JSON.stringify(item); op.textContent = `${item.market} (${source})`; sel.appendChild(op);
+  });
+  if (list.length) applyMarketSelection();
+}
+
+function applyMarketSelection() {
+  const raw = document.getElementById('marketSelect').value;
+  if (!raw) return;
+  const item = JSON.parse(raw);
+  document.getElementById('market').value = item.market || '';
+  document.getElementById('url').value = item.url || '';
+  document.getElementById('name').value = `${item.market}_${document.getElementById('sourceType').value}`;
+}
+
+async function addAgent() {
+  const payload = {
+    name: document.getElementById('name').value.trim(),
+    market: document.getElementById('market').value.trim(),
+    domain: document.getElementById('domain').value.trim() || 'finance',
+    source_type: document.getElementById('sourceType').value,
+    url: document.getElementById('url').value.trim(),
+    api_key: document.getElementById('apiKey').value.trim(),
+    weight: 1.0
+  };
+  try {
+    const res = await fetchJSON('/api/agents', { method: 'POST', body: JSON.stringify(payload) });
+    document.getElementById('addResult').textContent = `Agent added. total=${res.agent_count}`;
+    refreshAll();
+  } catch (err) {
+    document.getElementById('addResult').textContent = `Add failed: ${err.message}`;
+  }
+}
+
+setInfo();
+loadAlertPrefs().catch(() => {});
+loadSuggestions().catch(() => {});
+refreshAll();
+setInterval(refreshAll, 3000);
+</script>
+</body>
+</html>

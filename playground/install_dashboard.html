@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>IrsanAI TPM Install Cockpit</title>
+  <style>
+    :root{--bg:#060b16;--card:#0f1830;--line:#2a3a66;--accent:#45a2ff;--ok:#22c55e;--txt:#dbe7ff;--muted:#98abcf}
+    body{margin:0;background:radial-gradient(circle at 15% -10%,#1d2a66,transparent 40%),var(--bg);color:var(--txt);font-family:system-ui;padding:14px}
+    .wrap{max-width:920px;margin:0 auto}
+    .card{background:linear-gradient(145deg,#101a35,#0d152b);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+    h1{margin:0 0 10px 0;font-size:1.8rem}
+    .muted{color:var(--muted);font-size:13px}
+    .bar{height:16px;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#0a1122;margin:12px 0}
+    .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--ok),var(--accent));transition:width .3s}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .pill{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#0b1226;font-size:12px}
+    @media(max-width:800px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="card">
+    <h1>⚙️ IrsanAI TPM Agent Install Cockpit</h1>
+    <div class="muted">Smartphone-ready installation dashboard for Termux bootstrap progress, module states and realtime status.</div>
+    <div class="bar"><div id="fill" class="fill"></div></div>
+    <div id="pct" class="pill">Progress: 0%</div>
+  </section>
+
+  <section class="card grid">
+    <div class="pill" id="phase">Phase: idle</div>
+    <div class="pill" id="module">Module: n/a</div>
+    <div class="pill" id="note" style="grid-column:1/-1">Note: waiting…</div>
+    <div class="pill" id="ts">Updated: n/a</div>
+  </section>
+</div>
+<script>
+async function tick(){
+  try{
+    const r=await fetch('/api/install/status',{cache:'no-store'});
+    const s=await r.json();
+    const pct=Math.max(0,Math.min(100,Number(s.progress_pct||0)));
+    document.getElementById('fill').style.width=pct+'%';
+    document.getElementById('pct').textContent='Progress: '+pct+'%';
+    document.getElementById('phase').textContent='Phase: '+(s.phase||'n/a');
+    document.getElementById('module').textContent='Module: '+(s.module||'n/a');
+    document.getElementById('note').textContent='Note: '+(s.note||'n/a');
+    document.getElementById('ts').textContent='Updated: '+new Date((s.ts||0)*1000).toLocaleString();
+  }catch(e){
+    document.getElementById('note').textContent='Note: status endpoint unavailable';
+  }
+}
+tick(); setInterval(tick,1500);
+</script>
+</body>
+</html>

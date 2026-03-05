@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080b14" />
+  <title>The Forge | TPM Runtime Console</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root { 
+      --accent: #7c5cff;
+      --accent-light: #a78bfa;
+      --bg: #080b14;
+      --bg-light: #0f1729;
+      --line: #2a3353;
+      --line-light: #3a4563;
+      --text: #dce6ff;
+      --text-secondary: #a0aec0;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+    }
+    
+    * { box-sizing: border-box; }
+    
+    html, body { height: 100%; }
+    
+    body { 
+      margin: 0;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      background: radial-gradient(circle at 10% -10%, #1c2558 0, transparent 40%), 
+                  linear-gradient(135deg, var(--bg) 0%, #0a0d1a 100%);
+      min-height: 100vh;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+    
+    .wrap { 
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .glass { 
+      background: linear-gradient(145deg, rgba(18, 23, 42, 0.92), rgba(16, 19, 34, 0.92));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .glass:hover {
+      border-color: var(--line-light);
+      box-shadow: 0 12px 48px rgba(124, 92, 255, 0.1);
+    }
+    
+    h1, h2, h3 { margin: 0 0 12px 0; font-weight: 700; letter-spacing: -0.5px; }
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.4rem; }
+    h3 { font-size: 1.1rem; }
+    
+    .meta, .tips { 
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      align-items: center;
+    }
+    
+    .pill { 
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(21, 27, 49, 0.8);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.2s;
+      cursor: default;
+    }
+    
+    .pill:hover {
+      background: var(--line-light);
+      border-color: var(--accent);
+    }
+    
+    .pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    
+    .grid { 
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 16px;
+    }
+    
+    .subgrid { 
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .domains { 
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    
+    .domain-card { 
+      border: 1px solid rgba(124, 92, 255, 0.2);
+      border-radius: 12px;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(22, 29, 53, 0.8), rgba(16, 22, 42, 0.8));
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .domain-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(124, 92, 255, 0.1), transparent);
+      transition: left 0.5s;
+    }
+    
+    .domain-card:hover::before {
+      left: 100%;
+    }
+    
+    .domain-card:hover { 
+      transform: translateY(-6px);
+      border-color: var(--accent);
+      box-shadow: 0 12px 32px rgba(124, 92, 255, 0.2);
+      background: linear-gradient(135deg, rgba(30, 40, 70, 0.9), rgba(22, 29, 53, 0.9));
+    }
+    
+    .kpi { 
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: 8px;
+      color: var(--accent-light);
+    }
+    
+    .form-grid { 
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    input, select { 
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      background: rgba(14, 20, 38, 0.8);
+      color: var(--text);
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.1);
+      background: rgba(14, 20, 38, 1);
+    }
+    
+    input::placeholder {
+      color: var(--text-secondary);
+    }
+    
+    button { 
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #1e2d52, #2a3f72);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      transition: left 0.3s;
+    }
+    
+    button:hover::before {
+      left: 100%;
+    }
+    
+    button:hover {
+      background: linear-gradient(135deg, #2a3f72, #3a5fa8);
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px rgba(124, 92, 255, 0.2);
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    #startBtn { 
+      background: linear-gradient(135deg, #166534, #22c55e);
+      border-color: #22c55e;
+    }
+    
+    #startBtn:hover { 
+      background: linear-gradient(135deg, #15803d, #4ade80);
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.2);
+    }
+    
+    #stopBtn { 
+      background: linear-gradient(135deg, #991b1b, #ef4444);
+      border-color: #ef4444;
+    }
+    
+    #stopBtn:hover { 
+      background: linear-gradient(135deg, #b91c1c, #f87171);
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);
+    }
+    
+    pre { 
+      margin: 0;
+      max-height: 300px;
+      overflow: auto;
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    
+    .hint { 
+      font-size: 12px;
+      opacity: 0.85;
+      color: var(--text-secondary);
+      margin: 8px 0;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      background: var(--bg-light);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #60a5fa);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    
+    @media (max-width: 768px) {
+      .subgrid, .form-grid { grid-template-columns: 1fr; }
+      .domains { grid-template-columns: 1fr; }
+      body { padding: 12px; }
+      .wrap { max-width: 100%; }
+      h1 { font-size: 1.4rem; }
+      .glass { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="glass">
+    <h1 id="titleMain">⚒️ IrsanAI TPM-Agent Forge Runtime</h1>
+    <div class="meta">
+      <span class="pill" id="os"></span>
+      <span class="pill" id="device"></span>
+      <span class="pill" id="agents">Agents: 0</span>
+      <span class="pill" id="platformPill">Windows + Smartphone first</span>
+      <span class="pill" id="localeCount">Locales: 0</span>
+    </div>
+    
+    <div class="tips">
+      <span class="pill" id="runtimeState">Runtime: unknown</span>
+      <button id="startBtn" onclick="runtimeStart()">Start Runtime</button>
+      <button id="stopBtn" onclick="runtimeStop()">Stop Runtime</button>
+      <select id="localeSelect" onchange="setLocale(this.value)" style="max-width: 220px;"></select>
+      <a id="localeDoc" class="pill" href="/README.md" target="_blank" rel="noopener">📖 Language Guide</a>
+    </div>
+    
+    <div class="glass" id="runtimeControls" style="margin-top: 12px;">
+      <div class="hint">Service control with persisted state. You can stop/start from browser.</div>
+      <div class="progress-bar">
+        <div id="runtimeBar" class="progress-bar-fill"></div>
+      </div>
+      <div class="hint" id="runtimeProgress">Progress: 0%</div>
+    </div>
+    
+    <div class="tips">
+      <label class="pill"><input type="checkbox" id="termuxNotify"> 📱 Termux Notify</label>
+      <label class="pill"><input type="checkbox" id="beepEnabled"> 🔔 Beep</label>
+      <label class="pill">📳 Vibrate <input id="vibrateMs" type="number" min="0" value="800" style="width: 80px;"></label>
+      <label class="pill"><input type="checkbox" id="telegramEnabled"> 💬 Telegram</label>
+      <button id="saveAlertsBtn" onclick="saveAlertPrefs()">Save Alerts</button>
+      <button id="testAlertBtn" onclick="sendTestAlert()">Test Alert</button>
+      <span class="pill" id="alertStatus">alerts: n/a</span>
+    </div>
+    
+    <div class="tips">
+      <span class="pill">🔄 Realtime swarm: active agents + shared frame</span>
+      <span class="pill">📊 Suggestions derive from active + observed TPM markets</span>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="glass subgrid">
+      <div id="signals" style="height: 320px;"></div>
+      <div id="entropy" style="height: 320px;"></div>
+    </div>
+    <div class="glass">
+      <h3 id="domainsTitle">🌐 IrsanAI Domain Pulse</h3>
+      <div class="domains" id="domains"></div>
+    </div>
+  </section>
+
+  <section class="glass">
+    <h3 id="liveMarketsTitle">📈 IrsanAI Live Market Cockpit</h3>
+    <div class="hint" id="liveMarketsHint">Tap any market or agent card for immersive drill-down insights.</div>
+    <div id="liveCards" class="domains" style="margin-top: 12px;"></div>
+  </section>
+
+  <div id="insightModal" style="display: none; position: fixed; inset: 0; background: rgba(4, 8, 18, 0.92); z-index: 50; padding: 16px; backdrop-filter: blur(5px);">
+    <div class="glass" style="max-width: 1100px; margin: 0 auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+        <h3 id="insightTitle" style="margin: 0;">📊 IrsanAI Market Insight</h3>
+        <button onclick="closeInsightModal()">Close</button>
+      </div>
+      <div id="insightMeta" class="hint" style="margin-top: 8px;"></div>
+      <div id="insightChart" style="height: 360px; margin-top: 12px;"></div>
+      <pre id="insightJson" style="margin-top: 12px; max-height: 200px;"></pre>
+    </div>
+  </div>
+
+  <section class="grid">
+    <div class="glass">
+      <h3 id="addAgentTitle">➕ Add Market Agent</h3>
+      <div class="form-grid">
+        <select id="sourceType" onchange="applySourceSuggestion()">
+          <option value="binance">binance (public)</option>
+          <option value="kraken">kraken (public)</option>
+          <option value="alphavantage_commodity">alphavantage_commodity (api key)</option>
+          <option value="open_meteo">open_meteo (public)</option>
+        </select>
+        <select id="marketSelect" onchange="applyMarketSelection()"></select>
+        <input id="name" placeholder="Agent name (e.g. ETH_BINANCE)" />
+        <input id="market" placeholder="Market code (e.g. ETH)" />
+        <input id="domain" placeholder="Domain" value="finance" />
+        <input id="apiKey" placeholder="API key (required for protected sources)" />
+        <input id="url" placeholder="Source URL" style="grid-column: 1 / -1;" />
+      </div>
+      <button id="addAgentBtn" onclick="addAgent()" style="margin-top: 12px; width: 100%;">Add Agent</button>
+      <p id="addResult" class="hint"></p>
+      <p class="hint">If market is not available from existing sources, provide exact source URL + credentials (API key etc.).</p>
+      <p class="hint" id="sourceHints"></p>
+    </div>
+    <div class="glass">
+      <h3 id="liveFrameTitle">🔴 IrsanAI Live Frame</h3>
+      <pre id="json"></pre>
+    </div>
+  </section>
+</div>
+
+<script>
+const I18N = {
+  "en": {
+    "titleMain": "⚒️ IrsanAI TPM-Agent Forge Runtime",
+    "startBtn": "Start Runtime",
+    "stopBtn": "Stop Runtime",
+    "saveAlertsBtn": "Save Alerts",
+    "testAlertBtn": "Test Alert",
+    "addAgentBtn": "Add Agent",
+    "addAgentTitle": "➕ Add Market Agent",
+    "liveFrameTitle": "🔴 IrsanAI Live Frame",
+    "domainsTitle": "🌐 IrsanAI Domain Pulse",
+    "liveMarketsTitle": "📈 IrsanAI Live Market Cockpit",
+    "liveMarketsHint": "Tap any market or agent card for immersive drill-down insights.",
+    "placeholderName": "Agent name (e.g. ETH_BINANCE)",
+    "placeholderMarket": "Market code (e.g. ETH)",
+    "placeholderApiKey": "API key (required for protected sources)",
+    "placeholderUrl": "Source URL"
+  },
+  "de": {
+    "titleMain": "⚒️ IrsanAI TPM-Agent Forge Runtime",
+    "startBtn": "Runtime starten",
+    "stopBtn": "Runtime stoppen",
+    "saveAlertsBtn": "Alarme speichern",
+    "testAlertBtn": "Test-Alarm",
+    "addAgentBtn": "Agent hinzufügen",
+    "addAgentTitle": "➕ Markt-Agent hinzufügen",
+    "liveFrameTitle": "🔴 IrsanAI Live Frame",
+    "domainsTitle": "🌐 IrsanAI Domain Pulse",
+    "liveMarketsTitle": "📈 IrsanAI Live Market Cockpit",
+    "liveMarketsHint": "Tippen Sie auf eine Markt- oder Agentenkarte für detaillierte Einblicke.",
+    "placeholderName": "Agentenname (z.B. ETH_BINANCE)",
+    "placeholderMarket": "Marktcode (z.B. ETH)",
+    "placeholderApiKey": "API-Schlüssel (für geschützte Quellen)",
+    "placeholderUrl": "Quell-URL"
+  }
+};
+
+let currentLocale = "en";
+
+function setLocale(locale) {
+  currentLocale = locale;
+  localStorage.setItem("forge_locale", locale);
+  updateUI();
+}
+
+function updateUI() {
+  const i18n = I18N[currentLocale] || I18N["en"];
+  document.getElementById("titleMain").textContent = i18n.titleMain;
+  document.getElementById("startBtn").textContent = i18n.startBtn;
+  document.getElementById("stopBtn").textContent = i18n.stopBtn;
+  document.getElementById("saveAlertsBtn").textContent = i18n.saveAlertsBtn;
+  document.getElementById("testAlertBtn").textContent = i18n.testAlertBtn;
+  document.getElementById("addAgentBtn").textContent = i18n.addAgentBtn;
+  document.getElementById("addAgentTitle").textContent = i18n.addAgentTitle;
+  document.getElementById("liveFrameTitle").textContent = i18n.liveFrameTitle;
+  document.getElementById("domainsTitle").textContent = i18n.domainsTitle;
+  document.getElementById("liveMarketsTitle").textContent = i18n.liveMarketsTitle;
+  document.getElementById("liveMarketsHint").textContent = i18n.liveMarketsHint;
+  document.getElementById("name").placeholder = i18n.placeholderName;
+  document.getElementById("market").placeholder = i18n.placeholderMarket;
+  document.getElementById("apiKey").placeholder = i18n.placeholderApiKey;
+  document.getElementById("url").placeholder = i18n.placeholderUrl;
+}
+
+function runtimeStart() {
+  console.log("Runtime start requested");
+}
+
+function runtimeStop() {
+  console.log("Runtime stop requested");
+}
+
+function saveAlertPrefs() {
+  console.log("Alert preferences saved");
+}
+
+function sendTestAlert() {
+  console.log("Test alert sent");
+}
+
+function addAgent() {
+  console.log("Agent added");
+}
+
+function applySourceSuggestion() {
+  console.log("Source suggestion applied");
+}
+
+function applyMarketSelection() {
+  console.log("Market selection applied");
+}
+
+function closeInsightModal() {
+  document.getElementById("insightModal").style.display = "none";
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  const savedLocale = localStorage.getItem("forge_locale") || "en";
+  setLocale(savedLocale);
+});
+</script>
+</body>
+</html>

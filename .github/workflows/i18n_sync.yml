@@ -1,0 +1,42 @@
+name: I18N Auto-Sync
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'README.md'
+      - 'playground/*.html'
+      - 'i18n_master.json'
+  workflow_dispatch:
+
+jobs:
+  sync-translations:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run I18N Master Sync
+        run: |
+          python3 scripts/i18n_master_sync.py
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(i18n): auto-sync translations [skip ci]"
+          file_pattern: 'README*.md docs/i18n/README*.md playground/*.html i18n_master.json'

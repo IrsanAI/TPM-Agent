@@ -10,6 +10,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+try:
+    from core.init_db_v2 import init_db_v2
+except ModuleNotFoundError:
+    import sys
+
+    sys.path.append(str(Path(__file__).resolve().parents[1]))
+    from core.init_db_v2 import init_db_v2
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.environ.get("IRSANAI_DB_PATH", os.path.join(BASE_DIR, "data", "irsanai_production.db"))
 STATE_DIR = Path(os.environ.get("IRSANAI_STATE_DIR", os.path.join(BASE_DIR, "state")))
@@ -55,15 +63,53 @@ SOURCE_POOLS = {
 }
 
 
+def _ensure_price_history_table(cur: sqlite3.Cursor) -> None:
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS price_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            market TEXT NOT NULL,
+            source TEXT NOT NULL,
+            price REAL NOT NULL,
+            latency REAL,
+            quality_score REAL DEFAULT 1.0
+        )
+        """
+    )
+
+
 def log_price_to_db(market: str, source: str, price: float, latency_ms: float):
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
+    # Schema guard: preflight may run standalone in fresh Docker containers
+    # or against legacy DB files. Ensure table exists before insert.
+    try:
+        init_db_v2()
+    except Exception:
+        # Fallback to local DDL path below when full init is unavailable.
+        pass
+
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO price_history (market, source, price, latency) VALUES (?, ?, ?, ?)",
-        (market, source, price, latency_ms),
-    )
-    conn.commit()
-    conn.close()
+    try:
+        _ensure_price_history_table(cur)
+        cur.execute(
+            "INSERT INTO price_history (market, source, price, latency) VALUES (?, ?, ?, ?)",
+            (market, source, price, latency_ms),
+        )
+        conn.commit()
+    except sqlite3.OperationalError:
+        # Self-heal for edge cases where DB file is replaced mid-run.
+        _ensure_price_history_table(cur)
+        cur.execute(
+            "INSERT INTO price_history (market, source, price, latency) VALUES (?, ?, ?, ?)",
+            (market, source, price, latency_ms),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 
 class PreflightManager:
@@ -75,6 +121,11 @@ class PreflightManager:
             "Accept": "application/json,text/plain,*/*",
         }
         STATE_DIR.mkdir(parents=True, exist_ok=True)
+        try:
+            init_db_v2()
+        except Exception:
+            # Preflight still runs with cache-only mode even if DB init fails.
+            pass
 
     def _get_json(self, url: str):
         req = urllib.request.Request(url, headers=self.headers)
