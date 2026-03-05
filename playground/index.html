@@ -51,13 +51,19 @@
     <div>
       <input id="broClan" placeholder="Clan Name" value="TPM-Bro Squad" />
       <input id="broAlias" placeholder="Dein Alias" value="Irsan" />
+      <input id="broSecret" placeholder="Session Secret (optional)" value="" />
+      <button onclick="discoverBroPeers()">Suche TPM-Bro</button>
       <button onclick="createBroSession()">Session erstellen</button>
       <button onclick="joinBroSession()">Session joinen</button>
       <button onclick="publishBroSignal()">Signal posten</button>
+      <button onclick="showBroLeaderboard()">Leaderboard</button>
+      <button onclick="importBroKnowledge()">Knowledge import</button>
       <button onclick="closeBroSession()">Session schließen</button>
     </div>
     <p class="meta">Session ID: <code id="broSessionId">-</code></p>
     <ul id="broSessions"><li class="meta">Keine aktiven Sessions.</li></ul>
+    <ul id="broPeers"><li class="meta">Keine Peers entdeckt.</li></ul>
+    <ul id="broLeaderboard"><li class="meta">Kein Leaderboard geladen.</li></ul>
   </div>
 
   <div class="card">
@@ -189,7 +195,8 @@ async function refreshBroSessions(){
 async function createBroSession(){
   const clan_name=document.getElementById('broClan').value||'TPM-Bro Clan';
   const admin_alias=document.getElementById('broAlias').value||'Admin';
-  const r=await fetch('/api/bro/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clan_name,admin_alias,ttl_minutes:120})});
+  const secret=document.getElementById('broSecret').value||'';
+  const r=await fetch('/api/bro/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clan_name,admin_alias,ttl_minutes:120,secret})});
   if(!r.ok) return;
   const d=await r.json();
   if(d.session_id) document.getElementById('broSessionId').textContent=d.session_id;
@@ -209,6 +216,7 @@ async function publishBroSignal(){
   const session_id=document.getElementById('broSessionId').textContent.trim();
   if(!session_id || session_id==='-') return;
   const alias=document.getElementById('broAlias').value||'Guest';
+  const secret=document.getElementById('broSecret').value||'';
   const r=await fetch('/api/oracle',{cache:'no-store'});
   const snap=r.ok?await r.json():{};
   await fetch('/api/bro/signal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -217,7 +225,8 @@ async function publishBroSignal(){
     prediction_id:snap.prediction_id||'simulated',
     confidence_pct:snap.base_confidence_pct||0,
     reason_code:snap.reason_code||'PENDING',
-    drift_status:snap.drift_status||'low'
+    drift_status:snap.drift_status||'low',
+    secret
   })});
   refreshBroSessions();
 }
@@ -227,6 +236,39 @@ async function closeBroSession(){
   if(!session_id || session_id==='-') return;
   await fetch('/api/bro/close',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id})});
   refreshBroSessions();
+}
+
+
+async function discoverBroPeers(){
+  const alias=document.getElementById('broAlias').value||'bro-user';
+  const r=await fetch(`/api/bro/discover?alias=${encodeURIComponent(alias)}&timeout=1.2`, {cache:'no-store'});
+  if(!r.ok) return;
+  const d=await r.json();
+  const items=d.items||[];
+  document.getElementById('broPeers').innerHTML = items.length
+    ? items.map(x=>`<li>Peer ${x.alias} @ ${x.ip}</li>`).join('')
+    : '<li class="meta">Keine Peers entdeckt.</li>';
+}
+
+async function showBroLeaderboard(){
+  const session_id=document.getElementById('broSessionId').textContent.trim();
+  if(!session_id || session_id==='-') return;
+  const r=await fetch(`/api/bro/leaderboard?session_id=${encodeURIComponent(session_id)}`, {cache:'no-store'});
+  if(!r.ok) return;
+  const d=await r.json();
+  const rows=d.leaderboard||[];
+  const top=d.top_predictions||[];
+  document.getElementById('broLeaderboard').innerHTML = rows.length
+    ? rows.map(x=>`<li>${x.alias}: avg=${x.avg_conf}% (${x.count})</li>`).join('') + `<li class="meta">Top prediction: ${(top[0]||{}).prediction_id||'-'} ${(top[0]||{}).confidence_pct||0}%</li>`
+    : '<li class="meta">Kein Leaderboard geladen.</li>';
+}
+
+async function importBroKnowledge(){
+  const alias=document.getElementById('broAlias').value||'user';
+  const r=await fetch('/api/bro/knowledge/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({alias})});
+  if(!r.ok) return;
+  const d=await r.json();
+  alert(`Knowledge import done: sessions=${d.merged?.sessions||0} avgConf=${d.merged?.avg_confidence||0}`);
 }
 
 refreshOracle(); refreshReplay(); refreshCapabilities(); refreshUpdate();

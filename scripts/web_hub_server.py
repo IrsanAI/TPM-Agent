@@ -28,6 +28,7 @@ if str(ROOT) not in sys.path:
 
 from core.prediction_oracle import PredictionOracle
 from core.bro_session import BroSessionManager
+from core.bro_discovery import scan as bro_scan
 STATE = ROOT / "state"
 SNAPSHOT_MAX_AGE_SEC = int(os.environ.get("WEB_HUB_SNAPSHOT_MAX_AGE_SEC", "21600"))
 ORACLE = PredictionOracle()
@@ -194,9 +195,10 @@ class HubHandler(SimpleHTTPRequestHandler):
                 snap.setdefault("error_detail", "No oracle snapshot found yet")
             if q.get("device_ts"):
                 try:
-                    device_ts = datetime.fromisoformat(q["device_ts"][0])
+                    raw_device_ts = q["device_ts"][0]
+                    device_ts = datetime.fromisoformat(raw_device_ts.replace("Z", "+00:00"))
                     if snap.get("snapshot_utc"):
-                        server_ts = datetime.fromisoformat(snap["snapshot_utc"])
+                        server_ts = datetime.fromisoformat(str(snap["snapshot_utc"]).replace("Z", "+00:00"))
                         snap["device_clock_delta_seconds"] = (device_ts - server_ts).total_seconds()
                 except Exception:
                     return self._error("INVALID_DEVICE_TS", "Query parameter device_ts must be ISO-8601", 400)
@@ -220,12 +222,30 @@ class HubHandler(SimpleHTTPRequestHandler):
         if path == "/api/bro/session":
             q = parse_qs(parsed.query)
             sid = q.get("session_id", [""])[0].strip()
+            secret = q.get("secret", [""])[0]
             if not sid:
                 return self._error("MISSING_SESSION_ID", "Query parameter session_id is required", 400)
-            item = BRO.session_detail(sid)
+            item = BRO.session_detail(sid, secret=secret)
             if not item.get("ok"):
                 return self._error(item.get("error_code", "BRO_ERROR"), "Session not found", 404)
             return self._json(item)
+        if path == "/api/bro/discover":
+            q = parse_qs(parsed.query)
+            alias = q.get("alias", ["bro-user"])[0]
+            try:
+                timeout = float(q.get("timeout", [1.2])[0])
+            except Exception:
+                return self._error("INVALID_TIMEOUT", "Query parameter timeout must be numeric", 400)
+            return self._json({"ok": True, "items": bro_scan(alias=alias, timeout_s=max(0.2, min(3.0, timeout)))})
+        if path == "/api/bro/leaderboard":
+            q = parse_qs(parsed.query)
+            sid = q.get("session_id", [""])[0].strip()
+            if not sid:
+                return self._error("MISSING_SESSION_ID", "Query parameter session_id is required", 400)
+            out = BRO.leaderboard(sid)
+            if not out.get("ok"):
+                return self._error(out.get("error_code", "BRO_ERROR"), "Leaderboard failed", 404)
+            return self._json(out)
         return super().do_GET()
 
     def do_POST(self):
@@ -246,6 +266,7 @@ class HubHandler(SimpleHTTPRequestHandler):
                 clan_name=body.get("clan_name", "TPM-Bro Clan"),
                 admin_alias=body.get("admin_alias", "Admin"),
                 ttl_minutes=int(body.get("ttl_minutes", 90)),
+                secret=str(body.get("secret", "")),
             )
             return self._json(out)
 
@@ -270,8 +291,11 @@ class HubHandler(SimpleHTTPRequestHandler):
                 confidence_pct=float(body.get("confidence_pct", 0.0)),
                 reason_code=str(body.get("reason_code", "PENDING")),
                 drift_status=str(body.get("drift_status", "low")),
+                secret=str(body.get("secret", "")),
             )
             if not out.get("ok"):
+                if out.get("error_code") == "BRO_SECRET_INVALID":
+                    return self._error("BRO_SECRET_INVALID", "Secret mismatch for this session", 403)
                 return self._error(out.get("error_code", "BRO_ERROR"), "Signal publish failed", 404)
             return self._json(out)
 
@@ -282,6 +306,13 @@ class HubHandler(SimpleHTTPRequestHandler):
             out = BRO.close_session(str(body.get("session_id", "")).strip())
             if not out.get("ok"):
                 return self._error(out.get("error_code", "BRO_ERROR"), "Close failed", 404)
+            return self._json(out)
+
+        if path == "/api/bro/knowledge/import":
+            body, err = self._body_json()
+            if err:
+                return self._error("INVALID_BODY", err, 400)
+            out = BRO.import_knowledge(str(body.get("alias", "user")))
             return self._json(out)
 
         return self._error("NOT_FOUND", f"Endpoint not found: {path}", 404)
