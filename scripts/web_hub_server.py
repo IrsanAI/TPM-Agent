@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import subprocess
 import threading
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -47,9 +48,13 @@ class HubHandler(SimpleHTTPRequestHandler):
     def _capabilities(self) -> dict:
         is_termux = "com.termux" in os.environ.get("PREFIX", "") or "com.termux" in os.environ.get("HOME", "")
         is_docker = Path("/.dockerenv").exists() or os.environ.get("IRSANAI_DOCKER", "") == "1"
+        system = platform.system().lower()
         return {
+            "platform": "termux" if is_termux else ("docker" if is_docker else system),
             "termux": is_termux,
             "docker": is_docker,
+            "linux": system == "linux",
+            "macos": system == "darwin",
             "update_actions": True,
             "oracle_snapshot": (STATE / "prediction_hub_latest.json").exists(),
             "update_status": (STATE / "update_status.json").exists(),
