@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.irsanai.tpm.cockpit</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>scripts/tpm_cli.py</string>
+    <string>update-cockpit</string>
+    <string>--port</string><string>8787</string>
+    <string>--target-port</string><string>8765</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/USERNAME/IrsanAI-TPM</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+</dict>
+</plist>

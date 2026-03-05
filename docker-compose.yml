@@ -47,7 +47,7 @@ services:
       - irsanai-data:/app/data
       - irsanai-config:/app/config
       - irsanai-backups:/app/backups
-    command: ["python", "scripts/tpm_cli.py", "update-cockpit", "--port", "8787"]
+    command: ["python", "scripts/tpm_cli.py", "update-cockpit", "--port", "8787", "--target-port", "8765"]
 
 volumes:
   irsanai-state:

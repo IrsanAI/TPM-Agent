@@ -1,0 +1,13 @@
+[Unit]
+Description=IrsanAI TPM Update Cockpit
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/IrsanAI-TPM
+ExecStart=/usr/bin/python3 scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
