@@ -156,7 +156,9 @@ def save_oracle_snapshot(path: Path, snapshot: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(snapshot)
     payload["snapshot_utc"] = datetime.now(timezone.utc).isoformat()
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
 
 def run_termux_notification(message: str, vibrate_ms: int) -> None:
     """Best-effort Termux notification; ignored outside Termux or if unavailable."""
