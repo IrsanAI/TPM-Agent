@@ -21,9 +21,6 @@ BACKUP_ROOT = ROOT / "backups"
 MIN_FREE_MB = 512
 
 
-MIN_FREE_MB = 512
-
-
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 

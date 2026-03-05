@@ -15,6 +15,7 @@ import json
 import os
 import platform
 import subprocess
+import sys
 import threading
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -22,8 +23,13 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from core.prediction_oracle import PredictionOracle
 STATE = ROOT / "state"
 SNAPSHOT_MAX_AGE_SEC = int(os.environ.get("WEB_HUB_SNAPSHOT_MAX_AGE_SEC", "21600"))
+ORACLE = PredictionOracle()
 
 
 class HubHandler(SimpleHTTPRequestHandler):
@@ -180,6 +186,20 @@ class HubHandler(SimpleHTTPRequestHandler):
                 except Exception:
                     return self._error("INVALID_DEVICE_TS", "Query parameter device_ts must be ISO-8601", 400)
             return self._json(snap)
+        if path == "/api/replay/recent":
+            q = parse_qs(parsed.query)
+            market = q.get("market", [None])[0]
+            limit = int(q.get("limit", [10])[0])
+            return self._json({"ok": True, "items": ORACLE.recent_replays(market=market, limit=limit)})
+        if path == "/api/replay":
+            q = parse_qs(parsed.query)
+            pid = q.get("prediction_id", [""])[0].strip()
+            if not pid:
+                return self._error("MISSING_PREDICTION_ID", "Query parameter prediction_id is required", 400)
+            item = ORACLE.replay(pid)
+            if not item:
+                return self._error("REPLAY_NOT_FOUND", f"No replay found for prediction_id={pid}", 404)
+            return self._json({"ok": True, "item": item})
         return super().do_GET()
 
     def do_POST(self):

@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="manifest" href="/playground/manifest.webmanifest">
+  <meta name="theme-color" content="#0d1117" />
   <title>IrsanAI TPM Web Hub</title>
   <style>
     body { font-family: Arial, sans-serif; background:#0d1117; color:#e6edf3; margin:20px; }
     .card { background:#161b22; border:1px solid #30363d; border-radius:12px; padding:14px; margin-bottom:14px; }
-    .row { display:flex; flex-wrap:wrap; gap:12px; }
     .pill{display:inline-block;border-radius:999px;padding:4px 8px;margin:3px;font-size:12px}
     .good{background:#1f6f43;color:#d2ffe8}.bad{background:#8b1e2d;color:#ffd8de}.warn{background:#9a6700;color:#fff3cd}
     .countdown{font-size:24px;font-weight:700;color:#ff7b72}
@@ -17,6 +18,7 @@
     #whatsNewModal{display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center}
     #whatsNewModal .inner{max-width:680px}
     button{background:#238636;color:white;border:1px solid #30363d;border-radius:8px;padding:8px 12px;cursor:pointer}
+    ul{margin:6px 0 0 18px;}
   </style>
 </head>
 <body>
@@ -39,6 +41,11 @@
   </div>
 
   <div class="card">
+    <h3>🧵 Replay (letzte Vorhersagen)</h3>
+    <ul id="replayList"><li class="meta">Lade Replay…</li></ul>
+  </div>
+
+  <div class="card">
     <h3>Platform</h3>
     <pre id="platformJson"></pre>
   </div>
@@ -52,6 +59,10 @@
   </div>
 
 <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/playground/sw.js').catch(() => {}));
+}
+
 function fmtDelta(sec){ if(sec<60) return `${sec}s`; if(sec<3600) return `${Math.floor(sec/60)}m ${sec%60}s`; return `${Math.floor(sec/3600)}h ${Math.floor((sec%3600)/60)}m`; }
 
 function renderOracle(snap){
@@ -63,11 +74,15 @@ function renderOracle(snap){
   document.getElementById('oracleCountdown').textContent = `Bro, du hast nur noch ${fmtDelta(left)} bis Ereignis.`;
 
   const reason = snap.reason_code || 'PENDING';
+  const drift = snap.drift_status || 'low';
+  const regime = snap.regime_status || 'warmup';
   document.getElementById('oraclePills').innerHTML = [
     `<span class='pill ${snap.status==='completed'?'good':(snap.status==='expired'?'bad':'warn')}'>Status: ${snap.status||'pending'}</span>`,
     `<span class='pill good'>Streak: ${snap.confirmations_in_row||0}x</span>`,
     `<span class='pill warn'>Rounds: ${snap.validation_rounds||0}</span>`,
-    `<span class='pill ${reason==='ON_TRACK'?'good':'warn'}'>Reason: ${reason}</span>`
+    `<span class='pill ${reason==='ON_TRACK'?'good':'warn'}'>Reason: ${reason}</span>`,
+    `<span class='pill ${drift==='high'?'bad':(drift==='medium'?'warn':'good')}'>Drift: ${drift}</span>`,
+    `<span class='pill ${regime==='shock'?'bad':(regime==='transition'?'warn':'good')}'>Regime: ${regime}</span>`
   ].join('');
 
   const hops = (snap.hops||[]).slice(-8).map((h,i)=>`<span class='pill ${h.status==='confirmed'?'good':'bad'}'>#${i+1} ${Number(h.confidence_pct||0).toFixed(1)}% · ${h.reason_code||'-'}</span>`).join('');
@@ -76,13 +91,13 @@ function renderOracle(snap){
   const c = snap.confidence_decomposition || {};
   const clock = snap.device_clock_delta_seconds;
   const clockTxt = Number.isFinite(clock) ? `${clock.toFixed(2)}s` : 'n/a';
-  document.getElementById('oracleInfo').innerHTML = `Direction: <code>${snap.direction||'-'}</code> • ETA: <code>${snap.target_ts||'-'}</code> ± <code>${etaBand}s</code><br><span class="meta">Confidence split: Signal <code>${Number(c.signal_pct||0).toFixed(1)}%</code> · Regime <code>${Number(c.regime_pct||0).toFixed(1)}%</code> · Data <code>${Number(c.data_quality_pct||0).toFixed(1)}%</code> • Clock Δ: <code>${clockTxt}</code></span>`;
+  document.getElementById('oracleInfo').innerHTML = `Direction: <code>${snap.direction||'-'}</code> • ETA: <code>${snap.target_ts||'-'}</code> ± <code>${etaBand}s</code> • Drift score: <code>${Number(snap.drift_score||0).toFixed(1)}</code><br><span class="meta">Confidence split: Signal <code>${Number(c.signal_pct||0).toFixed(1)}%</code> · Regime <code>${Number(c.regime_pct||0).toFixed(1)}%</code> · Data <code>${Number(c.data_quality_pct||0).toFixed(1)}%</code> • Clock Δ: <code>${clockTxt}</code></span>`;
 }
 
 function simulatedOracle(){
   const now = new Date();
   const price=70000+Math.random()*100;
-  return {created_ts:now.toISOString(),created_price:price,target_price:price*1.001,target_ts:new Date(now.getTime()+52000).toISOString(),eta_window_seconds:10,status:'pending',confirmations_in_row:3,validation_rounds:5,direction:'UP',reason_code:'ON_TRACK',confidence_decomposition:{signal_pct:79,regime_pct:66,data_quality_pct:88},hops:[{confidence_pct:100,status:'confirmed',reason_code:'ON_TRACK'},{confidence_pct:82,status:'confirmed',reason_code:'ON_TRACK'},{confidence_pct:31,status:'missed',reason_code:'VOLATILITY_SPIKE'}]};
+  return {created_ts:now.toISOString(),created_price:price,target_price:price*1.001,target_ts:new Date(now.getTime()+52000).toISOString(),eta_window_seconds:10,status:'pending',confirmations_in_row:3,validation_rounds:5,direction:'UP',reason_code:'ON_TRACK',drift_status:'low',regime_status:'trend',drift_score:12,confidence_decomposition:{signal_pct:79,regime_pct:66,data_quality_pct:88},hops:[{confidence_pct:100,status:'confirmed',reason_code:'ON_TRACK'},{confidence_pct:82,status:'confirmed',reason_code:'ON_TRACK'},{confidence_pct:31,status:'missed',reason_code:'VOLATILITY_SPIKE'}]};
 }
 
 async function refreshOracle(){
@@ -91,6 +106,18 @@ async function refreshOracle(){
     if(res.ok){ const live=await res.json(); if(live.available){ renderOracle(live); return; } }
   }catch(e){}
   renderOracle(simulatedOracle());
+}
+
+async function refreshReplay(){
+  try {
+    const r = await fetch('/api/replay/recent?limit=6', {cache:'no-store'});
+    if (!r.ok) return;
+    const data = await r.json();
+    const items = data.items || [];
+    document.getElementById('replayList').innerHTML = items.length
+      ? items.map(x => `<li><code>${x.prediction_id?.slice(0,8)}</code> ${x.market} · ${x.status} · ${x.reason_code_latest} · drift=${x.drift_status} · regime=${x.regime_status}</li>`).join('')
+      : '<li class="meta">Noch keine Replay-Daten vorhanden.</li>';
+  } catch(e) {}
 }
 
 function openUpdateCockpit(){
@@ -131,8 +158,8 @@ async function refreshCapabilities(){
   }catch(e){}
 }
 
-refreshOracle(); refreshCapabilities(); refreshUpdate();
-setInterval(refreshOracle,1000); setInterval(refreshCapabilities,10000); setInterval(refreshUpdate,10000);
+refreshOracle(); refreshReplay(); refreshCapabilities(); refreshUpdate();
+setInterval(refreshOracle,1000); setInterval(refreshReplay,5000); setInterval(refreshCapabilities,10000); setInterval(refreshUpdate,10000);
 </script>
 </body>
 </html>

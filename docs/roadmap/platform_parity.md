@@ -22,19 +22,19 @@
 ## Linux desktop/server roadmap
 - [x] Base compatibility (CLI + web hub run with Python 3.11).
 - [x] Platform detection is exposed in `/api/capabilities`.
-- [ ] Add systemd unit templates for `web`, `live`, and `cockpit`.
+- [x] Add systemd unit templates for `web`, `live`, and `cockpit`.
 - [ ] Add package script (`./scripts/linux_install.sh`) for one-command bootstrap.
 
 ## macOS roadmap
 - [x] Base compatibility path through Python CLI.
 - [x] Capability detection in web API (`macos` flag via platform detection).
-- [ ] Add launchd plist templates for persistent services.
+- [x] Add launchd plist templates for persistent services.
 - [ ] Add signed app-wrapper packaging path (long-term).
 
 ## iPhone roadmap (web-first)
 - [x] Responsive web UI foundation in `playground/index.html`.
 - [x] Browser-only access path via web hub APIs.
-- [ ] Add iOS PWA manifest + install prompts.
+- [x] Add iOS PWA manifest + install prompts.
 - [ ] Add push-style alert bridge (server-side events + APNs relay option).
 - [ ] Define secure remote-host pattern (iPhone as client, backend on Docker/Linux host).
 

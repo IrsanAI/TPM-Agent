@@ -1,0 +1,10 @@
+{
+  "name": "IrsanAI TPM Web Hub",
+  "short_name": "IrsanAI Hub",
+  "start_url": "/playground/index.html",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "description": "Prediction Oracle Hub with replay and update cockpit integration.",
+  "icons": []
+}

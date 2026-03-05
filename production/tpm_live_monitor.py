@@ -174,13 +174,30 @@ def load_calibration(market: str) -> dict:
         try:
             obj = json.loads(fp.read_text(encoding="utf-8"))
             return {
+                "schema_version": int(obj.get("schema_version", 2)),
                 "confidence_bias": float(obj.get("confidence_bias", 0.0)),
                 "tolerance_bias": float(obj.get("tolerance_bias", 0.0)),
                 "samples": int(obj.get("samples", 0)),
+                "reason_weights": obj.get(
+                    "reason_weights",
+                    {"ON_TRACK": 1.0, "VOLATILITY_SPIKE": 1.15, "OVERSHOOT": 1.25, "UNDERSHOOT": 1.25, "TARGET_ZERO": 1.5},
+                ),
             }
         except Exception:
             pass
-    return {"confidence_bias": 0.0, "tolerance_bias": 0.0, "samples": 0}
+    return {
+        "schema_version": 2,
+        "confidence_bias": 0.0,
+        "tolerance_bias": 0.0,
+        "samples": 0,
+        "reason_weights": {
+            "ON_TRACK": 1.0,
+            "VOLATILITY_SPIKE": 1.15,
+            "OVERSHOOT": 1.25,
+            "UNDERSHOOT": 1.25,
+            "TARGET_ZERO": 1.5,
+        },
+    }
 
 
 def save_calibration(market: str, cal: dict) -> None:
@@ -198,17 +215,24 @@ def update_calibration(cal: dict, snap: dict) -> dict:
 
     status = snap.get("status", "pending")
     streak = int(snap.get("confirmations_in_row", 0))
+    reason_weights = cal.get("reason_weights", {})
+    weight = float(reason_weights.get(reason, 1.0))
 
-    if reason in {"VOLATILITY_SPIKE", "UNDERSHOOT", "OVERSHOOT"}:
-        cal["tolerance_bias"] = min(0.8, cal.get("tolerance_bias", 0.0) + 0.04)
-    if reason in {"UNDERSHOOT", "OVERSHOOT"}:
-        cal["confidence_bias"] = max(-12.0, cal.get("confidence_bias", 0.0) - 0.8)
+    if reason in {"VOLATILITY_SPIKE", "UNDERSHOOT", "OVERSHOOT", "TARGET_ZERO"}:
+        cal["tolerance_bias"] = min(0.8, cal.get("tolerance_bias", 0.0) + 0.04 * weight)
+    if reason in {"UNDERSHOOT", "OVERSHOOT", "TARGET_ZERO"}:
+        cal["confidence_bias"] = max(-12.0, cal.get("confidence_bias", 0.0) - 0.8 * weight)
     if reason == "ON_TRACK" and streak >= 2 and status in {"pending", "completed"}:
         cal["confidence_bias"] = min(8.0, cal.get("confidence_bias", 0.0) + 0.25)
         cal["tolerance_bias"] = max(-0.2, cal.get("tolerance_bias", 0.0) - 0.01)
 
+    # guardrails (Learning v2)
+    cal["confidence_bias"] = max(-12.0, min(8.0, float(cal.get("confidence_bias", 0.0))))
+    cal["tolerance_bias"] = max(-0.2, min(0.8, float(cal.get("tolerance_bias", 0.0))))
     cal["samples"] = rounds
+    cal["schema_version"] = 2
     return cal
+
 
 def run_termux_notification(message: str, vibrate_ms: int) -> None:
     """Best-effort Termux notification; ignored outside Termux or if unavailable."""
