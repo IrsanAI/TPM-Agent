@@ -40,6 +40,7 @@ The web hub now also exposes health probes: `GET /api/health` and `GET /api/read
 Replay APIs are available via `GET /api/replay/recent?limit=...` and `GET /api/replay?prediction_id=...`.
 TPM-Bro coop APIs are available via `GET /api/bro/sessions`, `GET /api/bro/session`, `GET /api/bro/discover`, `GET /api/bro/leaderboard`, `POST /api/bro/create`, `POST /api/bro/join`, `POST /api/bro/signal`, `POST /api/bro/close`, `POST /api/bro/knowledge/import`.
 If a session was created with a secret, `/api/bro/session` and `/api/bro/signal` require the same secret (MVP local auth guard).
+TPM-Bro coop APIs are available via `GET /api/bro/sessions`, `POST /api/bro/create`, `POST /api/bro/join`, `POST /api/bro/signal`, `POST /api/bro/close`.
 After successful update, the cockpit can hand over directly to the main Web Hub port ("IrsanAI - TPM Agenten starten").
 
 Update cockpit (same feature scope in Docker + Termux):

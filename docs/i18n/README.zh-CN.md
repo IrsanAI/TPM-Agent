@@ -14,6 +14,7 @@ A clean bootstrap for an autonomous multi-agent setup (BTC, COFFEE, and more) wi
 - `scripts/stress_test_suite.py` – failover/latency stress test.
 - `scripts/start_agents.sh`, `scripts/health_monitor_v3.sh` – process ops helpers.
 - `core/scout.py`, `core/reserve_manager.py`, `core/init_db_v2.py` – operational core tooling.
+- `core/bro_session.py` – local-first cooperative TPM-Bro session layer (MVP).
 
 ## Universal Quickstart
 
@@ -28,17 +29,25 @@ python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 360
 ## Orchestrated Update Flow
 
 ```bash
-python scripts/tpm_cli.py update check
-python scripts/tpm_cli.py update-cockpit --port 8787
+python scripts/tpm_cli.py update check  # may return phase=check_error if remote is unreachable
+python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 # open http://localhost:8787 and click update
 ```
 
 The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
+The web hub now also exposes health probes: `GET /api/health` and `GET /api/ready` for ops/runtime checks.
+`/api/ready` performs writable-state and snapshot-freshness checks (configurable via `WEB_HUB_SNAPSHOT_MAX_AGE_SEC`).
+Replay APIs are available via `GET /api/replay/recent?limit=...` and `GET /api/replay?prediction_id=...`.
+<<<<<<< codex/implement-update-orchestration-for-irsanai-alu09r
+TPM-Bro coop APIs are available via `GET /api/bro/sessions`, `POST /api/bro/create`, `POST /api/bro/join`, `POST /api/bro/signal`, `POST /api/bro/close`.
+=======
+>>>>>>> main
+After successful update, the cockpit can hand over directly to the main Web Hub port ("IrsanAI - TPM Agenten starten").
 
 Update cockpit (same feature scope in Docker + Termux):
 
 ```bash
-python scripts/tpm_cli.py update-cockpit --port 8787
+python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 # open http://localhost:8787
 ```
 
@@ -48,6 +57,11 @@ Docker equivalent:
 docker compose up -d tpm-cockpit
 # open http://localhost:8787
 ```
+
+
+Platform expansion roadmap (Linux/macOS/iPhone + parity tracking): `docs/roadmap/platform_parity.md`.
+Execution master plan (step-by-step release/sprint plan): `docs/roadmap/execution_master_plan.md`.
+Platform execution pack templates (Linux systemd / macOS launchd / iPhone PWA): `deployment/README.md`.
 
 
 ## Runtime Chain Check (causal/order sanity)
