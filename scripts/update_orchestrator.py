@@ -18,6 +18,8 @@ STATUS_FILE = STATE / "update_status.json"
 MAINT_FILE = STATE / "maintenance_mode.json"
 BACKUP_ROOT = ROOT / "backups"
 
+MIN_FREE_MB = 512
+
 
 MIN_FREE_MB = 512
 
@@ -71,18 +73,38 @@ def git_head() -> str:
     return (r.stdout or "").strip()
 
 
-def remote_head(branch: str) -> str:
+def remote_head_state(branch: str) -> tuple[bool, str, str]:
     r = run(["git", "ls-remote", "origin", f"refs/heads/{branch}"])
-    if r.returncode != 0 or not r.stdout.strip():
-        return ""
-    return r.stdout.split()[0]
+    if r.returncode != 0:
+        detail = (r.stderr or r.stdout or "ls-remote failed").strip()[:240]
+        return False, "", detail
+    if not r.stdout.strip():
+        return False, "", "empty remote response"
+    return True, r.stdout.split()[0], "ok"
 
 
 def check_update() -> dict:
     branch = git_branch()
     local = git_head()
-    remote = remote_head(branch)
-    available = bool(remote and local and remote != local)
+    remote_ok, remote, remote_detail = remote_head_state(branch)
+    available = bool(remote_ok and remote and local and remote != local)
+
+    if not remote_ok:
+        msg = "remote unreachable"
+        write_status(
+            phase="check_error",
+            progress_pct=100,
+            message=msg,
+            update_available=False,
+            error_code="REMOTE_UNREACHABLE",
+            error_detail=remote_detail,
+            branch=branch,
+            local_head=local,
+            remote_head="",
+            remote_reachable=False,
+        )
+        return read_status()
+
     msg = "update available" if available else "already up to date"
     write_status(
         phase="check",
@@ -92,6 +114,7 @@ def check_update() -> dict:
         branch=branch,
         local_head=local,
         remote_head=remote,
+        remote_reachable=True,
     )
     return read_status()
 
@@ -214,6 +237,11 @@ def apply_update() -> dict:
 
         write_status(progress_pct=18, message="checking upstream")
         st = check_update()
+        if st.get("phase") == "check_error":
+            set_maintenance(False)
+            append_step("check", "error", st.get("error_detail", "remote unreachable"))
+            return read_status()
+
         if not st.get("update_available", False):
             append_step("check", "done", "no update available")
             set_maintenance(False)
@@ -256,7 +284,7 @@ def apply_update() -> dict:
             local_head=new,
             backup_dir=str(backup_dir.relative_to(ROOT)),
             changelog=changelog,
-            launch_hint="Start with: python scripts/tpm_cli.py live",
+            launch_hint="Start with: python3 scripts/tpm_cli.py live",
         )
         append_step("finish", "done", "update completed successfully")
         return read_status()

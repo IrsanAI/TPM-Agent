@@ -16,13 +16,14 @@ import os
 import platform
 import subprocess
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE = ROOT / "state"
+SNAPSHOT_MAX_AGE_SEC = int(os.environ.get("WEB_HUB_SNAPSHOT_MAX_AGE_SEC", "21600"))
 
 
 class HubHandler(SimpleHTTPRequestHandler):
@@ -68,9 +69,35 @@ class HubHandler(SimpleHTTPRequestHandler):
         return {
             "ok": True,
             "service": "web_hub",
-            "ts": datetime.utcnow().isoformat() + "Z",
+            "ts": datetime.now(timezone.utc).isoformat(),
             "pid": os.getpid(),
         }
+
+    def _probe_state_write(self) -> tuple[bool, str]:
+        STATE.mkdir(parents=True, exist_ok=True)
+        probe = STATE / ".ready_probe"
+        try:
+            probe.write_text("ok", encoding="utf-8")
+            probe.unlink(missing_ok=True)
+            return True, "state writable"
+        except Exception as exc:
+            return False, f"state write probe failed: {exc}"
+
+    def _snapshot_freshness(self) -> tuple[bool, str]:
+        snap_file = STATE / "prediction_hub_latest.json"
+        if not snap_file.exists():
+            return True, "snapshot missing (allowed before first prediction)"
+        try:
+            payload = json.loads(snap_file.read_text(encoding="utf-8"))
+            snap_ts = payload.get("snapshot_utc")
+            if not snap_ts:
+                return False, "snapshot missing snapshot_utc"
+            age = (datetime.now(timezone.utc) - datetime.fromisoformat(snap_ts)).total_seconds()
+            if age > SNAPSHOT_MAX_AGE_SEC:
+                return False, f"snapshot stale: age={int(age)}s > {SNAPSHOT_MAX_AGE_SEC}s"
+            return True, f"snapshot fresh: age={int(age)}s"
+        except Exception as exc:
+            return False, f"snapshot parse failed: {exc}"
 
     def _ready(self) -> tuple[dict, int]:
         required_dirs = [ROOT / "playground", ROOT / "scripts", ROOT / "state"]
@@ -85,7 +112,41 @@ class HubHandler(SimpleHTTPRequestHandler):
                 },
                 503,
             )
-        return ({"ok": True, "service": "web_hub", "ready": True}, 200)
+
+        write_ok, write_detail = self._probe_state_write()
+        if not write_ok:
+            return (
+                {
+                    "ok": False,
+                    "error_code": "READINESS_STATE_UNWRITABLE",
+                    "error_detail": write_detail,
+                },
+                503,
+            )
+
+        snap_ok, snap_detail = self._snapshot_freshness()
+        if not snap_ok:
+            return (
+                {
+                    "ok": False,
+                    "error_code": "READINESS_STALE_SNAPSHOT",
+                    "error_detail": snap_detail,
+                },
+                503,
+            )
+
+        return (
+            {
+                "ok": True,
+                "service": "web_hub",
+                "ready": True,
+                "checks": {
+                    "state_write": write_detail,
+                    "snapshot": snap_detail,
+                },
+            },
+            200,
+        )
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -126,7 +187,7 @@ class HubHandler(SimpleHTTPRequestHandler):
         if path == "/api/update/start":
 
             def _run():
-                subprocess.run(["python", "scripts/update_orchestrator.py", "apply"], cwd=str(ROOT), check=False)
+                subprocess.run(["python3", "scripts/update_orchestrator.py", "apply"], cwd=str(ROOT), check=False)
 
             threading.Thread(target=_run, daemon=True).start()
             return self._json({"ok": True, "message": "update started"})
