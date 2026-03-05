@@ -52,6 +52,7 @@ docker compose up -d tpm-cockpit
 
 
 Platform expansion roadmap (Linux/macOS/iPhone + parity tracking): `docs/roadmap/platform_parity.md`.
+Execution master plan (step-by-step release/sprint plan): `docs/roadmap/execution_master_plan.md`.
 
 
 ## Runtime Chain Check (causal/order sanity)
