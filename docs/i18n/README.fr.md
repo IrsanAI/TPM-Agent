@@ -34,6 +34,7 @@ python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 ```
 
 The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
+The web hub now also exposes health probes: `GET /api/health` and `GET /api/ready` for ops/runtime checks.
 After successful update, the cockpit can hand over directly to the main Web Hub port ("IrsanAI - TPM Agenten starten").
 
 Update cockpit (same feature scope in Docker + Termux):

@@ -512,6 +512,20 @@
     "tr": "",
     "bs": ""
   },
+  "The web hub now also exposes health probes: GET /api/health and GET /api/ready for ops/runtime checks.": {
+    "en": "The web hub now also exposes health probes: GET /api/health and GET /api/ready for ops/runtime checks.",
+    "de": "",
+    "es": "",
+    "it": "",
+    "fr": "",
+    "pt-BR": "",
+    "ru": "",
+    "zh-CN": "",
+    "hi": "",
+    "ja": "",
+    "tr": "",
+    "bs": ""
+  },
   "After successful update, the cockpit can hand over directly to the main Web Hub port (\"IrsanAI - TPM Agenten starten\").": {
     "en": "After successful update, the cockpit can hand over directly to the main Web Hub port (\"IrsanAI - TPM Agenten starten\").",
     "de": "",
