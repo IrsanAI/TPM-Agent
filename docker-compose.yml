@@ -3,10 +3,54 @@ services:
     build: .
     environment:
       - ALPHAVANTAGE_KEY=${ALPHAVANTAGE_KEY:-}
+      - IRSANAI_DOCKER=1
+    volumes:
+      - irsanai-state:/app/state
+      - irsanai-data:/app/data
+      - irsanai-config:/app/config
+      - irsanai-backups:/app/backups
     command: ["python", "scripts/tpm_cli.py", "preflight", "--market", "ALL"]
 
   tpm-live:
     build: .
     environment:
       - ALPHAVANTAGE_KEY=${ALPHAVANTAGE_KEY:-}
+      - IRSANAI_DOCKER=1
+    volumes:
+      - irsanai-state:/app/state
+      - irsanai-data:/app/data
+      - irsanai-config:/app/config
+      - irsanai-backups:/app/backups
     command: ["python", "scripts/tpm_cli.py", "live", "--history-csv", "btc_real_24h.csv", "--poll-seconds", "3600"]
+
+  tpm-web:
+    build: .
+    environment:
+      - IRSANAI_DOCKER=1
+    ports:
+      - "8765:8765"
+    volumes:
+      - irsanai-state:/app/state
+      - irsanai-data:/app/data
+      - irsanai-config:/app/config
+      - irsanai-backups:/app/backups
+    command: ["python", "scripts/tpm_cli.py", "web", "--port", "8765"]
+
+  tpm-cockpit:
+    build: .
+    environment:
+      - IRSANAI_DOCKER=1
+    ports:
+      - "8787:8787"
+    volumes:
+      - irsanai-state:/app/state
+      - irsanai-data:/app/data
+      - irsanai-config:/app/config
+      - irsanai-backups:/app/backups
+    command: ["python", "scripts/tpm_cli.py", "update-cockpit", "--port", "8787"]
+
+volumes:
+  irsanai-state:
+  irsanai-data:
+  irsanai-config:
+  irsanai-backups:

@@ -24,6 +24,32 @@ python scripts/tpm_cli.py preflight --market ALL
 python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600
 ```
 
+
+## Orchestrated Update Flow
+
+```bash
+python scripts/tpm_cli.py update check
+python scripts/tpm_cli.py update-cockpit --port 8787
+# open http://localhost:8787 and click update
+```
+
+The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
+
+Update cockpit (same feature scope in Docker + Termux):
+
+```bash
+python scripts/tpm_cli.py update-cockpit --port 8787
+# open http://localhost:8787
+```
+
+Docker equivalent:
+
+```bash
+docker compose up -d tpm-cockpit
+# open http://localhost:8787
+```
+
+
 ## Runtime Chain Check (causal/order sanity)
 
 The default repo flow is intentionally linear to avoid hidden-state drift and "false confidence" during live runs.
@@ -83,6 +109,8 @@ If this lane convinces you, the rest of the repository will likely resonate too.
 ```bash
 docker compose run --rm tpm-preflight
 docker compose run --rm tpm-live
+docker compose up -d tpm-web
+# open http://localhost:8765
 ```
 
 Optional for COFFEE source quality:

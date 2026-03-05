@@ -15,8 +15,11 @@ import math
 import subprocess
 import time
 from collections import deque
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Deque, List, Optional, Tuple
+
+from core.prediction_oracle import PredictionOracle
 
 
 class TPMEngineAdaptive:
@@ -119,6 +122,28 @@ def load_history_csv(path: Path) -> List[float]:
     return out
 
 
+
+
+def infer_target(price: float, alpha: float, last_returns: List[float], horizon_seconds: int, poll_seconds: int) -> tuple[float, str, float]:
+    """Infer target price from short return trend + alpha confidence."""
+    if not last_returns:
+        drift = 0.0
+    else:
+        drift = sum(last_returns[-10:]) / max(1, len(last_returns[-10:]))
+    direction = "UP" if drift >= 0 else "DOWN"
+    steps = max(1, horizon_seconds // max(1, poll_seconds))
+    projected = price * (1.0 + drift * steps)
+    target = max(0.01, projected)
+    base_conf = max(40.0, min(99.0, (1.0 - alpha) * 100.0 + 15.0))
+    return target, direction, base_conf
+
+
+def save_oracle_snapshot(path: Path, snapshot: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = dict(snapshot)
+    payload["snapshot_utc"] = datetime.now(timezone.utc).isoformat()
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
 def run_termux_notification(message: str, vibrate_ms: int) -> None:
     """Best-effort Termux notification; ignored outside Termux or if unavailable."""
     try:
@@ -141,6 +166,9 @@ def main() -> None:
     parser.add_argument("--cooldown", type=int, default=8)
     parser.add_argument("--notify", action="store_true", help="Enable termux-toast + termux-vibrate on alerts")
     parser.add_argument("--vibrate-ms", type=int, default=800)
+    parser.add_argument("--oracle-market", default="BTC")
+    parser.add_argument("--oracle-horizon-seconds", type=int, default=180)
+    parser.add_argument("--oracle-recalc-every", type=int, default=3, help="Create a fresh prediction every N ticks")
     args = parser.parse_args()
 
     engine = TPMEngineAdaptive(
@@ -150,6 +178,10 @@ def main() -> None:
         min_alpha_delta=args.min_alpha_delta,
         cooldown_ticks=args.cooldown,
     )
+
+    oracle = PredictionOracle()
+    snapshot_path = Path("state/prediction_hub_latest.json")
+    tick_count = 0
 
     history = load_history_csv(Path(args.history_csv))
     if history:
@@ -172,7 +204,45 @@ def main() -> None:
             continue
 
         alpha, trigger = engine.process_tick(price)
+        tick_count += 1
         print(f"[{now}] BTC=${price:,.2f} alpha={alpha:.4f}")
+
+        should_recalc = (tick_count % max(1, args.oracle_recalc_every) == 0) or trigger
+        if should_recalc and len(engine.return_buffer) >= 3:
+            target_price, direction, base_conf = infer_target(
+                price=price,
+                alpha=alpha,
+                last_returns=list(engine.return_buffer),
+                horizon_seconds=args.oracle_horizon_seconds,
+                poll_seconds=args.poll_seconds,
+            )
+            pred = oracle.create_prediction(
+                market=args.oracle_market,
+                current_price=price,
+                target_price=target_price,
+                horizon_seconds=args.oracle_horizon_seconds,
+                base_confidence_pct=base_conf,
+                tolerance_pct=max(0.2, (1.0 - alpha) * 0.9),
+                direction=direction,
+            )
+            print(
+                f"[ORACLE] id={pred.prediction_id[:8]} market={pred.market} now=${pred.created_price:,.2f} "
+                f"target=${pred.target_price:,.2f} eta={pred.target_ts} conf={pred.base_confidence_pct:.1f}%"
+            )
+
+        oracle.validate_latest(args.oracle_market, price)
+        snap = oracle.latest_snapshot(args.oracle_market)
+        if snap:
+            save_oracle_snapshot(snapshot_path, snap)
+            eta = snap.get("seconds_left", 0)
+            status = snap.get("status", "pending")
+            streak = snap.get("confirmations_in_row", 0)
+            rounds = snap.get("validation_rounds", 0)
+            print(
+                f"[ORACLE] status={status} rounds={rounds} streak={streak} "
+                f"⏱️ {eta}s left to target @ ${snap['target_price']:,.2f}"
+            )
+
         if trigger:
             alert = f"🔥 LIVE-GLITCH DETECTED alpha={alpha:.4f} price=${price:,.2f}"
             print(alert)
