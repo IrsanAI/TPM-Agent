@@ -8,7 +8,6 @@ import os
 import platform
 import subprocess
 import sys
-import webbrowser
 from pathlib import Path
 
 
@@ -21,15 +20,18 @@ def is_termux() -> bool:
     return "com.termux" in os.environ.get("PREFIX", "") or "com.termux" in os.environ.get("HOME", "")
 
 
-
-
-def is_windows() -> bool:
-    return platform.system().lower().startswith("win")
-
 def run(cmd: list[str], cwd: Path = REPO_ROOT) -> int:
     print("$", " ".join(cmd))
     p = subprocess.run(cmd, cwd=str(cwd))
     return p.returncode
+
+
+def cmd_init_device_root(_: argparse.Namespace) -> int:
+    DEVICE_ROOT.mkdir(parents=True, exist_ok=True)
+    for rel in ["state", "data", "config", "backups"]:
+        (DEVICE_ROOT / rel).mkdir(parents=True, exist_ok=True)
+    print(f"Device root initialized: {DEVICE_ROOT}")
+    return 0
 
 
 def cmd_validate(_: argparse.Namespace) -> int:
@@ -41,7 +43,6 @@ def cmd_preflight(args: argparse.Namespace) -> int:
     if args.alpha_vantage_key:
         env["ALPHAVANTAGE_KEY"] = args.alpha_vantage_key
 
-    # Ensure schema exists before standalone preflight runs (Docker/Windows step 3).
     init_rc = run([sys.executable, "core/init_db_v2.py"], cwd=REPO_ROOT)
     if init_rc != 0:
         return init_rc
@@ -70,18 +71,16 @@ def cmd_live(args: argparse.Namespace) -> int:
 
 
 def cmd_update(args: argparse.Namespace) -> int:
-    cmd = [sys.executable, "scripts/update_orchestrator.py", args.action]
-    return run(cmd)
+    return run([sys.executable, "scripts/update_orchestrator.py", args.action])
 
 
 def cmd_cockpit(args: argparse.Namespace) -> int:
-    cmd = [sys.executable, "scripts/update_cockpit_server.py", "--port", str(args.port)]
+    cmd = [sys.executable, "scripts/update_cockpit_server.py", "--port", str(args.port), "--target-port", str(args.target_port)]
     return run(cmd)
 
 
 def cmd_web(args: argparse.Namespace) -> int:
-    cmd = [sys.executable, "scripts/web_hub_server.py", "--port", str(args.port)]
-    return run(cmd)
+    return run([sys.executable, "scripts/web_hub_server.py", "--port", str(args.port)])
 
 
 def cmd_env(_: argparse.Namespace) -> int:
@@ -114,7 +113,6 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--vibrate-ms", type=int, default=1000)
     live.set_defaults(func=cmd_live)
 
-
     web = sp.add_parser("web", help="start unified web hub (playground + oracle + update APIs)")
     web.add_argument("--port", type=int, default=8765)
     web.set_defaults(func=cmd_web)
@@ -125,6 +123,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     cockpit = sp.add_parser("update-cockpit", help="start update cockpit web UI")
     cockpit.add_argument("--port", type=int, default=8787)
+    cockpit.add_argument("--target-port", type=int, default=8765, help="web hub port after handover")
     cockpit.set_defaults(func=cmd_cockpit)
 
     return p
