@@ -28,17 +28,21 @@ python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 360
 ## Orchestrated Update Flow
 
 ```bash
-python scripts/tpm_cli.py update check
-python scripts/tpm_cli.py update-cockpit --port 8787
+python scripts/tpm_cli.py update check  # may return phase=check_error if remote is unreachable
+python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 # open http://localhost:8787 and click update
 ```
 
 The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
+The web hub now also exposes health probes: `GET /api/health` and `GET /api/ready` for ops/runtime checks.
+`/api/ready` performs writable-state and snapshot-freshness checks (configurable via `WEB_HUB_SNAPSHOT_MAX_AGE_SEC`).
+Replay APIs are available via `GET /api/replay/recent?limit=...` and `GET /api/replay?prediction_id=...`.
+After successful update, the cockpit can hand over directly to the main Web Hub port ("IrsanAI - TPM Agenten starten").
 
 Update cockpit (same feature scope in Docker + Termux):
 
 ```bash
-python scripts/tpm_cli.py update-cockpit --port 8787
+python scripts/tpm_cli.py update-cockpit --port 8787 --target-port 8765
 # open http://localhost:8787
 ```
 
@@ -48,6 +52,11 @@ Docker equivalent:
 docker compose up -d tpm-cockpit
 # open http://localhost:8787
 ```
+
+
+Platform expansion roadmap (Linux/macOS/iPhone + parity tracking): `docs/roadmap/platform_parity.md`.
+Execution master plan (step-by-step release/sprint plan): `docs/roadmap/execution_master_plan.md`.
+Platform execution pack templates (Linux systemd / macOS launchd / iPhone PWA): `deployment/README.md`.
 
 
 ## Runtime Chain Check (causal/order sanity)

@@ -138,11 +138,101 @@ def infer_target(price: float, alpha: float, last_returns: List[float], horizon_
     return target, direction, base_conf
 
 
+
+
+def confidence_components(alpha: float, trigger: bool, tick_count: int) -> tuple[float, float, float]:
+    signal = max(20.0, min(98.0, 100.0 - alpha * 100.0))
+    regime = 78.0 if trigger else 64.0
+    data_quality = 55.0 if tick_count < 10 else 84.0
+    return signal, regime, data_quality
+
+
+def adaptive_tolerance(alpha: float, misses: int, rounds: int) -> float:
+    miss_pressure = (misses / max(1, rounds)) * 1.2
+    raw = max(0.2, (1.0 - alpha) * 0.9 + miss_pressure)
+    return max(0.2, min(3.5, raw))
+
 def save_oracle_snapshot(path: Path, snapshot: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = dict(snapshot)
     payload["snapshot_utc"] = datetime.now(timezone.utc).isoformat()
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(path)
+
+
+
+def _calibration_path(market: str) -> Path:
+    p = Path("state/calibration")
+    p.mkdir(parents=True, exist_ok=True)
+    return p / f"{market.lower()}.json"
+
+
+def load_calibration(market: str) -> dict:
+    fp = _calibration_path(market)
+    if fp.exists():
+        try:
+            obj = json.loads(fp.read_text(encoding="utf-8"))
+            return {
+                "schema_version": int(obj.get("schema_version", 2)),
+                "confidence_bias": float(obj.get("confidence_bias", 0.0)),
+                "tolerance_bias": float(obj.get("tolerance_bias", 0.0)),
+                "samples": int(obj.get("samples", 0)),
+                "reason_weights": obj.get(
+                    "reason_weights",
+                    {"ON_TRACK": 1.0, "VOLATILITY_SPIKE": 1.15, "OVERSHOOT": 1.25, "UNDERSHOOT": 1.25, "TARGET_ZERO": 1.5},
+                ),
+            }
+        except Exception:
+            pass
+    return {
+        "schema_version": 2,
+        "confidence_bias": 0.0,
+        "tolerance_bias": 0.0,
+        "samples": 0,
+        "reason_weights": {
+            "ON_TRACK": 1.0,
+            "VOLATILITY_SPIKE": 1.15,
+            "OVERSHOOT": 1.25,
+            "UNDERSHOOT": 1.25,
+            "TARGET_ZERO": 1.5,
+        },
+    }
+
+
+def save_calibration(market: str, cal: dict) -> None:
+    fp = _calibration_path(market)
+    tmp = fp.with_suffix(".tmp")
+    tmp.write_text(json.dumps(cal, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(fp)
+
+
+def update_calibration(cal: dict, snap: dict) -> dict:
+    reason = snap.get("reason_code", "PENDING")
+    rounds = int(snap.get("validation_rounds", 0))
+    if rounds <= cal.get("samples", 0):
+        return cal
+
+    status = snap.get("status", "pending")
+    streak = int(snap.get("confirmations_in_row", 0))
+    reason_weights = cal.get("reason_weights", {})
+    weight = float(reason_weights.get(reason, 1.0))
+
+    if reason in {"VOLATILITY_SPIKE", "UNDERSHOOT", "OVERSHOOT", "TARGET_ZERO"}:
+        cal["tolerance_bias"] = min(0.8, cal.get("tolerance_bias", 0.0) + 0.04 * weight)
+    if reason in {"UNDERSHOOT", "OVERSHOOT", "TARGET_ZERO"}:
+        cal["confidence_bias"] = max(-12.0, cal.get("confidence_bias", 0.0) - 0.8 * weight)
+    if reason == "ON_TRACK" and streak >= 2 and status in {"pending", "completed"}:
+        cal["confidence_bias"] = min(8.0, cal.get("confidence_bias", 0.0) + 0.25)
+        cal["tolerance_bias"] = max(-0.2, cal.get("tolerance_bias", 0.0) - 0.01)
+
+    # guardrails (Learning v2)
+    cal["confidence_bias"] = max(-12.0, min(8.0, float(cal.get("confidence_bias", 0.0))))
+    cal["tolerance_bias"] = max(-0.2, min(0.8, float(cal.get("tolerance_bias", 0.0))))
+    cal["samples"] = rounds
+    cal["schema_version"] = 2
+    return cal
+
 
 def run_termux_notification(message: str, vibrate_ms: int) -> None:
     """Best-effort Termux notification; ignored outside Termux or if unavailable."""
@@ -181,6 +271,7 @@ def main() -> None:
 
     oracle = PredictionOracle()
     snapshot_path = Path("state/prediction_hub_latest.json")
+    calibration = load_calibration(args.oracle_market)
     tick_count = 0
 
     history = load_history_csv(Path(args.history_csv))
@@ -216,14 +307,22 @@ def main() -> None:
                 horizon_seconds=args.oracle_horizon_seconds,
                 poll_seconds=args.poll_seconds,
             )
+            latest_before = oracle.latest_snapshot(args.oracle_market) or {}
+            signal_c, regime_c, quality_c = confidence_components(alpha, trigger, tick_count)
+            tol = adaptive_tolerance(alpha, int(latest_before.get("misses", 0)), int(latest_before.get("validation_rounds", 0)))
+            conf_adj = max(1.0, min(99.0, base_conf + float(calibration.get("confidence_bias", 0.0))))
+            tol_adj = max(0.2, min(3.5, tol + float(calibration.get("tolerance_bias", 0.0))))
             pred = oracle.create_prediction(
                 market=args.oracle_market,
                 current_price=price,
                 target_price=target_price,
                 horizon_seconds=args.oracle_horizon_seconds,
-                base_confidence_pct=base_conf,
-                tolerance_pct=max(0.2, (1.0 - alpha) * 0.9),
+                base_confidence_pct=conf_adj,
+                tolerance_pct=tol_adj,
                 direction=direction,
+                signal_confidence_pct=signal_c,
+                regime_confidence_pct=regime_c,
+                data_quality_confidence_pct=quality_c,
             )
             print(
                 f"[ORACLE] id={pred.prediction_id[:8]} market={pred.market} now=${pred.created_price:,.2f} "
@@ -233,6 +332,8 @@ def main() -> None:
         oracle.validate_latest(args.oracle_market, price)
         snap = oracle.latest_snapshot(args.oracle_market)
         if snap:
+            calibration = update_calibration(calibration, snap)
+            save_calibration(args.oracle_market, calibration)
             save_oracle_snapshot(snapshot_path, snap)
             eta = snap.get("seconds_left", 0)
             status = snap.get("status", "pending")
