@@ -24,6 +24,18 @@ python scripts/tpm_cli.py preflight --market ALL
 python scripts/tpm_cli.py live --history-csv btc_real_24h.csv --poll-seconds 3600
 ```
 
+
+## Orchestrated Update Flow
+
+```bash
+python scripts/tpm_cli.py update check
+python scripts/tpm_cli.py update-cockpit --port 8787
+# open http://localhost:8787 and click update
+```
+
+The updater performs: graceful shutdown → maintenance mode → backup → git update → restore-ready state.
+
+
 ## Runtime Chain Check (causal/order sanity)
 
 The default repo flow is intentionally linear to avoid hidden-state drift and "false confidence" during live runs.

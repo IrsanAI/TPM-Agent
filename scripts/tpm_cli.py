@@ -69,35 +69,14 @@ def cmd_live(args: argparse.Namespace) -> int:
     return run(cmd)
 
 
-def cmd_forge_run(args: argparse.Namespace) -> int:
-    return run([sys.executable, "-m", "production.forge_orchestrator", "--config", args.config, "--ticks", str(args.ticks)])
+def cmd_update(args: argparse.Namespace) -> int:
+    cmd = [sys.executable, "scripts/update_orchestrator.py", args.action]
+    return run(cmd)
 
 
-def cmd_forge_dashboard(args: argparse.Namespace) -> int:
-    import importlib.util
-
-    if importlib.util.find_spec("fastapi") is None or importlib.util.find_spec("uvicorn") is None:
-        print("[warn] fastapi/uvicorn not installed; falling back to static playground host.")
-        return run([sys.executable, "-m", "http.server", str(args.port)])
-
-    url = f"http://127.0.0.1:{args.port}/"
-    if args.open_browser:
-        try:
-            webbrowser.open(url)
-            if is_windows():
-                print(f"[windows] opened immersive dashboard: {url}")
-        except Exception as exc:
-            print(f"[warn] browser auto-open failed: {exc}")
-
-    return run([sys.executable, "-m", "uvicorn", "production.forge_runtime:app", "--host", "0.0.0.0", "--port", str(args.port)])
-
-
-def cmd_init_device_root(_: argparse.Namespace) -> int:
-    DEVICE_ROOT.mkdir(parents=True, exist_ok=True)
-    for name in ["config", "data", "logs", "state"]:
-        (DEVICE_ROOT / name).mkdir(parents=True, exist_ok=True)
-    print(f"Device root ready at {DEVICE_ROOT}")
-    return 0
+def cmd_cockpit(args: argparse.Namespace) -> int:
+    cmd = [sys.executable, "scripts/update_cockpit_server.py", "--port", str(args.port)]
+    return run(cmd)
 
 
 def cmd_env(_: argparse.Namespace) -> int:
@@ -130,15 +109,14 @@ def build_parser() -> argparse.ArgumentParser:
     live.add_argument("--vibrate-ms", type=int, default=1000)
     live.set_defaults(func=cmd_live)
 
-    fr = sp.add_parser("forge-run", help="run stage-4 self-evolution loop")
-    fr.add_argument("--config", default="config/config.yaml")
-    fr.add_argument("--ticks", type=int, default=1)
-    fr.set_defaults(func=cmd_forge_run)
+    upd = sp.add_parser("update", help="check/apply orchestrated app updates")
+    upd.add_argument("action", choices=["check", "status", "apply"], default="check")
+    upd.set_defaults(func=cmd_update)
 
-    fd = sp.add_parser("forge-dashboard", help="launch Forge production runtime dashboard")
-    fd.add_argument("--port", type=int, default=8787)
-    fd.add_argument("--open-browser", action="store_true", help="Open dashboard automatically (recommended for Windows desktop UX)")
-    fd.set_defaults(func=cmd_forge_dashboard)
+    cockpit = sp.add_parser("update-cockpit", help="start update cockpit web UI")
+    cockpit.add_argument("--port", type=int, default=8787)
+    cockpit.set_defaults(func=cmd_cockpit)
+
     return p
 
 
