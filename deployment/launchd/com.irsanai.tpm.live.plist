@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.irsanai.tpm.live</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>scripts/tpm_cli.py</string>
+    <string>live</string>
+    <string>--history-csv</string><string>btc_real_24h.csv</string>
+    <string>--poll-seconds</string><string>3600</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/USERNAME/IrsanAI-TPM</string>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+</dict>
+</plist>
