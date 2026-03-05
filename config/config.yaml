@@ -1,0 +1,105 @@
+{
+  "platform": {
+    "project_root_name": "IrsanAI-TPM",
+    "cache_dir": "state",
+    "data_dir": "data",
+    "logs_dir": "logs"
+  },
+  "alerts": {
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "chat_id": ""
+    },
+    "signal": {
+      "enabled": false,
+      "endpoint": ""
+    }
+  },
+  "engine": {
+    "interval_seconds": 30,
+    "lookback_window": 60,
+    "entropy_bins": 12,
+    "transfer_lag": 1,
+    "circuit_breaker_failures": 3,
+    "cooldown_seconds": 45,
+    "reward_learning_rate": 0.08,
+    "min_source_votes": 2
+  },
+  "ui": {
+    "windows_profile": {
+      "layout": "immersive-desktop",
+      "accent": "#7c5cff",
+      "glass": true,
+      "future_tuple": "domain+future"
+    },
+    "domain_themes": {
+      "finance": {
+        "accent": "#00d4ff",
+        "gradient": [
+          "#0a0f1f",
+          "#11213a"
+        ],
+        "icon": "\ud83d\udcc8"
+      },
+      "weather": {
+        "accent": "#3ddc97",
+        "gradient": [
+          "#071a1e",
+          "#13343c"
+        ],
+        "icon": "\ud83c\udf26\ufe0f"
+      },
+      "medical": {
+        "accent": "#ff5f8a",
+        "gradient": [
+          "#220c16",
+          "#3c1326"
+        ],
+        "icon": "\ud83e\uddec"
+      },
+      "seismic": {
+        "accent": "#ffb347",
+        "gradient": [
+          "#2a1604",
+          "#4e2a0a"
+        ],
+        "icon": "\ud83c\udf0b"
+      }
+    }
+  },
+  "agents": [
+    {
+      "name": "BTC_BINANCE",
+      "domain": "finance",
+      "market": "BTC",
+      "source_type": "binance",
+      "url": "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+      "weight": 1.0
+    },
+    {
+      "name": "COFFEE_ALPHA",
+      "domain": "finance",
+      "market": "COFFEE",
+      "source_type": "alphavantage_commodity",
+      "url": "https://www.alphavantage.co/query?function=COFFEE&interval=monthly&apikey=demo",
+      "weight": 0.95
+    }
+  ],
+  "domain_templates": {
+    "medical": {
+      "metric_keys": [
+        "risk_index",
+        "latency",
+        "uptime"
+      ]
+    },
+    "seismic": {
+      "metric_keys": [
+        "magnitude",
+        "depth",
+        "confidence"
+      ]
+    }
+  }
+}
