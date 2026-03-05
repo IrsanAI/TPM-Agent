@@ -15,9 +15,10 @@ import os
 import platform
 import subprocess
 import threading
+from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAYGROUND = ROOT / "playground"
@@ -70,9 +71,19 @@ class HubHandler(SimpleHTTPRequestHandler):
         if path == "/api/update/status":
             return self._json(self._read_json("state/update_status.json", {"phase": "idle", "progress_pct": 0, "message": "idle", "steps": []}))
         if path == "/api/oracle":
+            parsed = urlparse(self.path)
+            q = parse_qs(parsed.query)
             snap = self._read_json("state/prediction_hub_latest.json", {"available": False})
             if "available" not in snap:
                 snap["available"] = True
+            if q.get("device_ts"):
+                try:
+                    device_ts = datetime.fromisoformat(q["device_ts"][0])
+                    if snap.get("snapshot_utc"):
+                        server_ts = datetime.fromisoformat(snap["snapshot_utc"])
+                        snap["device_clock_delta_seconds"] = (device_ts - server_ts).total_seconds()
+                except Exception:
+                    pass
             return self._json(snap)
         return super().do_GET()
 

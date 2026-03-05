@@ -11,6 +11,7 @@
     .pill{display:inline-block;border-radius:999px;padding:4px 8px;margin:3px;font-size:12px}
     .good{background:#1f6f43;color:#d2ffe8}.bad{background:#8b1e2d;color:#ffd8de}.warn{background:#9a6700;color:#fff3cd}
     .countdown{font-size:24px;font-weight:700;color:#ff7b72}
+    .meta{color:#9fb3c8;font-size:13px}
     .update-banner{display:none;background:#1f6feb33;border:1px solid #1f6feb}
     code{background:#0b1320;padding:2px 6px;border-radius:6px}
     #whatsNewModal{display:none;position:fixed;inset:0;background:#000a;align-items:center;justify-content:center}
@@ -57,27 +58,36 @@ function renderOracle(snap){
   const now = Date.now();
   const targetMs = new Date(snap.target_ts).getTime();
   const left = Math.max(0, Math.floor((targetMs-now)/1000));
+  const etaBand = Number(snap.eta_window_seconds||0);
   document.getElementById('oracleMeta').innerHTML = `Erkenntnis: <code>${snap.created_ts}</code> @ <code>${(snap.created_price||0).toFixed(2)}</code> → Ziel <code>${(snap.target_price||0).toFixed(2)}</code>`;
   document.getElementById('oracleCountdown').textContent = `Bro, du hast nur noch ${fmtDelta(left)} bis Ereignis.`;
+
+  const reason = snap.reason_code || 'PENDING';
   document.getElementById('oraclePills').innerHTML = [
     `<span class='pill ${snap.status==='completed'?'good':(snap.status==='expired'?'bad':'warn')}'>Status: ${snap.status||'pending'}</span>`,
     `<span class='pill good'>Streak: ${snap.confirmations_in_row||0}x</span>`,
-    `<span class='pill warn'>Rounds: ${snap.validation_rounds||0}</span>`
+    `<span class='pill warn'>Rounds: ${snap.validation_rounds||0}</span>`,
+    `<span class='pill ${reason==='ON_TRACK'?'good':'warn'}'>Reason: ${reason}</span>`
   ].join('');
-  const hops = (snap.hops||[]).slice(-8).map((h,i)=>`<span class='pill ${h.status==='confirmed'?'good':'bad'}'>#${i+1} ${Number(h.confidence_pct||0).toFixed(1)}%</span>`).join('');
+
+  const hops = (snap.hops||[]).slice(-8).map((h,i)=>`<span class='pill ${h.status==='confirmed'?'good':'bad'}'>#${i+1} ${Number(h.confidence_pct||0).toFixed(1)}% · ${h.reason_code||'-'}</span>`).join('');
   document.getElementById('oracleHops').innerHTML = hops || '<span>Keine Hops vorhanden.</span>';
-  document.getElementById('oracleInfo').innerHTML = `Direction: <code>${snap.direction||'-'}</code> • ETA: <code>${snap.target_ts||'-'}</code>`;
+
+  const c = snap.confidence_decomposition || {};
+  const clock = snap.device_clock_delta_seconds;
+  const clockTxt = Number.isFinite(clock) ? `${clock.toFixed(2)}s` : 'n/a';
+  document.getElementById('oracleInfo').innerHTML = `Direction: <code>${snap.direction||'-'}</code> • ETA: <code>${snap.target_ts||'-'}</code> ± <code>${etaBand}s</code><br><span class="meta">Confidence split: Signal <code>${Number(c.signal_pct||0).toFixed(1)}%</code> · Regime <code>${Number(c.regime_pct||0).toFixed(1)}%</code> · Data <code>${Number(c.data_quality_pct||0).toFixed(1)}%</code> • Clock Δ: <code>${clockTxt}</code></span>`;
 }
 
 function simulatedOracle(){
   const now = new Date();
   const price=70000+Math.random()*100;
-  return {created_ts:now.toISOString(),created_price:price,target_price:price*1.001,target_ts:new Date(now.getTime()+52000).toISOString(),status:'pending',confirmations_in_row:3,validation_rounds:5,direction:'UP',hops:[{confidence_pct:100,status:'confirmed'},{confidence_pct:82,status:'confirmed'},{confidence_pct:31,status:'missed'}]};
+  return {created_ts:now.toISOString(),created_price:price,target_price:price*1.001,target_ts:new Date(now.getTime()+52000).toISOString(),eta_window_seconds:10,status:'pending',confirmations_in_row:3,validation_rounds:5,direction:'UP',reason_code:'ON_TRACK',confidence_decomposition:{signal_pct:79,regime_pct:66,data_quality_pct:88},hops:[{confidence_pct:100,status:'confirmed',reason_code:'ON_TRACK'},{confidence_pct:82,status:'confirmed',reason_code:'ON_TRACK'},{confidence_pct:31,status:'missed',reason_code:'VOLATILITY_SPIKE'}]};
 }
 
 async function refreshOracle(){
   try{
-    const res=await fetch('/api/oracle',{cache:'no-store'});
+    const res=await fetch(`/api/oracle?device_ts=${encodeURIComponent(new Date().toISOString())}`,{cache:'no-store'});
     if(res.ok){ const live=await res.json(); if(live.available){ renderOracle(live); return; } }
   }catch(e){}
   renderOracle(simulatedOracle());
